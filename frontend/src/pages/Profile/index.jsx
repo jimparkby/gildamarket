@@ -29,17 +29,21 @@ export default function Profile() {
 
   const isOwner = !id || (authUser && String(authUser.id) === id);
 
+  // Always use getShop — it returns items + lookBoards.
+  // For own profile, pass authUser.id when no id param.
+  const shopId = id || (authUser ? String(authUser.id) : null);
+
   useEffect(() => {
+    if (!shopId) return;
     setLoading(true);
-    const fetch = isOwner ? getMe() : getShop(id);
-    fetch
+    getShop(shopId)
       .then(data => {
         setShop(data);
         setAboutDraft(data.about || '');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [id, isOwner]);
+  }, [shopId]);
 
   /* ── Avatar ── */
   const handleAvatar = useCallback(async (e) => {
