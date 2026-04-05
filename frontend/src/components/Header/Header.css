@@ -23,6 +23,10 @@
   color: var(--black);
 }
 
+.header__back-btn {
+  margin-left: -6px; /* оптически ближе к краю */
+}
+
 .header__logo {
   flex: 1;
   display: flex;
