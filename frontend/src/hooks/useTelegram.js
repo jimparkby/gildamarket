@@ -9,11 +9,18 @@ export function useTelegram() {
     if (tg) {
       tg.ready();
       tg.expand();
+      // Full screen (Telegram 8.0+)
+      if (typeof tg.requestFullscreen === 'function') {
+        tg.requestFullscreen();
+      }
       tg.setHeaderColor('#ffffff');
       tg.setBackgroundColor('#ffffff');
+      // Remove bottom bar if supported
+      if (typeof tg.setBottomBarColor === 'function') {
+        tg.setBottomBarColor('#ffffff');
+      }
       setReady(true);
     } else {
-      // Dev mode without Telegram
       setReady(true);
     }
   }, []);

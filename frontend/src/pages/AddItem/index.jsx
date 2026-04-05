@@ -78,10 +78,14 @@ export default function AddItem() {
       photos.forEach(p => fd.append('images', p.file));
 
       await createItem(fd);
-      haptic('success');
+      haptic('medium');
       navigate('/profile');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create listing');
+      const msg =
+        err.response?.data?.error ||
+        (err.code === 'ECONNABORTED' ? 'Request timed out. Check your connection.' : null) ||
+        'Failed to publish. Make sure the backend is running.';
+      setError(msg);
     } finally {
       setSubmitting(false);
     }

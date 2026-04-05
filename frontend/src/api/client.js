@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
-const api = axios.create({ baseURL: BASE });
+const api = axios.create({ baseURL: BASE, timeout: 12000 });
 
 // Attach JWT from localStorage
 api.interceptors.request.use(config => {

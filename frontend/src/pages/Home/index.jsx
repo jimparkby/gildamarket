@@ -14,6 +14,7 @@ export default function Home() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [apiError, setApiError] = useState(false);
   const [mode, setMode] = useState('initial'); // initial | more | paginated
   const [page, setPage] = useState(null);
   const [search, setSearch] = useState('');
@@ -37,11 +38,15 @@ export default function Home() {
   // Initial load
   useEffect(() => {
     setLoading(true);
+    setApiError(false);
     fetchItems().then(data => {
       setItems(data.items);
       setTotal(data.total);
       setMode('initial');
       setPage(null);
+      setLoading(false);
+    }).catch(() => {
+      setApiError(true);
       setLoading(false);
     });
   }, [fetchItems]);
@@ -101,6 +106,11 @@ export default function Home() {
       <main className="page home">
         {loading ? (
           <div className="spinner" />
+        ) : apiError ? (
+          <div className="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Could not connect to server</p>
+          </div>
         ) : items.length === 0 ? (
           <div className="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
