@@ -2,6 +2,6 @@
   "name": "gilda",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build && cp -r dist ../dist"
+    "build": "cd frontend && npm install && npm run build"
   }
 }
