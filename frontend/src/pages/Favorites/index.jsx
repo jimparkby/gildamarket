@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getFavorites, toggleShopLike } from '../../api/client';
+import { useSettings } from '../../App';
+import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ShopCard from '../../components/ShopCard';
 import ItemDetail from '../../components/ItemDetail';
 import './Favorites.css';
 
 export default function Favorites() {
+  const { language } = useSettings();
   const [tab, setTab] = useState('items'); // items | shops
   const [items, setItems] = useState([]);
   const [shops, setShops] = useState([]);
@@ -40,7 +43,7 @@ export default function Favorites() {
           className={`favorites__tab${tab === 'items' ? ' active' : ''}`}
           onClick={() => setTab('items')}
         >
-          Items
+          {t(language, 'items')}
           {items.length > 0 && (
             <span className="favorites__count">{items.length}</span>
           )}
@@ -49,7 +52,7 @@ export default function Favorites() {
           className={`favorites__tab${tab === 'shops' ? ' active' : ''}`}
           onClick={() => setTab('shops')}
         >
-          Shops
+          {language === 'ru' ? 'Магазины' : 'Shops'}
           {shops.length > 0 && (
             <span className="favorites__count">{shops.length}</span>
           )}
@@ -64,7 +67,7 @@ export default function Favorites() {
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
-            <p>No saved items yet</p>
+            <p>{t(language, 'noFavorites')}</p>
           </div>
         ) : (
           <div className="favorites__grid">
@@ -85,7 +88,7 @@ export default function Favorites() {
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            <p>No saved shops yet</p>
+            <p>{language === 'ru' ? 'Сохранённых магазинов пока нет' : 'No saved shops yet'}</p>
           </div>
         ) : (
           <div className="favorites__shops">

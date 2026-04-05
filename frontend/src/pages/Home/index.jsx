@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getItems } from '../../api/client';
+import { useSettings } from '../../App';
+import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
 import Header from '../../components/Header';
@@ -10,6 +12,7 @@ const MORE = 10;
 const PAGE_SIZE = 30;
 
 export default function Home() {
+  const { language } = useSettings();
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -109,7 +112,7 @@ export default function Home() {
         ) : apiError ? (
           <div className="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <p>Could not connect to server</p>
+            <p>{t(language, 'couldNotConnect')}</p>
           </div>
         ) : items.length === 0 ? (
           <div className="empty-state">
@@ -117,7 +120,7 @@ export default function Home() {
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <p>No items found</p>
+            <p>{t(language, 'noItemsYet')}</p>
           </div>
         ) : (
           <>
@@ -136,7 +139,7 @@ export default function Home() {
             {shownAll && !loadingMore && (
               <div className="home__more">
                 <button className="home__more-btn" onClick={handleViewMore}>
-                  View More
+                  {language === 'ru' ? 'Показать ещё' : 'View More'}
                 </button>
               </div>
             )}

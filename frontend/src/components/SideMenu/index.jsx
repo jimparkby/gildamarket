@@ -1,89 +1,120 @@
 import React, { useState, useCallback } from 'react';
 import { useSettings } from '../../App';
+import { t } from '../../translations';
 import './SideMenu.css';
 
 // ─── Static pages ─────────────────────────────────────────────────────────────
-const PAGES = {
+const PAGES_CONTENT = {
   privacy: {
-    title: 'Privacy Policy',
-    content: (
-      <div className="side-page__content">
-        <p className="side-page__updated">Last updated: April 2025</p>
-
-        <h3>1. Information We Collect</h3>
-        <p>When you use Gilda via Telegram, we receive basic profile information provided by Telegram: your name, username, and Telegram user ID. We do not collect passwords, phone numbers, or financial data.</p>
-
-        <h3>2. How We Use Your Information</h3>
-        <p>We use your data solely to operate the Gilda marketplace — to create and manage your shop, display your listings, and enable communication between buyers and sellers.</p>
-
-        <h3>3. Photos & Listings</h3>
-        <p>Photos you upload to Gilda are stored securely and displayed publicly as part of your listings. You can delete your listings at any time from your shop page.</p>
-
-        <h3>4. Data Sharing</h3>
-        <p>We do not sell or share your personal data with third parties. Your Telegram username is visible to other users only when you have active listings.</p>
-
-        <h3>5. Data Retention</h3>
-        <p>Your data is kept as long as your account is active. To request deletion, contact us at ernestgilda1@gmail.com.</p>
-
-        <h3>6. Contact</h3>
-        <p>Questions about privacy? Email us: <strong>ernestgilda1@gmail.com</strong></p>
-      </div>
-    ),
+    en: {
+      title: 'Privacy Policy',
+      body: (
+        <div className="side-page__content">
+          <p className="side-page__updated">Last updated: April 2025</p>
+          <h3>1. Information We Collect</h3>
+          <p>When you use Gilda via Telegram, we receive basic profile information: your name, username, and Telegram user ID. We do not collect passwords, phone numbers, or financial data.</p>
+          <h3>2. How We Use Your Information</h3>
+          <p>We use your data solely to operate the Gilda marketplace — to create and manage your shop, display your listings, and enable communication between buyers and sellers.</p>
+          <h3>3. Photos & Listings</h3>
+          <p>Photos you upload are stored securely and displayed publicly as part of your listings. You can delete your listings at any time from your shop page.</p>
+          <h3>4. Data Sharing</h3>
+          <p>We do not sell or share your personal data with third parties.</p>
+          <h3>5. Contact</h3>
+          <p>Questions about privacy? Email us: <strong>ernestgilda1@gmail.com</strong></p>
+        </div>
+      ),
+    },
+    ru: {
+      title: 'Политика конфиденциальности',
+      body: (
+        <div className="side-page__content">
+          <p className="side-page__updated">Последнее обновление: апрель 2025</p>
+          <h3>1. Какие данные мы собираем</h3>
+          <p>При использовании Gilda через Telegram мы получаем базовую информацию: имя, имя пользователя и Telegram ID. Мы не собираем пароли, телефоны или платёжные данные.</p>
+          <h3>2. Как мы используем данные</h3>
+          <p>Данные используются исключительно для работы маркетплейса Gilda — создания магазина, публикации объявлений и общения между продавцами и покупателями.</p>
+          <h3>3. Фото и объявления</h3>
+          <p>Загруженные фото хранятся в безопасном хранилище и отображаются публично. Вы можете удалить объявление в любой момент.</p>
+          <h3>4. Передача данных</h3>
+          <p>Мы не продаём и не передаём ваши персональные данные третьим лицам.</p>
+          <h3>5. Контакты</h3>
+          <p>Вопросы по конфиденциальности: <strong>ernestgilda1@gmail.com</strong></p>
+        </div>
+      ),
+    },
   },
   support: {
-    title: 'Support',
-    content: (
-      <div className="side-page__content">
-        <h3>How can we help?</h3>
-        <p>We're here to make your Gilda experience smooth. Browse the topics below or reach out directly.</p>
-
-        <h3>Common Questions</h3>
-        <p><strong>How do I list an item?</strong><br/>Tap the + icon in the bottom navigation, fill in the details and upload photos.</p>
-        <p><strong>How do I contact a seller?</strong><br/>Open any listing and tap "Message Seller" to start a chat on Telegram.</p>
-        <p><strong>How do I delete a listing?</strong><br/>Go to your Shop tab, find the item, and tap Delete.</p>
-        <p><strong>My item isn't showing up</strong><br/>Make sure the backend is connected and your listing was published successfully.</p>
-
-        <h3>Contact Support</h3>
-        <p>Email us and we'll get back to you within 24 hours:</p>
-        <a className="side-page__email" href="mailto:ernestgilda1@gmail.com">ernestgilda1@gmail.com</a>
-      </div>
-    ),
+    en: {
+      title: 'Support',
+      body: (
+        <div className="side-page__content">
+          <h3>How can we help?</h3>
+          <p>We're here to make your Gilda experience smooth.</p>
+          <h3>Common Questions</h3>
+          <p><strong>How do I list an item?</strong><br/>Tap the + icon, fill in the details and upload photos.</p>
+          <p><strong>How do I contact a seller?</strong><br/>Open any listing and tap "Message Seller".</p>
+          <p><strong>How do I delete a listing?</strong><br/>Go to your Shop tab, find the item, and tap Delete.</p>
+          <h3>Contact Support</h3>
+          <a className="side-page__email" href="mailto:ernestgilda1@gmail.com">ernestgilda1@gmail.com</a>
+        </div>
+      ),
+    },
+    ru: {
+      title: 'Поддержка',
+      body: (
+        <div className="side-page__content">
+          <h3>Как мы можем помочь?</h3>
+          <p>Мы здесь, чтобы ваш опыт в Gilda был максимально удобным.</p>
+          <h3>Часто задаваемые вопросы</h3>
+          <p><strong>Как опубликовать вещь?</strong><br/>Нажмите + в нижнем меню, заполните данные и добавьте фото.</p>
+          <p><strong>Как связаться с продавцом?</strong><br/>Откройте объявление и нажмите «Написать продавцу».</p>
+          <p><strong>Как удалить объявление?</strong><br/>Перейдите в Мой магазин, найдите вещь и нажмите «Удалить».</p>
+          <h3>Написать в поддержку</h3>
+          <a className="side-page__email" href="mailto:ernestgilda1@gmail.com">ernestgilda1@gmail.com</a>
+        </div>
+      ),
+    },
   },
   contact: {
-    title: 'Contact Us',
-    content: (
-      <div className="side-page__content">
-        <h3>Get in touch</h3>
-        <p>We'd love to hear from you — whether it's feedback, a partnership inquiry, or just a hello.</p>
-
-        <h3>Email</h3>
-        <a className="side-page__email" href="mailto:ernestgilda1@gmail.com">ernestgilda1@gmail.com</a>
-
-        <h3>Response Time</h3>
-        <p>We aim to respond within 24 hours on weekdays.</p>
-
-        <h3>For Sellers</h3>
-        <p>Interested in featuring your vintage shop on Gilda? Reach out and tell us about your collection.</p>
-      </div>
-    ),
+    en: {
+      title: 'Contact Us',
+      body: (
+        <div className="side-page__content">
+          <h3>Get in touch</h3>
+          <p>We'd love to hear from you — feedback, partnership inquiry, or just a hello.</p>
+          <h3>Email</h3>
+          <a className="side-page__email" href="mailto:ernestgilda1@gmail.com">ernestgilda1@gmail.com</a>
+          <h3>Response Time</h3>
+          <p>We aim to respond within 24 hours on weekdays.</p>
+        </div>
+      ),
+    },
+    ru: {
+      title: 'Написать нам',
+      body: (
+        <div className="side-page__content">
+          <h3>Свяжитесь с нами</h3>
+          <p>Мы рады обратной связи — предложения, вопросы о партнёрстве или просто привет.</p>
+          <h3>Email</h3>
+          <a className="side-page__email" href="mailto:ernestgilda1@gmail.com">ernestgilda1@gmail.com</a>
+          <h3>Время ответа</h3>
+          <p>Отвечаем в течение 24 часов в рабочие дни.</p>
+        </div>
+      ),
+    },
   },
 };
 
 export default function SideMenu({ open, onClose }) {
   const { currency, setCurrency, language, setLanguage, CURRENCIES, LANGUAGES } = useSettings();
 
-  // Local draft state — applied only on Save
   const [draftCurrency, setDraftCurrency] = useState(currency);
   const [draftLanguage, setDraftLanguage] = useState(language);
-  const [activePage, setActivePage] = useState(null); // null | 'privacy' | 'support' | 'contact'
+  const [activePage, setActivePage] = useState(null);
 
-  const handleOpen = useCallback((key) => {
-    setActivePage(key);
-  }, []);
-
-  const handleBack = useCallback(() => {
-    setActivePage(null);
-  }, []);
+  // Sync drafts when menu opens
+  const handleOpen = useCallback((key) => setActivePage(key), []);
+  const handleBack = useCallback(() => setActivePage(null), []);
 
   const handleSave = useCallback(() => {
     setCurrency(draftCurrency);
@@ -92,14 +123,21 @@ export default function SideMenu({ open, onClose }) {
   }, [draftCurrency, draftLanguage, setCurrency, setLanguage, onClose]);
 
   const handleClose = useCallback(() => {
-    // Reset drafts to current saved values on dismiss without save
     setDraftCurrency(currency);
     setDraftLanguage(language);
     setActivePage(null);
     onClose();
   }, [currency, language, onClose]);
 
-  const page = activePage ? PAGES[activePage] : null;
+  // Use draftLanguage for live preview inside the menu
+  const lang = draftLanguage;
+  const page = activePage ? PAGES_CONTENT[activePage]?.[lang] || PAGES_CONTENT[activePage]?.en : null;
+
+  const LINKS = [
+    { key: 'privacy', label: t(lang, 'privacy') },
+    { key: 'support', label: t(lang, 'support') },
+    { key: 'contact', label: t(lang, 'contact') },
+  ];
 
   return (
     <>
@@ -123,7 +161,7 @@ export default function SideMenu({ open, onClose }) {
                 </svg>
               </button>
             </div>
-            <div className="side-page__body">{page.content}</div>
+            <div className="side-page__body">{page.body}</div>
           </div>
         )}
 
@@ -140,7 +178,7 @@ export default function SideMenu({ open, onClose }) {
         <div className="side-menu__body">
           {/* Language */}
           <div className="side-menu__section">
-            <p className="side-menu__label">Language</p>
+            <p className="side-menu__label">{t(lang, 'language')}</p>
             <div className="side-menu__options">
               {LANGUAGES.map(l => (
                 <button
@@ -158,7 +196,7 @@ export default function SideMenu({ open, onClose }) {
 
           {/* Currency */}
           <div className="side-menu__section">
-            <p className="side-menu__label">Currency</p>
+            <p className="side-menu__label">{t(lang, 'currency')}</p>
             <div className="side-menu__options">
               {CURRENCIES.map(c => (
                 <button
@@ -172,10 +210,10 @@ export default function SideMenu({ open, onClose }) {
             </div>
           </div>
 
-          {/* Save button */}
+          {/* Save */}
           <div className="side-menu__section" style={{ paddingTop: 12 }}>
             <button className="side-menu__save" onClick={handleSave}>
-              Save Changes
+              {t(lang, 'save')}
             </button>
           </div>
 
@@ -183,11 +221,7 @@ export default function SideMenu({ open, onClose }) {
 
           {/* Links */}
           <div className="side-menu__links">
-            {[
-              { key: 'privacy', label: 'Privacy Policy' },
-              { key: 'support', label: 'Support' },
-              { key: 'contact', label: 'Contact Us' },
-            ].map(({ key, label }) => (
+            {LINKS.map(({ key, label }) => (
               <button key={key} className="side-menu__link" onClick={() => handleOpen(key)}>
                 {label}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

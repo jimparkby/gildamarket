@@ -3,11 +3,21 @@ import { useEffect, useState, useCallback } from 'react';
 const tg = window?.Telegram?.WebApp;
 
 function applyTelegramSafeArea() {
-  // In non-fullscreen expanded mode, safeAreaInset reflects the device notch only.
-  // Telegram's own UI bar sits above the webview, not overlapping it.
-  const top    = tg?.safeAreaInset?.top ?? 0;
+  const contentTop   = tg?.contentSafeAreaInset?.top ?? 0;
+  const deviceTop    = tg?.safeAreaInset?.top ?? 0;
+  const isFullscreen = tg?.isFullscreen ?? false;
+
+  // contentSafeAreaInset = height of Telegram's close-button bar (fullscreen only).
+  // If it hasn't populated yet but we're already fullscreen, use the larger of
+  // deviceTop and 52px (Telegram's bar is consistently ~52 px across devices).
+  const safeTop = contentTop > 0
+    ? contentTop
+    : isFullscreen
+      ? Math.max(deviceTop, 52)
+      : deviceTop;
+
   const bottom = tg?.safeAreaInset?.bottom ?? 0;
-  document.documentElement.style.setProperty('--tg-safe-top', `${top}px`);
+  document.documentElement.style.setProperty('--tg-safe-top',    `${safeTop}px`);
   document.documentElement.style.setProperty('--tg-safe-bottom', `${bottom}px`);
 }
 
@@ -19,29 +29,45 @@ export function useTelegram() {
       tg.ready();
       tg.expand();
 
+      if (typeof tg.requestFullscreen === 'function') {
+        tg.requestFullscreen();
+      }
+
       tg.setHeaderColor('#ffffff');
       tg.setBackgroundColor('#ffffff');
       if (typeof tg.setBottomBarColor === 'function') {
         tg.setBottomBarColor('#ffffff');
       }
 
+      // Apply immediately, then retry as values settle after fullscreen transition
       applyTelegramSafeArea();
-      tg.onEvent?.('safeAreaChanged', applyTelegramSafeArea);
+      const t1 = setTimeout(applyTelegramSafeArea, 150);
+      const t2 = setTimeout(applyTelegramSafeArea, 400);
+      const t3 = setTimeout(applyTelegramSafeArea, 800);
+
+      tg.onEvent?.('safeAreaChanged',        applyTelegramSafeArea);
+      tg.onEvent?.('contentSafeAreaChanged', applyTelegramSafeArea);
+      tg.onEvent?.('fullscreenChanged',      applyTelegramSafeArea);
 
       setReady(true);
+
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        tg.offEvent?.('safeAreaChanged',        applyTelegramSafeArea);
+        tg.offEvent?.('contentSafeAreaChanged', applyTelegramSafeArea);
+        tg.offEvent?.('fullscreenChanged',      applyTelegramSafeArea);
+      };
     } else {
       // Dev mode — no Telegram
-      document.documentElement.style.setProperty('--tg-safe-top', '0px');
+      document.documentElement.style.setProperty('--tg-safe-top',    '0px');
       document.documentElement.style.setProperty('--tg-safe-bottom', '0px');
       setReady(true);
     }
-
-    return () => {
-      tg?.offEvent?.('safeAreaChanged', applyTelegramSafeArea);
-    };
   }, []);
 
-  const close = useCallback(() => tg?.close(), []);
+  const close  = useCallback(() => tg?.close(), []);
   const haptic = useCallback((type = 'light') => {
     tg?.HapticFeedback?.impactOccurred(type);
   }, []);
@@ -49,8 +75,8 @@ export function useTelegram() {
   return {
     tg,
     ready,
-    user: tg?.initDataUnsafe?.user ?? null,
-    initData: tg?.initData ?? '',
+    user:        tg?.initDataUnsafe?.user ?? null,
+    initData:    tg?.initData ?? '',
     close,
     haptic,
     colorScheme: tg?.colorScheme ?? 'light',

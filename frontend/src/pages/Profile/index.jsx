@@ -6,7 +6,8 @@ import {
   deleteLookBoard, createLookBoard,
   toggleShopLike, deleteItem, markItemSold,
 } from '../../api/client';
-import { useAuth } from '../../App';
+import { useAuth, useSettings } from '../../App';
+import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
 import './Profile.css';
@@ -14,6 +15,7 @@ import './Profile.css';
 export default function Profile() {
   const { id } = useParams();
   const { user: authUser } = useAuth();
+  const { language } = useSettings();
   const navigate = useNavigate();
 
   const [shop, setShop] = useState(null);
@@ -114,7 +116,7 @@ export default function Profile() {
   }, []);
 
   if (loading) return <main className="page"><div className="spinner" /></main>;
-  if (!shop) return <main className="page"><div className="empty-state"><p>Shop not found</p></div></main>;
+  if (!shop) return <main className="page"><div className="empty-state"><p>{t(language, 'shopNotFound')}</p></div></main>;
 
   const lookBoards = shop.lookBoards || [];
   const items = shop.items || [];
@@ -130,7 +132,7 @@ export default function Profile() {
                 {isOwner && (
                   <span className="profile__bg-hint">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    Add cover
+                    {t(language, 'addCover')}
                   </span>
                 )}
               </div>
@@ -176,7 +178,7 @@ export default function Profile() {
               className={`profile__follow-btn${shop.isShopLiked ? ' followed' : ''}`}
               onClick={handleFollow}
             >
-              {shop.isShopLiked ? 'Following' : 'Follow'}
+              {shop.isShopLiked ? t(language, 'following') : t(language, 'follow')}
             </button>
           )}
         </div>
@@ -190,7 +192,7 @@ export default function Profile() {
                 value={aboutDraft}
                 onChange={e => setAboutDraft(e.target.value)}
                 rows={3}
-                placeholder="Tell buyers about your shop..."
+                placeholder={t(language, 'addBio')}
               />
               <div className="profile__about-actions">
                 <button onClick={() => setEditingAbout(false)} className="profile__about-cancel">Cancel</button>
@@ -202,7 +204,7 @@ export default function Profile() {
               className="profile__about-text"
               onClick={() => isOwner && setEditingAbout(true)}
             >
-              {shop.about || (isOwner ? 'Add a bio…' : '')}
+              {shop.about || (isOwner ? t(language, 'addBio') : '')}
             </p>
           )}
         </div>
@@ -211,12 +213,12 @@ export default function Profile() {
         <div className="profile__stats">
           <div className="profile__stat">
             <span className="profile__stat-num">{shop.itemsCount ?? items.length}</span>
-            <span className="profile__stat-label">Items</span>
+            <span className="profile__stat-label">{t(language, 'items')}</span>
           </div>
           <div className="profile__stat-divider" />
           <div className="profile__stat">
             <span className="profile__stat-num">{shop.shopLikesCount ?? 0}</span>
-            <span className="profile__stat-label">Followers</span>
+            <span className="profile__stat-label">{t(language, 'followers')}</span>
           </div>
         </div>
       </div>
@@ -225,14 +227,14 @@ export default function Profile() {
       {(lookBoards.length > 0 || isOwner) && (
         <section className="profile__section">
           <div className="profile__section-header">
-            <h2 className="profile__section-title">Look Board</h2>
+            <h2 className="profile__section-title">{t(language, 'lookBoard')}</h2>
             {isOwner && (
               <button
                 className="profile__add-lb"
                 onClick={() => lbRef.current?.click()}
                 disabled={lbUploading}
               >
-                {lbUploading ? '…' : '+ Add'}
+                {lbUploading ? '…' : t(language, 'addLook')}
               </button>
             )}
           </div>
@@ -240,7 +242,7 @@ export default function Profile() {
 
           {lookBoards.length === 0 ? (
             <div className="profile__lb-empty">
-              <p>Create your first look board</p>
+              <p>{t(language, 'createFirstLook')}</p>
             </div>
           ) : (
             <div className="profile__lb-grid">
@@ -257,7 +259,7 @@ export default function Profile() {
                       className="profile__lb-delete"
                       onClick={() => handleDeleteLb(lb.id)}
                     >
-                      Remove
+                      {t(language, 'remove')}
                     </button>
                   )}
                 </div>
@@ -271,21 +273,21 @@ export default function Profile() {
       <section className="profile__section">
         <div className="profile__section-header">
           <h2 className="profile__section-title">
-            {isOwner ? 'My Listings' : 'Listings'}
+            {isOwner ? t(language, 'myListings') : t(language, 'listings')}
           </h2>
           {isOwner && (
             <button
               className="profile__add-item-btn"
               onClick={() => navigate('/add')}
             >
-              + New
+              {t(language, 'newListing')}
             </button>
           )}
         </div>
 
         {items.length === 0 ? (
           <div className="empty-state">
-            <p>{isOwner ? 'List your first item' : 'No items yet'}</p>
+            <p>{isOwner ? t(language, 'listFirstItem') : t(language, 'noItemsYet')}</p>
           </div>
         ) : (
           <div className="profile__items-grid">
@@ -299,10 +301,10 @@ export default function Profile() {
                 {isOwner && (
                   <div className="profile__item-actions">
                     <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
-                      {item.isSold ? 'Mark available' : 'Mark sold'}
+                      {item.isSold ? t(language, 'markAvailable') : t(language, 'markSold')}
                     </button>
                     <button onClick={() => handleDeleteItem(item.id)} className="profile__item-del">
-                      Delete
+                      {t(language, 'delete')}
                     </button>
                   </div>
                 )}

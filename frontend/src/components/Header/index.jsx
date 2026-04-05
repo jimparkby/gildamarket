@@ -1,26 +1,29 @@
 import React, { useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SideMenu from '../SideMenu';
+import { useSettings } from '../../App';
+import { t } from '../../translations';
 import './Header.css';
 
 const MAIN_TABS = ['/', '/favorites', '/add', '/profile'];
 
-const PAGE_TITLES = {
-  '/': null,
-  '/favorites': 'Сохранённое',
-  '/add': 'Новое объявление',
-  '/profile': 'Мой магазин',
-};
-
 export default function Header({ onSearch }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { language } = useSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   const isHome = location.pathname === '/';
   const isMainTab = MAIN_TABS.includes(location.pathname);
+
+  const PAGE_TITLES = {
+    '/': null,
+    '/favorites': t(language, 'favorites'),
+    '/add': t(language, 'add'),
+    '/profile': t(language, 'myShop'),
+  };
   const title = PAGE_TITLES[location.pathname] ?? null;
 
   const handleSearch = useCallback((e) => {
@@ -74,7 +77,7 @@ export default function Header({ onSearch }) {
             <input
               autoFocus
               className="header__search-input"
-              placeholder="Бренд, категория, описание…"
+              placeholder={t(language, 'searchPlaceholder')}
               value={query}
               onChange={handleSearch}
             />
