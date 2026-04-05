@@ -1,0 +1,70 @@
+.home {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.home__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--gray-200);
+  border-top: 1px solid var(--gray-200);
+}
+
+.home__grid > * {
+  background: var(--white);
+  padding: 12px;
+}
+
+.home__more {
+  padding: 24px 20px;
+  display: flex;
+  justify-content: center;
+  background: var(--white);
+  border-top: 1px solid var(--gray-100);
+}
+
+.home__more-btn {
+  padding: 12px 40px;
+  border: 1.5px solid var(--black);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--black);
+  background: transparent;
+  transition: all var(--transition);
+}
+.home__more-btn:active {
+  background: var(--black);
+  color: var(--white);
+}
+
+.home__pagination {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 20px 16px 12px;
+  background: var(--white);
+  border-top: 1px solid var(--gray-100);
+}
+
+.home__page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--gray-200);
+  font-size: 13px;
+  color: var(--black);
+  background: transparent;
+  transition: all var(--transition);
+}
+.home__page-btn.active {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+.home__page-btn:not(.active):active {
+  background: var(--gray-50);
+}
