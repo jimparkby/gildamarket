@@ -1,4 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
+const resolveUrl = require('../utils/resolveUrl');
+
 const prisma = new PrismaClient();
 
 async function getFavorites(req, res, next) {
@@ -24,9 +26,7 @@ async function getFavorites(req, res, next) {
         where: { userId },
         include: {
           shop: {
-            include: {
-              _count: { select: { items: true, shopLikedBy: true } },
-            },
+            include: { _count: { select: { items: true, shopLikedBy: true } } },
           },
         },
       }),
@@ -39,7 +39,7 @@ async function getFavorites(req, res, next) {
       price: parseFloat(i.price),
       currency: i.currency,
       condition: i.condition,
-      images: (i.images || []).map(f => `/uploads/${f}`),
+      images: (i.images || []).map(resolveUrl),
       isSold: i.isSold,
       isLiked: true,
       likesCount: i._count.likes,
@@ -48,7 +48,7 @@ async function getFavorites(req, res, next) {
         firstName: i.seller.firstName,
         lastName: i.seller.lastName,
         telegramUsername: i.seller.telegramUsername,
-        avatar: i.seller.avatar ? `/uploads/${i.seller.avatar}` : null,
+        avatar: resolveUrl(i.seller.avatar),
       },
     }));
 
@@ -57,8 +57,8 @@ async function getFavorites(req, res, next) {
       firstName: s.firstName,
       lastName: s.lastName,
       telegramUsername: s.telegramUsername,
-      avatar: s.avatar ? `/uploads/${s.avatar}` : null,
-      backgroundImage: s.backgroundImage ? `/uploads/${s.backgroundImage}` : null,
+      avatar: resolveUrl(s.avatar),
+      backgroundImage: resolveUrl(s.backgroundImage),
       about: s.about,
       itemsCount: s._count.items,
       shopLikesCount: s._count.shopLikedBy,

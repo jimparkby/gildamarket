@@ -1,4 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
+const resolveUrl = require('../utils/resolveUrl');
+
 const prisma = new PrismaClient();
 
 const INITIAL_PAGE_SIZE = 20;
@@ -16,7 +18,7 @@ function serializeItem(item, userId) {
     price: parseFloat(item.price),
     currency: item.currency,
     description: item.description,
-    images: (item.images || []).map(f => `/uploads/${f}`),
+    images: (item.images || []).map(resolveUrl),
     isSold: item.isSold,
     createdAt: item.createdAt,
     likesCount: item._count?.likes ?? item.likes?.length ?? 0,
@@ -26,7 +28,7 @@ function serializeItem(item, userId) {
       firstName: item.seller.firstName,
       lastName: item.seller.lastName,
       telegramUsername: item.seller.telegramUsername,
-      avatar: item.seller.avatar ? `/uploads/${item.seller.avatar}` : null,
+      avatar: resolveUrl(item.seller.avatar),
     } : null,
   };
 }
@@ -40,11 +42,9 @@ async function getItems(req, res, next) {
     let take = INITIAL_PAGE_SIZE;
 
     if (mode === 'more') {
-      // "View More" loads next 10 after initial 20
       skip = INITIAL_PAGE_SIZE;
       take = VIEW_MORE_SIZE;
     } else if (page && parseInt(page) > 0) {
-      // Paginated pages: 30 items each, starting after initial 30
       const p = parseInt(page) - 1;
       skip = INITIAL_PAGE_SIZE + VIEW_MORE_SIZE + (p * PAGINATION_SIZE);
       take = PAGINATION_SIZE;
@@ -68,13 +68,7 @@ async function getItems(req, res, next) {
         orderBy: { createdAt: 'desc' },
         include: {
           seller: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              telegramUsername: true,
-              avatar: true,
-            },
+            select: { id: true, firstName: true, lastName: true, telegramUsername: true, avatar: true },
           },
           likes: userId ? { where: { userId } } : false,
           _count: { select: { likes: true } },
@@ -108,7 +102,6 @@ async function getItem(req, res, next) {
     });
 
     if (!item) return res.status(404).json({ error: 'Item not found' });
-
     res.json(serializeItem(item, userId));
   } catch (err) {
     next(err);
@@ -118,7 +111,9 @@ async function getItem(req, res, next) {
 async function createItem(req, res, next) {
   try {
     const { title, brand, category, size, condition, price, currency, description } = req.body;
-    const images = (req.files || []).map(f => f.filename);
+
+    // S3: use file.location (full URL); local: use file.filename
+    const images = (req.files || []).map(f => f.location || f.filename);
 
     if (!title || !category || !condition || !price) {
       return res.status(400).json({ error: 'title, category, condition, price are required' });

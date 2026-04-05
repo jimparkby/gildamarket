@@ -1,4 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
+const resolveUrl = require('../utils/resolveUrl');
+
 const prisma = new PrismaClient();
 
 async function getMyLookBoards(req, res, next) {
@@ -10,7 +12,7 @@ async function getMyLookBoards(req, res, next) {
     res.json(lookBoards.map(lb => ({
       id: lb.id,
       title: lb.title,
-      images: (lb.images || []).map(f => `/uploads/${f}`),
+      images: (lb.images || []).map(resolveUrl),
       createdAt: lb.createdAt,
     })));
   } catch (err) {
@@ -21,7 +23,8 @@ async function getMyLookBoards(req, res, next) {
 async function createLookBoard(req, res, next) {
   try {
     const { title } = req.body;
-    const images = (req.files || []).map(f => f.filename);
+    // S3: file.location; local: file.filename
+    const images = (req.files || []).map(f => f.location || f.filename);
 
     if (!images.length) return res.status(400).json({ error: 'At least one image required' });
 
@@ -32,7 +35,7 @@ async function createLookBoard(req, res, next) {
     res.status(201).json({
       id: lb.id,
       title: lb.title,
-      images: lb.images.map(f => `/uploads/${f}`),
+      images: lb.images.map(resolveUrl),
       createdAt: lb.createdAt,
     });
   } catch (err) {

@@ -1,4 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
+const resolveUrl = require('../utils/resolveUrl');
+
 const prisma = new PrismaClient();
 
 function serializeUser(user, isOwner = false) {
@@ -8,8 +10,8 @@ function serializeUser(user, isOwner = false) {
     firstName: user.firstName,
     lastName: user.lastName,
     telegramUsername: user.telegramUsername,
-    avatar: user.avatar ? `/uploads/${user.avatar}` : null,
-    backgroundImage: user.backgroundImage ? `/uploads/${user.backgroundImage}` : null,
+    avatar: resolveUrl(user.avatar),
+    backgroundImage: resolveUrl(user.backgroundImage),
     about: user.about,
     createdAt: user.createdAt,
     itemsCount: user._count?.items ?? 0,
@@ -65,12 +67,12 @@ async function getShop(req, res, next) {
       items: user.items.map(i => ({
         id: i.id, title: i.title, brand: i.brand,
         price: parseFloat(i.price), currency: i.currency,
-        images: (i.images || []).map(f => `/uploads/${f}`),
+        images: (i.images || []).map(resolveUrl),
         condition: i.condition, isSold: i.isSold,
       })),
       lookBoards: user.lookBoards.map(lb => ({
         id: lb.id, title: lb.title,
-        images: (lb.images || []).map(f => `/uploads/${f}`),
+        images: (lb.images || []).map(resolveUrl),
         createdAt: lb.createdAt,
       })),
     });
@@ -100,11 +102,13 @@ async function updateProfile(req, res, next) {
 async function uploadAvatar(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    // S3: req.file.location; local: req.file.filename
+    const avatar = req.file.location || req.file.filename;
     const user = await prisma.user.update({
       where: { id: req.userId },
-      data: { avatar: req.file.filename },
+      data: { avatar },
     });
-    res.json({ avatar: `/uploads/${user.avatar}` });
+    res.json({ avatar: resolveUrl(user.avatar) });
   } catch (err) {
     next(err);
   }
@@ -113,11 +117,12 @@ async function uploadAvatar(req, res, next) {
 async function uploadBackground(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const backgroundImage = req.file.location || req.file.filename;
     const user = await prisma.user.update({
       where: { id: req.userId },
-      data: { backgroundImage: req.file.filename },
+      data: { backgroundImage },
     });
-    res.json({ backgroundImage: `/uploads/${user.backgroundImage}` });
+    res.json({ backgroundImage: resolveUrl(user.backgroundImage) });
   } catch (err) {
     next(err);
   }
