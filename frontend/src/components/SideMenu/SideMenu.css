@@ -34,11 +34,11 @@
 /* ── Header ── */
 .side-menu__header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 20px 8px;
   border-bottom: 1px solid var(--gray-200);
-  height: var(--header-h);
+  height: calc(var(--header-h) + var(--tg-safe-top));
   flex-shrink: 0;
 }
 

@@ -3,12 +3,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + var(--tg-safe-bottom));
   background: var(--white);
   border-top: 1px solid var(--gray-200);
   display: flex;
+  align-items: flex-start;
   z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: 4px;
 }
 
 .bottom-nav__item {

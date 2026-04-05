@@ -18,8 +18,11 @@
   --header-h: 52px;
   --nav-h: 60px;
   --radius: 0px;
-
   --transition: 180ms ease;
+
+  /* Set by useTelegram hook – height of Telegram's own top bar in fullscreen */
+  --tg-safe-top: 0px;
+  --tg-safe-bottom: 0px;
 }
 
 *, *::before, *::after {
@@ -99,8 +102,8 @@ img {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-top: var(--header-h);
-  padding-bottom: var(--nav-h);
+  padding-top: calc(var(--header-h) + var(--tg-safe-top));
+  padding-bottom: calc(var(--nav-h) + var(--tg-safe-bottom));
   -webkit-overflow-scrolling: touch;
 }
 
