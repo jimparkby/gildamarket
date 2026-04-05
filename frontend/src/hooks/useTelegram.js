@@ -3,8 +3,11 @@ import { useEffect, useState, useCallback } from 'react';
 const tg = window?.Telegram?.WebApp;
 
 function applyTelegramSafeArea() {
-  // Telegram fullscreen safe area (top = height of Telegram's own header bar)
-  const top = tg?.safeAreaInset?.top ?? 0;
+  // contentSafeAreaInset = space reserved by Telegram's own UI (close button bar)
+  // safeAreaInset = device notch/home indicator
+  const contentTop = tg?.contentSafeAreaInset?.top ?? 0;
+  const deviceTop = tg?.safeAreaInset?.top ?? 0;
+  const top = Math.max(contentTop, deviceTop);
   const bottom = tg?.safeAreaInset?.bottom ?? 0;
   document.documentElement.style.setProperty('--tg-safe-top', `${top}px`);
   document.documentElement.style.setProperty('--tg-safe-bottom', `${bottom}px`);
@@ -32,6 +35,7 @@ export function useTelegram() {
       // Apply safe area immediately and on each change
       applyTelegramSafeArea();
       tg.onEvent?.('safeAreaChanged', applyTelegramSafeArea);
+      tg.onEvent?.('contentSafeAreaChanged', applyTelegramSafeArea);
       tg.onEvent?.('fullscreenChanged', applyTelegramSafeArea);
 
       setReady(true);
@@ -44,6 +48,7 @@ export function useTelegram() {
 
     return () => {
       tg?.offEvent?.('safeAreaChanged', applyTelegramSafeArea);
+      tg?.offEvent?.('contentSafeAreaChanged', applyTelegramSafeArea);
       tg?.offEvent?.('fullscreenChanged', applyTelegramSafeArea);
     };
   }, []);
