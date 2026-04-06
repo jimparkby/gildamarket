@@ -44,11 +44,15 @@ async function getShop(req, res, next) {
         include: {
           _count: { select: { items: true, shopLikedBy: true } },
           items: {
-            where: { isSold: false },
+            where: {
+              isSold: false,
+              // Владелец видит все свои товары; чужой профиль — только одобренные
+              ...(viewerId === id ? {} : { status: 'approved' }),
+            },
             orderBy: { createdAt: 'desc' },
             select: {
               id: true, title: true, brand: true, price: true, currency: true,
-              images: true, condition: true, isSold: true,
+              images: true, condition: true, isSold: true, status: true,
             },
           },
           lookBoards: { orderBy: { createdAt: 'desc' } },
@@ -68,7 +72,7 @@ async function getShop(req, res, next) {
         id: i.id, title: i.title, brand: i.brand,
         price: parseFloat(i.price), currency: i.currency,
         images: (i.images || []).map(resolveUrl),
-        condition: i.condition, isSold: i.isSold,
+        condition: i.condition, isSold: i.isSold, status: i.status,
       })),
       lookBoards: user.lookBoards.map(lb => ({
         id: lb.id, title: lb.title,

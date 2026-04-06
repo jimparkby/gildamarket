@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const resolveUrl = require('../utils/resolveUrl');
+const { notifyAdminAboutNewItem } = require('../services/telegramBot');
 
 const prisma = new PrismaClient();
 
@@ -7,8 +8,8 @@ const INITIAL_PAGE_SIZE = 20;
 const VIEW_MORE_SIZE = 10;
 const PAGINATION_SIZE = 30;
 
-function serializeItem(item, userId) {
-  return {
+function serializeItem(item, userId, includeStatus = false) {
+  const result = {
     id: item.id,
     title: item.title,
     brand: item.brand,
@@ -31,6 +32,8 @@ function serializeItem(item, userId) {
       avatar: resolveUrl(item.seller.avatar),
     } : null,
   };
+  if (includeStatus) result.status = item.status;
+  return result;
 }
 
 async function getItems(req, res, next) {
@@ -50,15 +53,19 @@ async function getItems(req, res, next) {
       take = PAGINATION_SIZE;
     }
 
-    const where = search
-      ? {
-          OR: [
-            { title: { contains: search, mode: 'insensitive' } },
-            { brand: { contains: search, mode: 'insensitive' } },
-            { category: { contains: search, mode: 'insensitive' } },
-          ],
-        }
-      : {};
+    // Лента показывает только одобренные товары
+    const where = {
+      status: 'approved',
+      ...(search
+        ? {
+            OR: [
+              { title: { contains: search, mode: 'insensitive' } },
+              { brand: { contains: search, mode: 'insensitive' } },
+              { category: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
 
     const [items, total] = await Promise.all([
       prisma.item.findMany({
@@ -131,11 +138,17 @@ async function createItem(req, res, next) {
         description: description || null,
         images,
         sellerId: req.userId,
+        status: 'pending',
       },
       include: { seller: true, _count: { select: { likes: true } } },
     });
 
-    res.status(201).json(serializeItem(item, req.userId));
+    // Уведомить администратора (fire-and-forget)
+    notifyAdminAboutNewItem(item.id).catch(err =>
+      console.error('[AdminBot] notifyAdminAboutNewItem error:', err)
+    );
+
+    res.status(201).json(serializeItem(item, req.userId, true));
   } catch (err) {
     next(err);
   }

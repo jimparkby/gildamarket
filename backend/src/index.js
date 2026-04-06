@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { startBot } = require('./services/telegramBot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,4 +54,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Gilda API running on port ${PORT}`);
+  startBot();
 });

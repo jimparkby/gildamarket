@@ -39,6 +39,7 @@ model Item {
   description String?
   images      String[]  // array of file paths
   isSold      Boolean   @default(false) @map("is_sold")
+  status      String    @default("pending") // pending | approved | rejected
   createdAt   DateTime  @default(now()) @map("created_at")
 
   sellerId    Int       @map("seller_id")
@@ -46,6 +47,13 @@ model Item {
   likes       ItemLike[]
 
   @@map("items")
+}
+
+model BannedTelegramUser {
+  telegramUserId String   @id @map("telegram_user_id")
+  bannedAt       DateTime @default(now()) @map("banned_at")
+
+  @@map("banned_telegram_users")
 }
 
 model ItemLike {

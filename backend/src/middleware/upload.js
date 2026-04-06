@@ -25,18 +25,11 @@ const fileFilter = (req, file, cb) => {
 
 const maxSize = () => parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10) * 1024 * 1024;
 
-// ─── S3 storage ──────────────────────────────────────────────────────────────
-const s3Storage = multerS3({
-  s3,
-  bucket: process.env.S3_BUCKET,
-  acl: 'public-read',
-  contentType: multerS3.AUTO_CONTENT_TYPE,
-  key: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const unique = crypto.randomBytes(14).toString('hex');
-    cb(null, `gilda/${Date.now()}-${unique}${ext}`);
-  },
-});
+const useS3 = () =>
+  process.env.S3_ENDPOINT &&
+  process.env.S3_ACCESS_KEY &&
+  process.env.S3_SECRET_KEY &&
+  process.env.S3_BUCKET;
 
 // ─── Local fallback (dev without S3 credentials) ─────────────────────────────
 const localDir = path.join(__dirname, '..', '..', process.env.UPLOAD_DIR || 'uploads');
@@ -51,18 +44,23 @@ const localStorage = multer.diskStorage({
   },
 });
 
-const useS3 = () =>
-  process.env.S3_ENDPOINT &&
-  process.env.S3_ACCESS_KEY &&
-  process.env.S3_SECRET_KEY &&
-  process.env.S3_BUCKET;
-
 function createUpload() {
-  return multer({
-    storage: useS3() ? s3Storage : localStorage,
-    fileFilter,
-    limits: { fileSize: maxSize() },
-  });
+  // S3 storage создаётся лениво — только если все переменные заданы
+  if (useS3()) {
+    const s3Storage = multerS3({
+      s3,
+      bucket: process.env.S3_BUCKET,
+      acl: 'public-read',
+      contentType: multerS3.AUTO_CONTENT_TYPE,
+      key: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const unique = crypto.randomBytes(14).toString('hex');
+        cb(null, `gilda/${Date.now()}-${unique}${ext}`);
+      },
+    });
+    return multer({ storage: s3Storage, fileFilter, limits: { fileSize: maxSize() } });
+  }
+  return multer({ storage: localStorage, fileFilter, limits: { fileSize: maxSize() } });
 }
 
 // Expose a lazy proxy so env is read at request time (after dotenv loads)
