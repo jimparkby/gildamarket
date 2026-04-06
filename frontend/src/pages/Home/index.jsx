@@ -62,6 +62,21 @@ export default function Home() {
     }
   }, [selected?.id]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchItems().then(data => {
+      if (cancelled) return;
+      setItems(data.items || []);
+      setTotal(data.total || 0);
+      setApiError(false);
+      setLoading(false);
+    }).catch(() => {
+      if (!cancelled) { setApiError(true); setLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, [fetchItems]);
+
   const shownAll = mode === 'initial' && items.length >= INITIAL && items.length < total;
   const shownMore = mode === 'more';
   const showPagination = shownMore || (mode === 'paginated');
