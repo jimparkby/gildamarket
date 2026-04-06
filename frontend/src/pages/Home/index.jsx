@@ -54,11 +54,15 @@ export default function Home() {
   }, [fetchItems]);
 
   const handleLikeChange = useCallback((itemId, liked) => {
-    setItems(prev => prev.map(i =>
-      i.id === itemId ? { ...i, isLiked: liked } : i
-    ));
-    if (selected?.id === itemId) {
-      setSelected(prev => ({ ...prev, isLiked: liked }));
+    if (liked) {
+      // Лайкнутый товар уходит в сохранённое — убираем из ленты
+      setItems(prev => prev.filter(i => i.id !== itemId));
+      setTotal(prev => Math.max(0, prev - 1));
+      if (selected?.id === itemId) setSelected(null);
+    } else {
+      setItems(prev => prev.map(i =>
+        i.id === itemId ? { ...i, isLiked: false } : i
+      ));
     }
   }, [selected?.id]);
 

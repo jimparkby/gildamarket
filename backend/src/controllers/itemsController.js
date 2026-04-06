@@ -61,6 +61,8 @@ async function getItems(req, res, next) {
 
     const where = {
       ...statusFilter,
+      // Авторизованный пользователь не видит в ленте уже лайкнутые товары
+      ...(userId ? { NOT: { likes: { some: { userId } } } } : {}),
       ...(search
         ? {
             OR: [
