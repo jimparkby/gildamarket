@@ -48,51 +48,56 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     <div className="item-detail-overlay" onClick={onClose}>
       <div className="item-detail" onClick={e => e.stopPropagation()}>
 
-        {/* Header bar */}
-        <div className="item-detail__bar">
-          <button className="item-detail__close" onClick={onClose}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-          <span className="item-detail__bar-title">Item</span>
-          <button
-            className={`item-detail__heart${isLiked ? ' liked' : ''}`}
-            onClick={handleLike}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </button>
-        </div>
-
-        {/* Images */}
-        {images.length > 0 && (
-          <div className="item-detail__images">
-            <div className="item-detail__main-img-wrap">
-              <img
-                className="item-detail__main-img"
-                src={images[activeImg]}
-                alt={item.title}
-              />
-              {item.isSold && <div className="item-detail__sold">SOLD</div>}
-            </div>
-            {images.length > 1 && (
-              <div className="item-detail__thumbs">
-                {images.map((src, i) => (
-                  <button
-                    key={i}
-                    className={`item-detail__thumb${activeImg === i ? ' active' : ''}`}
-                    onClick={() => setActiveImg(i)}
-                  >
-                    <img src={src} alt="" />
-                  </button>
-                ))}
-              </div>
-            )}
+        {/* Фото — занимает верхнюю часть, кнопки поверх него */}
+        <div className="item-detail__hero">
+          {/* Кнопки-оверлей: X слева, ♡ справа */}
+          <div className="item-detail__overlay-bar">
+            <button className="item-detail__overlay-btn" onClick={onClose} aria-label="Закрыть">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <button
+              className={`item-detail__overlay-btn${isLiked ? ' liked' : ''}`}
+              onClick={handleLike}
+              aria-label="Лайк"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+              </svg>
+            </button>
           </div>
-        )}
+
+          {images.length > 0 ? (
+            <>
+              <div className="item-detail__main-img-wrap">
+                <img
+                  className="item-detail__main-img"
+                  src={images[activeImg]}
+                  alt={item.title}
+                />
+                {item.isSold && <div className="item-detail__sold">SOLD</div>}
+              </div>
+              {images.length > 1 && (
+                <div className="item-detail__thumbs">
+                  {images.map((src, i) => (
+                    <button
+                      key={i}
+                      className={`item-detail__thumb${activeImg === i ? ' active' : ''}`}
+                      onClick={() => setActiveImg(i)}
+                    >
+                      <img src={src} alt="" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            /* Нет фото — показываем пустой блок чтобы кнопки были видны */
+            <div className="item-detail__no-img" />
+          )}
+        </div>
 
         {/* Info */}
         <div className="item-detail__info">
@@ -153,6 +158,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
             </button>
           )}
         </div>
+
       </div>
     </div>
   );

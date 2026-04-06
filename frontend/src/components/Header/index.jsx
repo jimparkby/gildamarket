@@ -4,7 +4,7 @@ import { useSettings } from '../../App';
 import { t } from '../../translations';
 import './Header.css';
 
-const MAIN_TABS = ['/', '/favorites', '/add', '/profile'];
+const MAIN_TABS = ['/', '/search', '/favorites', '/add', '/profile'];
 
 export default function Header() {
   const location = useLocation();
@@ -15,6 +15,7 @@ export default function Header() {
 
   const PAGE_TITLES = {
     '/': null,
+    '/search': language === 'ru' ? 'ПОИСК' : 'SEARCH',
     '/favorites': t(language, 'favorites'),
     '/add': t(language, 'add'),
     '/profile': t(language, 'myShop'),

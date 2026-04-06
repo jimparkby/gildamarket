@@ -7,7 +7,7 @@
 
 @keyframes overlay-in {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 .item-detail {
@@ -22,47 +22,52 @@
 
 @keyframes sheet-in {
   from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  to   { transform: translateY(0); }
 }
 
-/* Bar */
-.item-detail__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--gray-100);
-  position: sticky;
-  top: 0;
-  background: var(--white);
+/* ── Hero (фото + оверлей-кнопки) ── */
+.item-detail__hero {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Кнопки поверх фото */
+.item-detail__overlay-bar {
+  position: absolute;
+  top: calc(var(--tg-safe-top, 0px) + 10px);
+  left: 0;
+  right: 0;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 14px;
+  pointer-events: none;
 }
 
-.item-detail__bar-title {
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-.item-detail__close,
-.item-detail__heart {
-  width: 36px;
-  height: 36px;
+.item-detail__overlay-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--black);
+  pointer-events: all;
+  transition: background var(--transition);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
 }
-.item-detail__heart.liked { color: #e53e3e; }
+.item-detail__overlay-btn:active { background: rgba(255,255,255,1); }
+.item-detail__overlay-btn.liked  { color: #e53e3e; }
 
-/* Images */
-.item-detail__images { background: var(--gray-50); }
-
+/* Фото */
 .item-detail__main-img-wrap {
   position: relative;
   aspect-ratio: 4 / 5;
   overflow: hidden;
+  background: var(--gray-100);
 }
 
 .item-detail__main-img {
@@ -81,6 +86,11 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   padding: 4px 10px;
+}
+
+.item-detail__no-img {
+  height: 120px;
+  background: var(--gray-100);
 }
 
 .item-detail__thumbs {
@@ -217,8 +227,9 @@
 .item-detail__actions {
   display: flex;
   gap: 10px;
-  padding: 16px 20px 24px;
+  padding: 16px 20px 32px;
   border-top: 1px solid var(--gray-100);
+  margin-top: auto;
 }
 
 .item-detail__btn-primary,

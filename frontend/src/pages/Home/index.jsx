@@ -19,21 +19,8 @@ export default function Home() {
   const [apiError, setApiError] = useState(false);
   const [mode, setMode] = useState('initial');
   const [page, setPage] = useState(null);
-  const [search, setSearch] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const searchRef = useRef('');
-  const inputRef = useRef(null);
-
-  // Слушаем событие от BottomNav
-  useEffect(() => {
-    const handler = () => {
-      setSearchOpen(true);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    };
-    window.addEventListener('gilda:open-search', handler);
-    return () => window.removeEventListener('gilda:open-search', handler);
-  }, []);
 
   const fetchItems = useCallback(async (opts = {}) => {
     try {
@@ -47,39 +34,6 @@ export default function Home() {
       return { items: [], total: 0 };
     }
   }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    setApiError(false);
-    fetchItems().then(data => {
-      setItems(data.items);
-      setTotal(data.total);
-      setMode('initial');
-      setPage(null);
-      setLoading(false);
-    }).catch(() => {
-      setApiError(true);
-      setLoading(false);
-    });
-  }, [fetchItems]);
-
-  const handleSearch = useCallback((q) => {
-    searchRef.current = q;
-    setSearch(q);
-    setLoading(true);
-    fetchItems().then(data => {
-      setItems(data.items);
-      setTotal(data.total);
-      setMode('initial');
-      setPage(null);
-      setLoading(false);
-    });
-  }, [fetchItems]);
-
-  const closeSearch = useCallback(() => {
-    setSearchOpen(false);
-    handleSearch('');
-  }, [handleSearch]);
 
   const handleViewMore = useCallback(async () => {
     setLoadingMore(true);
@@ -115,31 +69,7 @@ export default function Home() {
 
   return (
     <>
-      {/* Search bar — появляется под хедером при открытии поиска */}
-      {searchOpen && (
-        <div className="home__search-bar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="home__search-icon">
-            <circle cx="11" cy="11" r="7"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            ref={inputRef}
-            className="home__search-input"
-            placeholder={t(language, 'searchPlaceholder')}
-            value={search}
-            onChange={e => handleSearch(e.target.value)}
-            autoFocus
-          />
-          <button className="home__search-close" onClick={closeSearch} aria-label="Закрыть">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-      )}
-
-      <main className={`page home${searchOpen ? ' home--searching' : ''}`}>
+      <main className="page home">
         {loading ? (
           <div className="spinner" />
         ) : apiError ? (

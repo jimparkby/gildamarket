@@ -1,9 +1,9 @@
 import React from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useTelegram } from '../../hooks/useTelegram';
 import './BottomNav.css';
 
-const NAV_TABS = [
+const tabs = [
   {
     to: '/',
     label: 'Home',
@@ -14,8 +14,16 @@ const NAV_TABS = [
       </svg>
     ),
   },
-  // Search — специальная кнопка, не NavLink
-  null,
+  {
+    to: '/search',
+    label: 'Search',
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="7"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    ),
+  },
   {
     to: '/favorites',
     label: 'Saved',
@@ -50,60 +58,25 @@ const NAV_TABS = [
 
 export default function BottomNav() {
   const { haptic } = useTelegram();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleSearch = () => {
-    haptic('light');
-    if (location.pathname !== '/') {
-      navigate('/');
-      // Даём Home смонтироваться перед открытием поиска
-      setTimeout(() => window.dispatchEvent(new CustomEvent('gilda:open-search')), 80);
-    } else {
-      window.dispatchEvent(new CustomEvent('gilda:open-search'));
-    }
-  };
 
   return (
     <nav className="bottom-nav">
-      {NAV_TABS.map((tab, i) => {
-        // Search button
-        if (tab === null) {
-          return (
-            <button
-              key="search"
-              className="bottom-nav__item bottom-nav__search"
-              onClick={handleSearch}
-              aria-label="Поиск"
-            >
-              <span className="bottom-nav__icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="7"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-              </span>
-              <span className="bottom-nav__label">Search</span>
-            </button>
-          );
-        }
-
-        return (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            end={tab.to === '/'}
-            className={({ isActive }) => `bottom-nav__item${isActive ? ' active' : ''}`}
-            onClick={() => haptic('light')}
-          >
-            {({ isActive }) => (
-              <>
-                <span className="bottom-nav__icon">{tab.icon(isActive)}</span>
-                <span className="bottom-nav__label">{tab.label}</span>
-              </>
-            )}
-          </NavLink>
-        );
-      })}
+      {tabs.map(tab => (
+        <NavLink
+          key={tab.to}
+          to={tab.to}
+          end={tab.to === '/'}
+          className={({ isActive }) => `bottom-nav__item${isActive ? ' active' : ''}`}
+          onClick={() => haptic('light')}
+        >
+          {({ isActive }) => (
+            <>
+              <span className="bottom-nav__icon">{tab.icon(isActive)}</span>
+              <span className="bottom-nav__label">{tab.label}</span>
+            </>
+          )}
+        </NavLink>
+      ))}
     </nav>
   );
 }
