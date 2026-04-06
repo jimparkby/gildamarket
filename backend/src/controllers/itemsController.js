@@ -53,9 +53,14 @@ async function getItems(req, res, next) {
       take = PAGINATION_SIZE;
     }
 
-    // Лента показывает только одобренные товары
+    // Лента показывает только одобренные товары (после prisma db push на проде)
+    // Если колонка status ещё не добавлена — фильтр игнорируется через OR-трюк
+    const statusFilter = process.env.MODERATION_ENABLED === 'true'
+      ? { status: 'approved' }
+      : {};
+
     const where = {
-      status: 'approved',
+      ...statusFilter,
       ...(search
         ? {
             OR: [

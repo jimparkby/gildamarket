@@ -8,13 +8,19 @@
  *   🚫 Забанить  — удаляет пользователя и все его данные
  */
 
-const TelegramBot = require('node-telegram-bot-api');
+let TelegramBot;
+try {
+  TelegramBot = require('node-telegram-bot-api');
+} catch {
+  console.warn('[AdminBot] node-telegram-bot-api не установлен — бот отключён. Запустите npm install.');
+}
+
 const { PrismaClient } = require('@prisma/client');
 const resolveUrl = require('../utils/resolveUrl');
 
 const prisma = new PrismaClient();
 
-/** @type {TelegramBot|null} */
+/** @type {import('node-telegram-bot-api')|null} */
 let bot = null;
 
 // ── In-memory хранилище базовых подписей для review-сообщений ─────────────────
@@ -349,6 +355,10 @@ function registerHandlers() {
  * Запустить бота (вызывать один раз при старте сервера)
  */
 function startBot() {
+  if (!TelegramBot) {
+    console.warn('[AdminBot] Пропуск запуска — node-telegram-bot-api не установлен');
+    return;
+  }
   if (!process.env.BOT_TOKEN) {
     console.warn('[AdminBot] BOT_TOKEN не задан — бот не запущен');
     return;
