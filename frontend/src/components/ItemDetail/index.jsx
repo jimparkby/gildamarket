@@ -48,23 +48,13 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     <div className="item-detail-overlay" onClick={onClose}>
       <div className="item-detail" onClick={e => e.stopPropagation()}>
 
-        {/* Фото — занимает верхнюю часть, кнопки поверх него */}
+        {/* Фото — занимает верхнюю часть, кнопка X поверх него */}
         <div className="item-detail__hero">
-          {/* Кнопки-оверлей: X слева, ♡ справа */}
           <div className="item-detail__overlay-bar">
             <button className="item-detail__overlay-btn" onClick={onClose} aria-label="Закрыть">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-            <button
-              className={`item-detail__overlay-btn${isLiked ? ' liked' : ''}`}
-              onClick={handleLike}
-              aria-label="Лайк"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
               </svg>
             </button>
           </div>
@@ -101,7 +91,20 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
 
         {/* Info */}
         <div className="item-detail__info">
-          {item.brand && <p className="item-detail__brand">{item.brand}</p>}
+          <div className="item-detail__brand-row">
+            {item.brand
+              ? <p className="item-detail__brand">{item.brand}</p>
+              : <span />}
+            <button
+              className={`item-detail__like-btn${isLiked ? ' liked' : ''}`}
+              onClick={handleLike}
+              aria-label="Лайк"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+              </svg>
+            </button>
+          </div>
           <h2 className="item-detail__title">{item.title}</h2>
 
           <div className="item-detail__price-row">

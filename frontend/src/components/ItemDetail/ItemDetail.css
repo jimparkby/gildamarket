@@ -31,16 +31,12 @@
   flex-shrink: 0;
 }
 
-/* Кнопки поверх фото */
+/* Кнопка X поверх фото */
 .item-detail__overlay-bar {
   position: absolute;
-  top: calc(var(--tg-safe-top, 0px) + 10px);
-  left: 0;
-  right: 0;
+  top: calc(var(--tg-safe-top, 52px) + 14px);
+  left: 14px;
   z-index: 10;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 14px;
   pointer-events: none;
 }
 
@@ -60,7 +56,25 @@
   box-shadow: 0 1px 6px rgba(0,0,0,0.12);
 }
 .item-detail__overlay-btn:active { background: rgba(255,255,255,1); }
-.item-detail__overlay-btn.liked  { color: #e53e3e; }
+
+/* Бренд + лайк под фото */
+.item-detail__brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 20px;
+}
+
+.item-detail__like-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-400);
+  padding: 4px;
+  transition: color var(--transition), transform 120ms;
+}
+.item-detail__like-btn:active { transform: scale(0.88); }
+.item-detail__like-btn.liked   { color: #e53e3e; }
 
 /* Фото */
 .item-detail__main-img-wrap {
