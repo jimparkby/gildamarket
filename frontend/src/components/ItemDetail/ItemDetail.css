@@ -34,7 +34,7 @@
 /* Кнопка X поверх фото */
 .item-detail__overlay-bar {
   position: absolute;
-  top: calc(var(--tg-safe-top, 52px) + 14px);
+  top: calc(var(--tg-safe-top, 0px) + 70px);
   left: 14px;
   z-index: 10;
   pointer-events: none;

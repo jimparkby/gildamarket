@@ -184,18 +184,19 @@ export default function Profile() {
                 {shop.isShopLiked ? t(language, 'following') : t(language, 'follow')}
               </button>
             )}
-            {/* Кнопка настроек — три точки */}
-            <button
-              className="profile__menu-btn"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Настройки"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="5" cy="12" r="1.5"/>
-                <circle cx="12" cy="12" r="1.5"/>
-                <circle cx="19" cy="12" r="1.5"/>
-              </svg>
-            </button>
+            {isOwner && (
+              <button
+                className="profile__menu-btn"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Настройки"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="5" cy="12" r="1.5"/>
+                  <circle cx="12" cy="12" r="1.5"/>
+                  <circle cx="19" cy="12" r="1.5"/>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
