@@ -12,11 +12,17 @@ async function login(req, res, next) {
     const tgUser = validateTelegramInitData(initData);
     if (!tgUser) return res.status(401).json({ error: 'Invalid Telegram data' });
 
-    // Проверка бана
-    const banned = await prisma.bannedTelegramUser.findUnique({
-      where: { telegramUserId: String(tgUser.id) },
-    });
-    if (banned) return res.status(403).json({ error: 'Account banned' });
+    // Проверка бана (таблица может ещё не существовать до prisma db push)
+    if (prisma.bannedTelegramUser) {
+      try {
+        const banned = await prisma.bannedTelegramUser.findUnique({
+          where: { telegramUserId: String(tgUser.id) },
+        });
+        if (banned) return res.status(403).json({ error: 'Account banned' });
+      } catch {
+        // Таблица ещё не создана — игнорируем
+      }
+    }
 
     // Upsert user
     const user = await prisma.user.upsert({

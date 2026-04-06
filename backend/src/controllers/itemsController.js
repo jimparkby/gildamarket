@@ -143,7 +143,7 @@ async function createItem(req, res, next) {
         description: description || null,
         images,
         sellerId: req.userId,
-        status: 'pending',
+        // status добавляется автоматически через @default("pending") после prisma db push
       },
       include: { seller: true, _count: { select: { likes: true } } },
     });
