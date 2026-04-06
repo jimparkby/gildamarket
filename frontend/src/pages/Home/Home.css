@@ -3,6 +3,62 @@
   padding-right: 0;
 }
 
+/* Доп. отступ сверху когда открыт search bar */
+.home--searching {
+  padding-top: calc(var(--header-h) + var(--tg-safe-top) + 48px);
+}
+
+/* Search bar — фиксированная полоса под хедером */
+.home__search-bar {
+  position: fixed;
+  top: calc(var(--header-h) + var(--tg-safe-top));
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 48px;
+  animation: search-bar-in 160ms ease;
+}
+
+@keyframes search-bar-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.home__search-icon {
+  color: var(--gray-500);
+  flex-shrink: 0;
+}
+
+.home__search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--black);
+  padding: 4px 0;
+  border-bottom: 1.5px solid var(--black);
+}
+
+.home__search-input::placeholder {
+  color: var(--gray-300);
+}
+
+.home__search-close {
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
 .home__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

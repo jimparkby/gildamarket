@@ -92,6 +92,25 @@
   gap: 12px;
 }
 
+.profile__name-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.profile__menu-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-500);
+  transition: color var(--transition);
+}
+.profile__menu-btn:active { color: var(--black); }
+
 .profile__name {
   font-family: var(--font-serif);
   font-size: 22px;

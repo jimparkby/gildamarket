@@ -4,6 +4,7 @@ import { useTelegram } from './hooks/useTelegram';
 import { authTelegram } from './api/client';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
+// Header рендерится глобально в App — без onSearch (поиск теперь в BottomNav)
 import Home from './pages/Home';
 import Favorites from './pages/Favorites';
 import AddItem from './pages/AddItem';

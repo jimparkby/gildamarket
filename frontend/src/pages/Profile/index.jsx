@@ -10,6 +10,7 @@ import { useAuth, useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
+import SideMenu from '../../components/SideMenu';
 import './Profile.css';
 
 export default function Profile() {
@@ -24,6 +25,7 @@ export default function Profile() {
   const [aboutDraft, setAboutDraft] = useState('');
   const [selected, setSelected] = useState(null);
   const [lbUploading, setLbUploading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const avatarRef = useRef();
   const bgRef = useRef();
@@ -173,14 +175,28 @@ export default function Profile() {
               <p className="profile__tg">@{shop.telegramUsername}</p>
             )}
           </div>
-          {!isOwner && (
+          <div className="profile__name-actions">
+            {!isOwner && (
+              <button
+                className={`profile__follow-btn${shop.isShopLiked ? ' followed' : ''}`}
+                onClick={handleFollow}
+              >
+                {shop.isShopLiked ? t(language, 'following') : t(language, 'follow')}
+              </button>
+            )}
+            {/* Кнопка настроек — три точки */}
             <button
-              className={`profile__follow-btn${shop.isShopLiked ? ' followed' : ''}`}
-              onClick={handleFollow}
+              className="profile__menu-btn"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Настройки"
             >
-              {shop.isShopLiked ? t(language, 'following') : t(language, 'follow')}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="1.5"/>
+                <circle cx="12" cy="12" r="1.5"/>
+                <circle cx="19" cy="12" r="1.5"/>
+              </svg>
             </button>
-          )}
+          </div>
         </div>
 
         {/* About */}
@@ -321,6 +337,8 @@ export default function Profile() {
           onLikeChange={() => {}}
         />
       )}
+
+      <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </main>
   );
 }

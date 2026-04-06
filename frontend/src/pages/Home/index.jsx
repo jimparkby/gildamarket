@@ -4,7 +4,6 @@ import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
-import Header from '../../components/Header';
 import './Home.css';
 
 const INITIAL = 20;
@@ -18,11 +17,23 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [apiError, setApiError] = useState(false);
-  const [mode, setMode] = useState('initial'); // initial | more | paginated
+  const [mode, setMode] = useState('initial');
   const [page, setPage] = useState(null);
   const [search, setSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const searchRef = useRef('');
+  const inputRef = useRef(null);
+
+  // Слушаем событие от BottomNav
+  useEffect(() => {
+    const handler = () => {
+      setSearchOpen(true);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    };
+    window.addEventListener('gilda:open-search', handler);
+    return () => window.removeEventListener('gilda:open-search', handler);
+  }, []);
 
   const fetchItems = useCallback(async (opts = {}) => {
     try {
@@ -30,7 +41,6 @@ export default function Home() {
       if (searchRef.current) params.search = searchRef.current;
       if (opts.mode === 'more') params.mode = 'more';
       if (opts.page) params.page = opts.page;
-
       const data = await getItems(params);
       return data;
     } catch {
@@ -38,7 +48,6 @@ export default function Home() {
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     setLoading(true);
     setApiError(false);
@@ -54,7 +63,6 @@ export default function Home() {
     });
   }, [fetchItems]);
 
-  // Search
   const handleSearch = useCallback((q) => {
     searchRef.current = q;
     setSearch(q);
@@ -67,6 +75,11 @@ export default function Home() {
       setLoading(false);
     });
   }, [fetchItems]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    handleSearch('');
+  }, [handleSearch]);
 
   const handleViewMore = useCallback(async () => {
     setLoadingMore(true);
@@ -95,7 +108,6 @@ export default function Home() {
     }
   }, [selected?.id]);
 
-  // Pagination info
   const shownAll = mode === 'initial' && items.length >= INITIAL && items.length < total;
   const shownMore = mode === 'more';
   const showPagination = shownMore || (mode === 'paginated');
@@ -103,10 +115,31 @@ export default function Home() {
 
   return (
     <>
-      {/* Header with search */}
-      <Header onSearch={handleSearch} />
+      {/* Search bar — появляется под хедером при открытии поиска */}
+      {searchOpen && (
+        <div className="home__search-bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="home__search-icon">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            ref={inputRef}
+            className="home__search-input"
+            placeholder={t(language, 'searchPlaceholder')}
+            value={search}
+            onChange={e => handleSearch(e.target.value)}
+            autoFocus
+          />
+          <button className="home__search-close" onClick={closeSearch} aria-label="Закрыть">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      )}
 
-      <main className="page home">
+      <main className={`page home${searchOpen ? ' home--searching' : ''}`}>
         {loading ? (
           <div className="spinner" />
         ) : apiError ? (
@@ -135,7 +168,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* View More button */}
             {shownAll && !loadingMore && (
               <div className="home__more">
                 <button className="home__more-btn" onClick={handleViewMore}>
@@ -146,7 +178,6 @@ export default function Home() {
 
             {loadingMore && <div className="spinner" />}
 
-            {/* Pagination */}
             {showPagination && totalPages > 0 && (
               <div className="home__pagination">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
