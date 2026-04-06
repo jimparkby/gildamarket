@@ -58,6 +58,8 @@ export default function AddItem() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [agreed, setAgreed] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   const setField = useCallback((field, val) => {
     setForm(prev => {
@@ -283,13 +285,67 @@ export default function AddItem() {
         </div>
 
         {error && <div className="wizard__error">{error}</div>}
+
+        {/* Чекбокс согласия с правилами */}
+        <label className="wizard__agree">
+          <span
+            className={`wizard__checkbox${agreed ? ' checked' : ''}`}
+            onClick={() => setAgreed(v => !v)}
+            role="checkbox"
+            aria-checked={agreed}
+          >
+            {agreed && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            )}
+          </span>
+          <span className="wizard__agree-text">
+            I agree to the{' '}
+            <span className="wizard__agree-link" onClick={(e) => { e.preventDefault(); setRulesOpen(true); }}>
+              listing rules
+            </span>
+          </span>
+        </label>
       </div>
 
       <div className="wizard__footer">
-        <button className="wizard__next" onClick={handleSubmit} disabled={submitting}>
+        <button className="wizard__next" onClick={handleSubmit} disabled={submitting || !agreed}>
           {submitting ? 'Publishing…' : 'Publish Listing'}
         </button>
       </div>
+
+      {/* Модальное окно с правилами */}
+      {rulesOpen && (
+        <div className="rules-overlay" onClick={() => setRulesOpen(false)}>
+          <div className="rules-modal" onClick={e => e.stopPropagation()}>
+            <div className="rules-modal__header">
+              <h3 className="rules-modal__title">Listing Rules</h3>
+              <button className="rules-modal__close" onClick={() => setRulesOpen(false)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div className="rules-modal__body">
+              <p className="rules-modal__rule"><strong>1. Authenticity</strong><br/>Only list genuine items. Counterfeits, replicas, or items presented as something they are not are strictly prohibited.</p>
+              <p className="rules-modal__rule"><strong>2. Accurate description</strong><br/>Photos and description must honestly reflect the item's condition. Hide no visible damage, stains, or defects.</p>
+              <p className="rules-modal__rule"><strong>3. Availability</strong><br/>Only list items you actually own and are ready to sell. Do not list items that have already been sold elsewhere.</p>
+              <p className="rules-modal__rule"><strong>4. Appropriate content</strong><br/>Prohibited items include: weapons, drugs, adult content, stolen goods, or anything illegal under applicable law.</p>
+              <p className="rules-modal__rule"><strong>5. Fair pricing</strong><br/>Set a real price. Listings with placeholder prices (0, 1, 9999) will be removed.</p>
+              <p className="rules-modal__rule"><strong>6. One listing per item</strong><br/>Do not create duplicate listings for the same item.</p>
+            </div>
+            <div className="rules-modal__footer">
+              <button
+                className="rules-modal__accept"
+                onClick={() => { setAgreed(true); setRulesOpen(false); }}
+              >
+                I understand and agree
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
