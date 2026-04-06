@@ -25,6 +25,7 @@ export const getItem = (id) =>
 export const createItem = (formData) =>
   api.post('/items', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000,
   }).then(r => r.data);
 
 export const deleteItem = (id) =>
