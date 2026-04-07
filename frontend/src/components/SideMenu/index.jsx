@@ -106,31 +106,25 @@ const PAGES_CONTENT = {
 };
 
 export default function SideMenu({ open, onClose }) {
-  const { currency, setCurrency, language, setLanguage, CURRENCIES, LANGUAGES } = useSettings();
+  const { language, theme, setTheme } = useSettings();
 
-  const [draftCurrency, setDraftCurrency] = useState(currency);
-  const [draftLanguage, setDraftLanguage] = useState(language);
   const [activePage, setActivePage] = useState(null);
 
   // Sync drafts when menu opens
   const handleOpen = useCallback((key) => setActivePage(key), []);
   const handleBack = useCallback(() => setActivePage(null), []);
 
-  const handleSave = useCallback(() => {
-    setCurrency(draftCurrency);
-    setLanguage(draftLanguage);
-    onClose();
-  }, [draftCurrency, draftLanguage, setCurrency, setLanguage, onClose]);
-
   const handleClose = useCallback(() => {
-    setDraftCurrency(currency);
-    setDraftLanguage(language);
     setActivePage(null);
     onClose();
-  }, [currency, language, onClose]);
+  }, [onClose]);
 
-  // Use draftLanguage for live preview inside the menu
-  const lang = draftLanguage;
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  }, [theme, setTheme]);
+
+  // Use language for menu
+  const lang = language;
   const page = activePage ? PAGES_CONTENT[activePage]?.[lang] || PAGES_CONTENT[activePage]?.en : null;
 
   const LINKS = [
@@ -176,45 +170,24 @@ export default function SideMenu({ open, onClose }) {
         </div>
 
         <div className="side-menu__body">
-          {/* Language */}
+
+          {/* Theme Switcher */}
           <div className="side-menu__section">
-            <p className="side-menu__label">{t(lang, 'language')}</p>
+            <p className="side-menu__label">Тема</p>
             <div className="side-menu__options">
-              {LANGUAGES.map(l => (
-                <button
-                  key={l.code}
-                  className={`side-menu__option${draftLanguage === l.code ? ' selected' : ''}`}
-                  onClick={() => setDraftLanguage(l.code)}
-                >
-                  {l.label}
-                </button>
-              ))}
+              <button
+                className={`side-menu__option${theme === 'light' ? ' selected' : ''}`}
+                onClick={() => setTheme('light')}
+              >
+                Светлая
+              </button>
+              <button
+                className={`side-menu__option${theme === 'dark' ? ' selected' : ''}`}
+                onClick={() => setTheme('dark')}
+              >
+                Темная
+              </button>
             </div>
-          </div>
-
-          <div className="side-menu__divider" />
-
-          {/* Currency */}
-          <div className="side-menu__section">
-            <p className="side-menu__label">{t(lang, 'currency')}</p>
-            <div className="side-menu__options">
-              {CURRENCIES.map(c => (
-                <button
-                  key={c}
-                  className={`side-menu__option${draftCurrency === c ? ' selected' : ''}`}
-                  onClick={() => setDraftCurrency(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Save */}
-          <div className="side-menu__section" style={{ paddingTop: 12 }}>
-            <button className="side-menu__save" onClick={handleSave}>
-              {t(lang, 'save')}
-            </button>
           </div>
 
           <div className="side-menu__divider" />

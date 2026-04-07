@@ -35,7 +35,7 @@ model Item {
   size        String?
   condition   String    // new, like_new, good, fair
   price       Decimal   @db.Decimal(10, 2)
-  currency    String    @default("USD")
+  currency    String    @default("RUB")
   description String?
   images      String[]  // array of file paths
   isSold      Boolean   @default(false) @map("is_sold")

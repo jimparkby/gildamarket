@@ -18,9 +18,9 @@ export const useAuth = () => useContext(AuthContext);
 export const SettingsContext = createContext(null);
 export const useSettings = () => useContext(SettingsContext);
 
-const CURRENCIES = ['USD', 'EUR', 'RUB', 'GBP'];
+// Fixed to Russian and RUB only
+const CURRENCIES = ['RUB'];
 const LANGUAGES = [
-  { code: 'en', label: 'English' },
   { code: 'ru', label: 'Русский' },
 ];
 
@@ -30,9 +30,10 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Settings
-  const [currency, setCurrency] = useState(() => localStorage.getItem('gilda_currency') || 'USD');
-  const [language, setLanguage] = useState(() => localStorage.getItem('gilda_language') || 'en');
+  // Settings - Fixed to RUB and Russian
+  const [currency, setCurrency] = useState('RUB');
+  const [language, setLanguage] = useState('ru');
+  const [theme, setTheme] = useState(() => localStorage.getItem('gilda_theme') || 'light');
 
   const persistCurrency = useCallback((c) => {
     setCurrency(c);
@@ -43,6 +44,17 @@ export default function App() {
     setLanguage(l);
     localStorage.setItem('gilda_language', l);
   }, []);
+
+  const persistTheme = useCallback((t) => {
+    setTheme(t);
+    localStorage.setItem('gilda_theme', t);
+    document.documentElement.setAttribute('data-theme', t);
+  }, []);
+
+  // Apply theme on mount
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   // Telegram auth on mount
   useEffect(() => {
@@ -87,7 +99,7 @@ export default function App() {
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
-      <SettingsContext.Provider value={{ currency, setCurrency: persistCurrency, language, setLanguage: persistLanguage, CURRENCIES, LANGUAGES }}>
+      <SettingsContext.Provider value={{ currency, setCurrency: persistCurrency, language, setLanguage: persistLanguage, theme, setTheme: persistTheme, CURRENCIES, LANGUAGES }}>
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />

@@ -25,6 +25,19 @@
   --tg-safe-bottom: 0px;
 }
 
+/* Dark theme */
+[data-theme="dark"] {
+  --black: #ffffff;
+  --white: #0a0a0a;
+  --gray-50: #1a1a1a;
+  --gray-100: #222222;
+  --gray-200: #2a2a2a;
+  --gray-300: #3a3a3a;
+  --gray-500: #8c8c87;
+  --gray-700: #b8b8b5;
+  --accent: #ffffff;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;

@@ -6,30 +6,24 @@ import './AddItem.css';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { value: 'Tops', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6l3-3h3l3 3 3-3h3l3 3-3 3v11H6V9L3 6z"/></svg> },
-  { value: 'Bottoms', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 3h16v5l-4 13H8L4 8V3z"/><line x1="12" y1="8" x2="12" y2="21"/></svg> },
-  { value: 'Outerwear', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l4-3 5 3 5-3 4 3v3l-3-1v11H6V9L3 10V7z"/><path d="M9 4l3 3 3-3"/></svg> },
-  { value: 'Footwear', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18c0-2 1-5 4-7l2-5h4l1 4 3 1c2 1 6 2 6 4v3H2v-1z"/></svg> },
-  { value: 'Dresses', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l-3 7H5l4 5-2 8h10l-2-8 4-5h-4L12 2z"/></svg> },
-  { value: 'Tailoring', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l3 4 4-2 4 2 3-4M8 7v14M16 7v14M8 14h8"/><path d="M8 7c0 2 4 3 4 3s4-1 4-3"/></svg> },
-  { value: 'Bags', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="7" width="16" height="14" rx="0"/><path d="M8 7V5a4 4 0 018 0v2"/></svg> },
-  { value: 'Accessories', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg> },
-  { value: 'Jewellery', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l3 6-9 12L3 9l3-6z"/><path d="M3 9h18M6 3l3 6M18 3l-3 6"/></svg> },
-  { value: 'Other', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg> },
+  { value: 'Обувь', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18c0-2 1-5 4-7l2-5h4l1 4 3 1c2 1 6 2 6 4v3H2v-1z"/></svg> },
+  { value: 'Верхняя одежда', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l4-3 5 3 5-3 4 3v3l-3-1v11H6V9L3 10V7z"/><path d="M9 4l3 3 3-3"/></svg> },
+  { value: 'Средний слой', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6l3-3h3l3 3 3-3h3l3 3-3 3v11H6V9L3 6z"/></svg> },
+  { value: 'Штаны/Джинсы', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 3h16v5l-4 13H8L4 8V3z"/><line x1="12" y1="8" x2="12" y2="21"/></svg> },
+  { value: 'Аксессуары', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg> },
+  { value: 'Прочее', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg> },
 ];
 
-const NO_SIZE = ['Accessories', 'Jewellery', 'Bags'];
-const SHOE_SIZE = ['Footwear'];
+const NO_SIZE = ['Аксессуары'];
+const SHOE_SIZE = ['Обувь'];
 
 const CLOTHING_SIZES = [
   { label: 'One\nSize', value: 'One Size' },
-  { label: 'XXS', sub: '/ 40', value: 'XXS' },
-  { label: 'XS', sub: '/ 42', value: 'XS' },
-  { label: 'S', sub: '/ 44–46', value: 'S' },
-  { label: 'M', sub: '/ 48–50', value: 'M' },
-  { label: 'L', sub: '/ 52–54', value: 'L' },
-  { label: 'XL', sub: '/ 56', value: 'XL' },
-  { label: 'XXL', sub: '/ 58', value: 'XXL' },
+  { label: 'XS', value: 'XS' },
+  { label: 'S', value: 'S' },
+  { label: 'M', value: 'M' },
+  { label: 'L', value: 'L' },
+  { label: 'XL', value: 'XL' },
 ];
 
 const SHOE_SIZES = ['35','36','37','38','39','40','41','42','43','44','45','46'].map(s => ({ label: s, value: s }));
@@ -53,8 +47,8 @@ export default function AddItem() {
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState({
-    title: '', brand: '', category: '', size: '',
-    condition: '', price: '', currency: 'USD', description: '',
+    title: '', category: '', size: '',
+    condition: '', price: '', currency: 'RUB', description: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -246,12 +240,7 @@ export default function AddItem() {
 
         <div className="form-field">
           <label className="form-label">Item Name *</label>
-          <input className="form-input" placeholder="e.g. Vintage Levi's 501 Jeans" value={form.title} onChange={e => setField('title', e.target.value)} />
-        </div>
-
-        <div className="form-field">
-          <label className="form-label">Brand</label>
-          <input className="form-input" placeholder="e.g. Levi's, Gucci, Zara…" value={form.brand} onChange={e => setField('brand', e.target.value)} />
+          <input className="form-input" placeholder="Например: Винтажные джинсы Levi's 501" value={form.title} onChange={e => setField('title', e.target.value)} />
         </div>
 
         <div className="form-divider" />
