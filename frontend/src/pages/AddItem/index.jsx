@@ -47,7 +47,7 @@ export default function AddItem() {
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState({
-    title: '', category: '', size: '',
+    title: '', brand: '', category: '', size: '',
     condition: '', price: '', currency: 'RUB', description: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -241,6 +241,11 @@ export default function AddItem() {
         <div className="form-field">
           <label className="form-label">Item Name *</label>
           <input className="form-input" placeholder="Например: Винтажные джинсы Levi's 501" value={form.title} onChange={e => setField('title', e.target.value)} />
+        </div>
+
+        <div className="form-field">
+          <label className="form-label">Бренд</label>
+          <input className="form-input" placeholder="Например: Levi's, Gucci, Zara…" value={form.brand} onChange={e => setField('brand', e.target.value)} />
         </div>
 
         <div className="form-divider" />
