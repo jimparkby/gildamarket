@@ -61,14 +61,14 @@ export default function Header() {
               onClick={() => navigate('/search')}
               aria-label="Поиск"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="7"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </button>
           ) : (
             <button className="header__btn header__back-btn" onClick={handleBack} aria-label="Назад">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5"/>
                 <path d="M12 19l-7-7 7-7"/>
               </svg>
@@ -93,10 +93,10 @@ export default function Header() {
               onClick={() => setMenuOpen(true)}
               aria-label="Меню"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="5" cy="12" r="1.5"/>
-                <circle cx="12" cy="12" r="1.5"/>
-                <circle cx="19" cy="12" r="1.5"/>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2"/>
+                <circle cx="12" cy="12" r="2"/>
+                <circle cx="19" cy="12" r="2"/>
               </svg>
             </button>
           )}

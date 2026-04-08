@@ -14,13 +14,14 @@
 }
 
 .header__btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: var(--black);
+  opacity: 1;
 }
 
 .header__back-btn {
@@ -52,9 +53,10 @@
 }
 
 .header__side {
-  width: 36px;
+  width: 40px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .header__side--right {
