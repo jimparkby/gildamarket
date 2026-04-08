@@ -17,6 +17,7 @@ export const T = {
     searchPlaceholder: 'Brand, item, category…',
     noItemsYet: 'No items yet',
     couldNotConnect: 'Could not connect to server',
+    viewMore: 'View more',
     // Favorites
     noFavorites: 'No saved items yet',
     // Profile
@@ -69,6 +70,7 @@ export const T = {
     searchPlaceholder: 'Бренд, категория, описание…',
     noItemsYet: 'Пока нет вещей',
     couldNotConnect: 'Нет соединения с сервером',
+    viewMore: 'Показать ещё',
     // Favorites
     noFavorites: 'Сохранённых вещей пока нет',
     // Profile

@@ -33,7 +33,7 @@ export default function App() {
   // Settings - Fixed to RUB and Russian
   const [currency, setCurrency] = useState('RUB');
   const [language, setLanguage] = useState('ru');
-  const [theme, setTheme] = useState(() => localStorage.getItem('gilda_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('gilda_theme') || 'dark');
 
   const persistCurrency = useCallback((c) => {
     setCurrency(c);
