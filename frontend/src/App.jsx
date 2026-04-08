@@ -90,13 +90,19 @@ export default function App() {
     doAuth();
   }, [ready, initData]);
 
-  // Handle Telegram startapp deep link: startapp=shop_123 → /shop/123
+  // Handle deep links: startapp=shop_123 (BotFather shortname) OR ?shop=123 (URL param fallback)
   useEffect(() => {
     if (authLoading) return;
+    // 1. Telegram native startapp parameter (requires /newapp shortname in BotFather)
     const param = window?.Telegram?.WebApp?.initDataUnsafe?.start_param;
     if (param?.startsWith('shop_')) {
-      const shopId = param.replace('shop_', '');
-      navigate(`/shop/${shopId}`, { replace: true });
+      navigate(`/shop/${param.replace('shop_', '')}`, { replace: true });
+      return;
+    }
+    // 2. URL query param fallback ?shop=123
+    const urlShop = new URLSearchParams(window.location.search).get('shop');
+    if (urlShop) {
+      navigate(`/shop/${urlShop}`, { replace: true });
     }
   }, [authLoading]); // eslint-disable-line
 
