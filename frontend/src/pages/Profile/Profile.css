@@ -423,7 +423,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1px;
-  background: var(--gray-200);
+  background: var(--white);
   margin-top: 1px;
 }
 .profile__item-wrap {

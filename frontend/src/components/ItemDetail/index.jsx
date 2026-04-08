@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toggleItemLike } from '../../api/client';
 import { useSettings } from '../../App';
@@ -18,6 +18,22 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const { haptic } = useTelegram();
   const [activeImg, setActiveImg] = useState(0);
   const [isLiked, setIsLiked] = useState(item?.isLiked ?? false);
+  const touchStartX = useRef(null);
+
+  const handleTouchStart = useCallback((e) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    const total = item?.images?.length ?? 0;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) setActiveImg(prev => Math.min(prev + 1, total - 1));
+      else setActiveImg(prev => Math.max(prev - 1, 0));
+    }
+    touchStartX.current = null;
+  }, [item?.images?.length]);
 
   const handleLike = useCallback(async () => {
     haptic('light');
@@ -61,27 +77,29 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
 
           {images.length > 0 ? (
             <>
-              <div className="item-detail__main-img-wrap">
+              <div
+                className="item-detail__main-img-wrap"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
                 <img
                   className="item-detail__main-img"
                   src={images[activeImg]}
                   alt={item.title}
                 />
                 {item.isSold && <div className="item-detail__sold">SOLD</div>}
+                {images.length > 1 && (
+                  <div className="item-detail__dots">
+                    {images.map((_, i) => (
+                      <button
+                        key={i}
+                        className={`item-detail__dot${activeImg === i ? ' active' : ''}`}
+                        onClick={() => setActiveImg(i)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              {images.length > 1 && (
-                <div className="item-detail__thumbs">
-                  {images.map((src, i) => (
-                    <button
-                      key={i}
-                      className={`item-detail__thumb${activeImg === i ? ' active' : ''}`}
-                      onClick={() => setActiveImg(i)}
-                    >
-                      <img src={src} alt="" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </>
           ) : (
             /* Нет фото — показываем пустой блок чтобы кнопки были видны */
