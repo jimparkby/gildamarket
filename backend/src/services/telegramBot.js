@@ -200,13 +200,12 @@ function registerHandlers() {
     const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
 
     const text = [
-      `👋 Привет, ${esc(firstName)}!`,
+      `Привет! 🙌🏻`,
+      `Это маркетплейс нового формата.`,
       ``,
-      `<b>Gilda Market</b> — твой маркетплейс винтажной и брендовой одежды.`,
-      ``,
-      `🛍 Покупай и продавай уникальные вещи напрямую через Telegram.`,
-      ``,
-      `Нажми кнопку ниже, чтобы открыть магазин 👇`,
+      `Создавай свой магазин 🛒`,
+      `Находи уникальные вещи 🖤`,
+      `Подписывайся на любимых продавцов`,
     ].join('\n');
 
     await bot.sendMessage(chatId, text, {
