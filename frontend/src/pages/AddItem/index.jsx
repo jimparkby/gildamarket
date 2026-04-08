@@ -41,14 +41,6 @@ const BOTTOMS_SIZES = ['26','27','28','29','30','31','32','33','34','35','36','3
 
 const SHOE_SIZES = ['35','36','37','38','39','40','41','42','43','44','45','46'].map(s => ({ label: s, value: s }));
 
-const CONDITIONS = [
-  { value: 'new', label: 'New with tags' },
-  { value: 'like_new', label: 'Like new' },
-  { value: 'good', label: 'Good condition' },
-  { value: 'fair', label: 'Fair condition' },
-];
-
-const CURRENCIES = ['USD', 'EUR', 'RUB', 'GBP'];
 
 const TOTAL_STEPS = 4;
 
@@ -61,7 +53,7 @@ export default function AddItem() {
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState({
     title: '', brand: '', category: '', subcategory: '', size: '',
-    condition: '', price: '', currency: 'RUB', description: '',
+    condition: 'good', price: '', currency: 'RUB', description: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -100,7 +92,6 @@ export default function AddItem() {
 
   const handleSubmit = useCallback(async () => {
     if (!form.title.trim()) return setError('Item name is required');
-    if (!form.condition) return setError('Please select a condition');
     if (!form.price || isNaN(parseFloat(form.price))) return setError('Valid price is required');
 
     haptic('medium');
@@ -279,32 +270,12 @@ export default function AddItem() {
           <input className="form-input" placeholder="Например: Винтажные джинсы Levi's 501" value={form.title} onChange={e => setField('title', e.target.value)} />
         </div>
 
-        <div className="form-field">
-          <label className="form-label">Бренд</label>
-          <input className="form-input" placeholder="Например: Levi's, Gucci, Zara…" value={form.brand} onChange={e => setField('brand', e.target.value)} />
-        </div>
-
         <div className="form-divider" />
 
-        <p className="form-section-title">Condition</p>
-        <div className="condition-list">
-          {CONDITIONS.map(c => (
-            <button key={c.value} className={`condition-btn${form.condition === c.value ? ' selected' : ''}`} onClick={() => setField('condition', c.value)}>
-              {c.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="form-divider" />
-
-        <p className="form-section-title">Price</p>
+        <p className="form-section-title">Цена</p>
         <div className="price-row">
           <input className="price-input" type="number" placeholder="0" min="0" value={form.price} onChange={e => setField('price', e.target.value)} />
-          <div className="currency-row">
-            {CURRENCIES.map(c => (
-              <button key={c} className={`currency-btn${form.currency === c ? ' selected' : ''}`} onClick={() => setField('currency', c)}>{c}</button>
-            ))}
-          </div>
+          <span className="currency-label">RUB</span>
         </div>
 
         <div className="form-divider" />

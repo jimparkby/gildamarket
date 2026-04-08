@@ -16,6 +16,16 @@ const tabs = [
     ),
   },
   {
+    to: '/search',
+    label: 'Поиск',
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="7"/>
+        <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+      </svg>
+    ),
+  },
+  {
     to: '/add',
     label: 'Подача',
     icon: (active) => (

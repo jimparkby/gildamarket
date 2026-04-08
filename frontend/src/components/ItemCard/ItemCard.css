@@ -4,6 +4,7 @@
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
+  background: var(--white);
 }
 
 .item-card__image-wrap {
