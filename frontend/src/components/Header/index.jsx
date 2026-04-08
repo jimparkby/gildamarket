@@ -53,9 +53,20 @@ export default function Header() {
   return (
     <>
       <header className="header">
-        {/* Left: back button (all pages except home) */}
+        {/* Left: search (home) or back button (other pages) */}
         <div className="header__side">
-          {!isHome && (
+          {isHome ? (
+            <button
+              className="header__btn"
+              onClick={() => navigate('/search')}
+              aria-label="Поиск"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+          ) : (
             <button className="header__btn header__back-btn" onClick={handleBack} aria-label="Назад">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5"/>
@@ -74,21 +85,9 @@ export default function Header() {
           )}
         </div>
 
-        {/* Right: search icon (home) or menu dots (profile/shop) */}
+        {/* Right: three dots (home, profile, shop) */}
         <div className="header__side header__side--right">
-          {isHome && (
-            <button
-              className="header__btn"
-              onClick={() => navigate('/search')}
-              aria-label="Поиск"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            </button>
-          )}
-          {(isProfile || isShop) && (
+          {(isHome || isProfile || isShop) && (
             <button
               className="header__btn"
               onClick={() => setMenuOpen(true)}

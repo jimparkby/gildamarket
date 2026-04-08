@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useTelegram } from './hooks/useTelegram';
 import { authTelegram } from './api/client';
 import BottomNav from './components/BottomNav';
@@ -26,6 +26,7 @@ const LANGUAGES = [
 
 export default function App() {
   const { ready, initData } = useTelegram();
+  const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -88,6 +89,16 @@ export default function App() {
 
     doAuth();
   }, [ready, initData]);
+
+  // Handle Telegram startapp deep link: startapp=shop_123 → /shop/123
+  useEffect(() => {
+    if (authLoading) return;
+    const param = window?.Telegram?.WebApp?.initDataUnsafe?.start_param;
+    if (param?.startsWith('shop_')) {
+      const shopId = param.replace('shop_', '');
+      navigate(`/shop/${shopId}`, { replace: true });
+    }
+  }, [authLoading]); // eslint-disable-line
 
   if (authLoading) {
     return (

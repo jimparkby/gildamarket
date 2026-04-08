@@ -22,7 +22,7 @@ export default function Profile() {
 
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('catalogue'); // lookbook | catalogue | archive
+  const [activeFilter, setActiveFilter] = useState('all');
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [editingAbout, setEditingAbout] = useState(false);
@@ -177,14 +177,8 @@ export default function Profile() {
   const items = shop.items || [];
   const archivedItems = shop.archivedItems || [];
 
-  // Group items by category
-  const itemsByCategory = {};
-  CATEGORIES.forEach(cat => {
-    const catItems = items.filter(i => i.category === cat);
-    if (catItems.length > 0) itemsByCategory[cat] = catItems;
-  });
-  const uncategorized = items.filter(i => !CATEGORIES.includes(i.category));
-  if (uncategorized.length > 0) itemsByCategory['Other'] = [...(itemsByCategory['Other'] || []), ...uncategorized];
+  const availableCategories = CATEGORIES.filter(cat => items.some(i => i.category === cat));
+  const filteredItems = activeFilter === 'all' ? items : items.filter(i => i.category === activeFilter);
 
   const shopName = `${shop.firstName || ''}${shop.lastName ? ' ' + shop.lastName : ''}`.trim() || (isOwner ? t(language, 'addShopName') : '');
 
@@ -330,144 +324,129 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── Section Tabs ── */}
-      <div className="profile__section-tabs">
-        <button
-          className={`profile__section-tab${activeTab === 'lookbook' ? ' active' : ''}`}
-          onClick={() => setActiveTab('lookbook')}
-        >
-          {t(language, 'lookBoard')}
-        </button>
-        <button
-          className={`profile__section-tab${activeTab === 'catalogue' ? ' active' : ''}`}
-          onClick={() => setActiveTab('catalogue')}
-        >
-          {t(language, 'myListings')}
-        </button>
-        <button
-          className={`profile__section-tab${activeTab === 'archive' ? ' active' : ''}`}
-          onClick={() => setActiveTab('archive')}
-        >
-          {t(language, 'archive')}
-          {archivedItems.length > 0 && <span className="profile__tab-count">{archivedItems.length}</span>}
-        </button>
-      </div>
-
-      {/* ── Лукбук Tab ── */}
-      {activeTab === 'lookbook' && (
-        <section className="profile__section">
+      {/* ── Лукбук Section ── */}
+      <section className="profile__section">
+        <div className="profile__section-header">
+          <h3 className="profile__section-label">{t(language, 'lookBoard')}</h3>
           {isOwner && (
-            <div className="profile__section-header">
-              <span />
-              <button className="profile__add-lb" onClick={openLbModal} disabled={lbUploading}>
-                {lbUploading ? '…' : t(language, 'addLook')}
-              </button>
-            </div>
+            <button className="profile__add-lb" onClick={openLbModal} disabled={lbUploading}>
+              {lbUploading ? '…' : t(language, 'addLook')}
+            </button>
           )}
-          {lookBoards.length === 0 ? (
+        </div>
+        {lookBoards.length === 0 ? (
+          isOwner ? (
             <div className="profile__lb-empty">
               <p>{t(language, 'createFirstLook')}</p>
             </div>
-          ) : (
-            <div className="profile__lb-feed">
-              {lookBoards.map(lb => (
-                <div key={lb.id} className="profile__lb-post">
-                  {/* Images horizontal scroll */}
-                  <div className="profile__lb-scroll">
-                    {lb.images.map((img, i) => (
-                      <img key={i} src={img} alt="" className="profile__lb-scroll-img" />
-                    ))}
-                  </div>
-                  {(lb.title || lb.description) && (
-                    <div className="profile__lb-text">
-                      {lb.title && <p className="profile__lb-title">{lb.title}</p>}
-                      {lb.description && <p className="profile__lb-desc">{lb.description}</p>}
-                    </div>
-                  )}
-                  {isOwner && (
-                    <button className="profile__lb-delete" onClick={() => handleDeleteLb(lb.id)}>
-                      {t(language, 'remove')}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* ── Каталог Tab ── */}
-      {activeTab === 'catalogue' && (
-        <section className="profile__section">
-          {isOwner && (
-            <div className="profile__section-header">
-              <span />
-              <button className="profile__add-item-btn" onClick={() => navigate('/add')}>
-                {t(language, 'newListing')}
-              </button>
-            </div>
-          )}
-          {items.length === 0 ? (
-            <div className="empty-state">
-              <p>{isOwner ? t(language, 'listFirstItem') : t(language, 'noItemsYet')}</p>
-            </div>
-          ) : (
-            Object.entries(itemsByCategory).map(([cat, catItems]) => (
-              <div key={cat} className="profile__cat-section">
-                <h3 className="profile__cat-title">{cat}</h3>
-                <div className="profile__cat-scroll">
-                  {catItems.map(item => (
-                    <div key={item.id} className="profile__cat-item">
-                      <ItemCard
-                        item={item}
-                        onClick={setSelected}
-                        onLikeChange={() => {}}
-                      />
-                      {isOwner && (
-                        <div className="profile__item-actions">
-                          <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
-                            {item.isSold ? t(language, 'markAvailable') : t(language, 'markSold')}
-                          </button>
-                          <button onClick={() => handleDeleteItem(item.id)} className="profile__item-del">
-                            {t(language, 'delete')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
+          ) : null
+        ) : (
+          <div className="profile__lb-feed">
+            {lookBoards.map(lb => (
+              <div key={lb.id} className="profile__lb-post">
+                <div className="profile__lb-scroll">
+                  {lb.images.map((img, i) => (
+                    <img key={i} src={img} alt="" className="profile__lb-scroll-img" />
                   ))}
                 </div>
+                {(lb.title || lb.description) && (
+                  <div className="profile__lb-text">
+                    {lb.title && <p className="profile__lb-title">{lb.title}</p>}
+                    {lb.description && <p className="profile__lb-desc">{lb.description}</p>}
+                  </div>
+                )}
+                {isOwner && (
+                  <button className="profile__lb-delete" onClick={() => handleDeleteLb(lb.id)}>
+                    {t(language, 'remove')}
+                  </button>
+                )}
               </div>
-            ))
-          )}
-        </section>
-      )}
+            ))}
+          </div>
+        )}
+      </section>
 
-      {/* ── Архив Tab ── */}
-      {activeTab === 'archive' && (
-        <section className="profile__section">
-          {archivedItems.length === 0 ? (
-            <div className="empty-state">
-              <p>{t(language, 'noArchive')}</p>
-            </div>
-          ) : (
-            <div className="profile__items-grid">
-              {archivedItems.map(item => (
-                <div key={item.id} className="profile__item-wrap">
-                  <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
-                  {isOwner && (
-                    <div className="profile__item-actions">
-                      <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
-                        {t(language, 'markAvailable')}
-                      </button>
-                      <button onClick={() => handleDeleteItem(item.id)} className="profile__item-del">
-                        {t(language, 'delete')}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+      {/* ── Мои товары Section ── */}
+      <section className="profile__section">
+        <div className="profile__section-header">
+          <h3 className="profile__section-label">{t(language, 'myListings')}</h3>
+          {isOwner && (
+            <button className="profile__add-item-btn" onClick={() => navigate('/add')}>
+              {t(language, 'newListing')}
+            </button>
           )}
+        </div>
+
+        {/* Filter chips */}
+        {items.length > 0 && (
+          <div className="profile__filters">
+            <button
+              className={`profile__filter-chip${activeFilter === 'all' ? ' active' : ''}`}
+              onClick={() => setActiveFilter('all')}
+            >
+              Все
+            </button>
+            {availableCategories.map(cat => (
+              <button
+                key={cat}
+                className={`profile__filter-chip${activeFilter === cat ? ' active' : ''}`}
+                onClick={() => setActiveFilter(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {items.length === 0 ? (
+          <div className="empty-state">
+            <p>{isOwner ? t(language, 'listFirstItem') : t(language, 'noItemsYet')}</p>
+          </div>
+        ) : (
+          <div className="profile__items-grid">
+            {filteredItems.map(item => (
+              <div key={item.id} className="profile__item-wrap">
+                <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
+                {isOwner && (
+                  <div className="profile__item-actions">
+                    <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
+                      {item.isSold ? t(language, 'markAvailable') : t(language, 'markSold')}
+                    </button>
+                    <button onClick={() => handleDeleteItem(item.id)} className="profile__item-del">
+                      {t(language, 'delete')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Архив Section ── */}
+      {archivedItems.length > 0 && (
+        <section className="profile__section profile__section--archive">
+          <div className="profile__section-header">
+            <h3 className="profile__section-label">{t(language, 'archive')}</h3>
+            <span className="profile__section-count">{archivedItems.length}</span>
+          </div>
+          <div className="profile__items-grid">
+            {archivedItems.map(item => (
+              <div key={item.id} className="profile__item-wrap">
+                <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
+                {isOwner && (
+                  <div className="profile__item-actions">
+                    <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
+                      {t(language, 'markAvailable')}
+                    </button>
+                    <button onClick={() => handleDeleteItem(item.id)} className="profile__item-del">
+                      {t(language, 'delete')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </section>
       )}
 

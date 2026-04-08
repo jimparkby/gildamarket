@@ -9,8 +9,9 @@ const tabs = [
     label: 'Лента',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
-        <path d="M9 21V12h6v9"/>
+        <rect x="3" y="4" width="18" height="3" rx="1"/>
+        <rect x="3" y="10" width="18" height="3" rx="1"/>
+        <rect x="3" y="16" width="18" height="5" rx="1"/>
       </svg>
     ),
   },
