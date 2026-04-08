@@ -31,13 +31,12 @@
   flex-shrink: 0;
 }
 
-/* Кнопка X поверх фото */
+/* Кнопка назад поверх фото */
 .item-detail__overlay-bar {
   position: absolute;
   top: calc(var(--tg-safe-top, 0px) + 70px);
   left: 14px;
   z-index: 10;
-  pointer-events: none;
 }
 
 .item-detail__overlay-btn {

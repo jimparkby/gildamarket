@@ -32,6 +32,7 @@ model Item {
   title       String
   brand       String?
   category    String
+  subcategory String?
   size        String?
   condition   String    // new, like_new, good, fair
   price       Decimal   @db.Decimal(10, 2)

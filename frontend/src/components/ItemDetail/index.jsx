@@ -48,8 +48,17 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     <div className="item-detail-overlay" onClick={onClose}>
       <div className="item-detail" onClick={e => e.stopPropagation()}>
 
-        {/* Фото — занимает верхнюю часть */}
+        {/* Фото — занимает верхнюю часть, кнопка назад поверх него */}
         <div className="item-detail__hero">
+          <div className="item-detail__overlay-bar">
+            <button className="item-detail__overlay-btn" onClick={onClose} aria-label="Назад">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5"/>
+                <path d="M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
+          </div>
+
           {images.length > 0 ? (
             <>
               <div className="item-detail__main-img-wrap">
@@ -101,6 +110,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
           <div className="item-detail__price-row">
             <span className="item-detail__price">{item.price} {currency || item.currency}</span>
             {item.size && <span className="item-detail__pill">{item.size}</span>}
+            {item.subcategory && <span className="item-detail__pill">{item.subcategory}</span>}
             <span className="item-detail__pill">{CONDITION_LABELS[item.condition] || item.condition}</span>
           </div>
 

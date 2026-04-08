@@ -18,6 +18,16 @@ const NO_SIZE = ['Аксессуары'];
 const SHOE_SIZE = ['Обувь'];
 const BOTTOMS_SIZE = ['Штаны/Джинсы'];
 
+const BOTTOMS_SUBCATEGORIES = [
+  'Джинсы',
+  'Брюки',
+  'Шорты',
+  'Джоггеры',
+  'Леггинсы',
+  'Комбинезоны',
+  'Трекинговые штаны',
+];
+
 const CLOTHING_SIZES = [
   { label: 'One\nSize', value: 'One Size' },
   { label: 'XS', value: 'XS' },
@@ -50,7 +60,7 @@ export default function AddItem() {
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState({
-    title: '', brand: '', category: '', size: '',
+    title: '', brand: '', category: '', subcategory: '', size: '',
     condition: '', price: '', currency: 'RUB', description: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +70,7 @@ export default function AddItem() {
 
   const setField = useCallback((field, val) => {
     setForm(prev => {
-      if (field === 'category') return { ...prev, category: val, size: '' };
+      if (field === 'category') return { ...prev, category: val, subcategory: '', size: '' };
       return { ...prev, [field]: val };
     });
   }, []);
@@ -141,9 +151,31 @@ export default function AddItem() {
             </button>
           ))}
         </div>
+
+        {/* Подкатегории для Штаны/Джинсы */}
+        {form.category === 'Штаны/Джинсы' && (
+          <div className="subcat-section">
+            <p className="subcat-title">Тип</p>
+            <div className="subcat-grid">
+              {BOTTOMS_SUBCATEGORIES.map(sub => (
+                <button
+                  key={sub}
+                  className={`subcat-chip${form.subcategory === sub ? ' selected' : ''}`}
+                  onClick={() => setField('subcategory', sub)}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <div className="wizard__footer">
-        <button className="wizard__next" disabled={!form.category} onClick={next}>
+        <button
+          className="wizard__next"
+          disabled={!form.category || (form.category === 'Штаны/Джинсы' && !form.subcategory)}
+          onClick={next}
+        >
           Continue
         </button>
       </div>

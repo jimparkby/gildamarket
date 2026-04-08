@@ -14,6 +14,7 @@ function serializeItem(item, userId, includeStatus = false) {
     title: item.title,
     brand: item.brand,
     category: item.category,
+    subcategory: item.subcategory || null,
     size: item.size,
     condition: item.condition,
     price: parseFloat(item.price),
@@ -130,7 +131,7 @@ async function getItem(req, res, next) {
 
 async function createItem(req, res, next) {
   try {
-    const { title, brand, category, size, condition, price, currency, description } = req.body;
+    const { title, brand, category, subcategory, size, condition, price, currency, description } = req.body;
 
     // S3: use file.location (full URL); local: use file.filename
     const images = (req.files || []).map(f => f.location || f.filename);
@@ -144,6 +145,7 @@ async function createItem(req, res, next) {
         title,
         brand: brand || null,
         category,
+        subcategory: subcategory || null,
         size: size || null,
         condition,
         price: parseFloat(price),

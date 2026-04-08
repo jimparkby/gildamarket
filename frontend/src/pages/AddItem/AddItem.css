@@ -491,3 +491,39 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+/* ── Subcategory ── */
+.subcat-section {
+  padding: 20px 20px 8px;
+  border-top: 1px solid var(--gray-100);
+  margin-top: 8px;
+}
+
+.subcat-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin-bottom: 12px;
+}
+
+.subcat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.subcat-chip {
+  padding: 8px 16px;
+  border: 1px solid var(--gray-200);
+  font-size: 13px;
+  color: var(--gray-700);
+  background: transparent;
+  transition: all var(--transition);
+}
+.subcat-chip.selected {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
