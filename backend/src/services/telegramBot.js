@@ -193,6 +193,32 @@ async function editAdminMessage(chatId, messageId, hasPhoto, text, keyboard) {
 // ── Обработчики callback-кнопок ───────────────────────────────────────────────
 
 function registerHandlers() {
+  // ── /start — Приветственное сообщение ────────────────────────────────────────
+  bot.onText(/\/start/, async (msg) => {
+    const chatId = msg.chat.id;
+    const firstName = msg.from?.first_name || 'друг';
+    const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
+
+    const text = [
+      `👋 Привет, ${esc(firstName)}!`,
+      ``,
+      `<b>Gilda Market</b> — твой маркетплейс винтажной и брендовой одежды.`,
+      ``,
+      `🛍 Покупай и продавай уникальные вещи напрямую через Telegram.`,
+      ``,
+      `Нажми кнопку ниже, чтобы открыть магазин 👇`,
+    ].join('\n');
+
+    await bot.sendMessage(chatId, text, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [[
+          { text: '🛍 Открыть Gilda Market', web_app: { url: appUrl } },
+        ]],
+      },
+    });
+  });
+
   bot.on('callback_query', async (query) => {
     const data = query.data || '';
     const msg = query.message;
