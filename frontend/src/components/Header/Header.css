@@ -57,6 +57,10 @@
   align-items: center;
 }
 
+.header__side--right {
+  justify-content: flex-end;
+}
+
 /* Search input */
 .header__search-wrap {
   flex: 1;

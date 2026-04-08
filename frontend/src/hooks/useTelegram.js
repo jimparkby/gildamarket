@@ -33,10 +33,10 @@ export function useTelegram() {
         tg.requestFullscreen();
       }
 
-      tg.setHeaderColor('#ffffff');
-      tg.setBackgroundColor('#ffffff');
+      tg.setHeaderColor('#181818');
+      tg.setBackgroundColor('#181818');
       if (typeof tg.setBottomBarColor === 'function') {
-        tg.setBottomBarColor('#ffffff');
+        tg.setBottomBarColor('#181818');
       }
 
       // Apply immediately, then retry as values settle after fullscreen transition
