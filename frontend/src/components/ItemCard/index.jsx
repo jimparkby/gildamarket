@@ -1,7 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useSettings } from '../../App';
-import { toggleItemLike } from '../../api/client';
-import { useTelegram } from '../../hooks/useTelegram';
 import './ItemCard.css';
 
 const CONDITION_LABELS = {
@@ -11,18 +9,8 @@ const CONDITION_LABELS = {
   fair: 'Fair',
 };
 
-export default function ItemCard({ item, onLikeChange, onClick }) {
+export default function ItemCard({ item, onClick }) {
   const { currency } = useSettings();
-  const { haptic } = useTelegram();
-
-  const handleLike = useCallback(async (e) => {
-    e.stopPropagation();
-    haptic('light');
-    try {
-      const res = await toggleItemLike(item.id);
-      onLikeChange?.(item.id, res.liked);
-    } catch {}
-  }, [item.id, haptic, onLikeChange]);
 
   const image = item.images?.[0];
 
@@ -42,16 +30,6 @@ export default function ItemCard({ item, onLikeChange, onClick }) {
         )}
 
         {item.isSold && <div className="item-card__sold-badge">SOLD</div>}
-
-        <button
-          className={`item-card__like${item.isLiked ? ' liked' : ''}`}
-          onClick={handleLike}
-          aria-label={item.isLiked ? 'Unlike' : 'Like'}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={item.isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-          </svg>
-        </button>
       </div>
 
       <div className="item-card__body">

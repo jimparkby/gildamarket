@@ -200,7 +200,7 @@ export default function Search() {
                       <span className="search-shop-row__tg">@{shop.telegramUsername}</span>
                     )}
                   </div>
-                  <span className="search-shop-row__count">{shop.itemsCount} вещей</span>
+                  <span className="search-shop-row__count">{shop.itemsCount} товаров</span>
                 </button>
               ))}
             </div>

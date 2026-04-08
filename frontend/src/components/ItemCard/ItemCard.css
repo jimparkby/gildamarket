@@ -45,23 +45,6 @@
   padding: 3px 7px;
 }
 
-.item-card__like {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--black);
-  transition: color var(--transition), background var(--transition);
-  border-radius: 50%;
-}
-.item-card__like.liked {
-  color: #e53e3e;
-}
 
 .item-card__body {
   padding: 10px 2px 4px;

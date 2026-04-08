@@ -10,6 +10,7 @@ import { useAuth, useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
+import SideMenu from '../../components/SideMenu';
 import './Profile.css';
 
 const CATEGORIES = ['Обувь','Верхняя одежда','Средний слой','Штаны/Джинсы','Аксессуары','Прочее'];
@@ -28,6 +29,7 @@ export default function Profile() {
   const [editingAbout, setEditingAbout] = useState(false);
   const [aboutDraft, setAboutDraft] = useState('');
   const [selected, setSelected] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [lbUploading, setLbUploading] = useState(false);
   const [lbModalOpen, setLbModalOpen] = useState(false);
   const [lbDesc, setLbDesc] = useState('');
@@ -245,6 +247,15 @@ export default function Profile() {
               <h1 className="profile__name">{shopName}</h1>
               {shop.telegramUsername && <p className="profile__tg">@{shop.telegramUsername}</p>}
             </div>
+          )}
+          {isOwner && !editingName && (
+            <button className="profile__menu-btn" onClick={() => setMenuOpen(true)} aria-label="Меню">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2"/>
+                <circle cx="12" cy="12" r="2"/>
+                <circle cx="19" cy="12" r="2"/>
+              </svg>
+            </button>
           )}
         </div>
 
@@ -514,6 +525,7 @@ export default function Profile() {
         />
       )}
 
+      <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </main>
   );
 }
