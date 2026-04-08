@@ -1,61 +1,98 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { getItems } from '../../api/client';
+import { useNavigate } from 'react-router-dom';
+import { getItems, searchUsers } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
 import './Search.css';
 
+const CATEGORIES = [
+  'Обувь', 'Верхняя одежда', 'Средний слой', 'Штаны/Джинсы', 'Аксессуары', 'Прочее',
+];
+
 export default function Search() {
   const { language } = useSettings();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [mode, setMode] = useState('items'); // items | shops
+  const [selectedCat, setSelectedCat] = useState('');
   const [items, setItems] = useState([]);
+  const [shops, setShops] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState(null);
   const inputRef = useRef(null);
-  const queryRef = useRef('');
+  const timerRef = useRef(null);
 
-  // Фокус при открытии страницы
   useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 80);
   }, []);
 
-  const doSearch = useCallback(async (q) => {
-    if (!q.trim()) {
+  const doSearch = useCallback(async (q, cat, searchMode) => {
+    const hasQuery = q.trim().length > 0;
+    const hasCat = cat.length > 0;
+
+    if (!hasQuery && !hasCat) {
       setItems([]);
+      setShops([]);
       setTotal(0);
       setSearched(false);
       return;
     }
+
     setLoading(true);
     setSearched(true);
     try {
-      const data = await getItems({ search: q });
-      setItems(data.items);
-      setTotal(data.total);
+      if (searchMode === 'shops') {
+        const data = await searchUsers(q);
+        setShops(data);
+      } else {
+        const params = {};
+        if (q.trim()) params.search = q;
+        if (cat) params.category = cat;
+        const data = await getItems(params);
+        setItems(data.items);
+        setTotal(data.total);
+      }
     } catch {
       setItems([]);
+      setShops([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Поиск с дебаунсом 300мс
-  const timerRef = useRef(null);
+  const triggerSearch = useCallback((q, cat, searchMode) => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => doSearch(q, cat, searchMode), 300);
+  }, [doSearch]);
+
   const handleChange = useCallback((e) => {
     const val = e.target.value;
     setQuery(val);
-    queryRef.current = val;
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => doSearch(val), 300);
-  }, [doSearch]);
+    triggerSearch(val, selectedCat, mode);
+  }, [selectedCat, mode, triggerSearch]);
+
+  const handleCatSelect = useCallback((cat) => {
+    const newCat = cat === selectedCat ? '' : cat;
+    setSelectedCat(newCat);
+    triggerSearch(query, newCat, mode);
+  }, [query, selectedCat, mode, triggerSearch]);
+
+  const handleModeSwitch = useCallback((newMode) => {
+    setMode(newMode);
+    setItems([]);
+    setShops([]);
+    setSearched(false);
+    triggerSearch(query, selectedCat, newMode);
+  }, [query, selectedCat, triggerSearch]);
 
   const clearQuery = useCallback(() => {
     setQuery('');
-    queryRef.current = '';
     setItems([]);
+    setShops([]);
     setSearched(false);
     inputRef.current?.focus();
   }, []);
@@ -77,7 +114,7 @@ export default function Search() {
           <input
             ref={inputRef}
             className="search-page__input"
-            placeholder={t(language, 'searchPlaceholder')}
+            placeholder={mode === 'shops' ? t(language, 'searchShopsPlaceholder') : t(language, 'searchPlaceholder')}
             value={query}
             onChange={handleChange}
             autoComplete="off"
@@ -85,7 +122,7 @@ export default function Search() {
             spellCheck={false}
           />
           {query && (
-            <button className="search-page__clear" onClick={clearQuery} aria-label="Очистить">
+            <button className="search-page__clear" onClick={clearQuery}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
@@ -93,6 +130,37 @@ export default function Search() {
             </button>
           )}
         </div>
+
+        {/* Переключатель Вещи / Магазины */}
+        <div className="search-page__mode-tabs">
+          <button
+            className={`search-page__mode-tab${mode === 'items' ? ' active' : ''}`}
+            onClick={() => handleModeSwitch('items')}
+          >
+            {t(language, 'items')}
+          </button>
+          <button
+            className={`search-page__mode-tab${mode === 'shops' ? ' active' : ''}`}
+            onClick={() => handleModeSwitch('shops')}
+          >
+            {t(language, 'shops')}
+          </button>
+        </div>
+
+        {/* Категории (только для режима items) */}
+        {mode === 'items' && (
+          <div className="search-page__cats">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                className={`search-page__cat${selectedCat === cat ? ' active' : ''}`}
+                onClick={() => handleCatSelect(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Состояния */}
         {loading ? (
@@ -103,11 +171,43 @@ export default function Search() {
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <p>{language === 'ru' ? 'Введите запрос для поиска' : 'Type to search items'}</p>
+            <p>{language === 'ru' ? 'Введите запрос для поиска' : 'Type to search'}</p>
           </div>
+        ) : mode === 'shops' ? (
+          shops.length === 0 ? (
+            <div className="search-page__hint">
+              <p>{t(language, 'noShopsFound')}</p>
+            </div>
+          ) : (
+            <div className="search-page__shops">
+              {shops.map(shop => (
+                <button
+                  key={shop.id}
+                  className="search-shop-row"
+                  onClick={() => navigate(`/shop/${shop.id}`)}
+                >
+                  <div className="search-shop-row__avatar">
+                    {shop.avatar
+                      ? <img src={shop.avatar} alt="" />
+                      : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    }
+                  </div>
+                  <div className="search-shop-row__info">
+                    <span className="search-shop-row__name">
+                      {shop.firstName}{shop.lastName ? ` ${shop.lastName}` : ''}
+                    </span>
+                    {shop.telegramUsername && (
+                      <span className="search-shop-row__tg">@{shop.telegramUsername}</span>
+                    )}
+                  </div>
+                  <span className="search-shop-row__count">{shop.itemsCount} вещей</span>
+                </button>
+              ))}
+            </div>
+          )
         ) : items.length === 0 ? (
           <div className="search-page__hint">
-            <p>{language === 'ru' ? `По запросу «${query}» ничего не найдено` : `Nothing found for "${query}"`}</p>
+            <p>{language === 'ru' ? (query ? `По запросу «${query}» ничего не найдено` : 'Ничего не найдено') : `Nothing found`}</p>
           </div>
         ) : (
           <>

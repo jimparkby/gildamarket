@@ -43,7 +43,7 @@
   background: var(--gray-200);
 }
 .favorites__grid > * {
-  background: var(--white);
+  background: var(--gray-50);
   padding: 12px;
 }
 

@@ -77,10 +77,11 @@ model ShopLike {
 }
 
 model LookBoard {
-  id        Int      @id @default(autoincrement())
-  title     String?
-  images    String[] // array of file paths
-  createdAt DateTime @default(now()) @map("created_at")
+  id          Int      @id @default(autoincrement())
+  title       String?
+  description String?
+  images      String[] // array of file paths
+  createdAt   DateTime @default(now()) @map("created_at")
 
   userId    Int      @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

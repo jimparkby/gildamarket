@@ -68,6 +68,9 @@ export const toggleShopLike = (shopId) =>
 export const getMyLookBoards = () =>
   api.get('/lookboard/me').then(r => r.data);
 
+export const getLookBoardFeed = () =>
+  api.get('/lookboard/feed').then(r => r.data);
+
 export const createLookBoard = (formData) =>
   api.post('/lookboard', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -75,5 +78,9 @@ export const createLookBoard = (formData) =>
 
 export const deleteLookBoard = (id) =>
   api.delete(`/lookboard/${id}`).then(r => r.data);
+
+// ─── Users / Shops search ───────────────────────────────
+export const searchUsers = (q) =>
+  api.get('/profile/search', { params: { q } }).then(r => r.data);
 
 export default api;

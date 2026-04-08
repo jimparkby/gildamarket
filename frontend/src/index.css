@@ -2,15 +2,16 @@
 /* Inspired by K1OSK editorial minimalism */
 
 :root {
-  --black: #0a0a0a;
-  --white: #ffffff;
-  --gray-50: #f8f8f6;
-  --gray-100: #f0f0ed;
-  --gray-200: #e4e4e0;
-  --gray-300: #c8c8c3;
-  --gray-500: #8c8c87;
-  --gray-700: #4a4a47;
-  --accent: #0a0a0a;
+  /* Dark theme – SoundCloud-style #181818 */
+  --black: #f0f0ed;     /* foreground / text */
+  --white: #181818;     /* main background */
+  --gray-50: #1e1e1e;
+  --gray-100: #252525;
+  --gray-200: #363636;
+  --gray-300: #4d4d4d;
+  --gray-500: #888888;
+  --gray-700: #b8b8b3;
+  --accent: #f0f0ed;
 
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -155,3 +156,4 @@ img {
 }
 .empty-state svg { opacity: 0.3; }
 .empty-state p { font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; }
+

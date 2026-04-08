@@ -3,18 +3,47 @@ const resolveUrl = require('../utils/resolveUrl');
 
 const prisma = new PrismaClient();
 
+function serializeLb(lb) {
+  return {
+    id: lb.id,
+    title: lb.title,
+    description: lb.description,
+    images: (lb.images || []).map(resolveUrl),
+    createdAt: lb.createdAt,
+    user: lb.user ? {
+      id: lb.user.id,
+      firstName: lb.user.firstName,
+      lastName: lb.user.lastName,
+      telegramUsername: lb.user.telegramUsername,
+      avatar: resolveUrl(lb.user.avatar),
+    } : undefined,
+  };
+}
+
 async function getMyLookBoards(req, res, next) {
   try {
     const lookBoards = await prisma.lookBoard.findMany({
       where: { userId: req.userId },
       orderBy: { createdAt: 'desc' },
     });
-    res.json(lookBoards.map(lb => ({
-      id: lb.id,
-      title: lb.title,
-      images: (lb.images || []).map(resolveUrl),
-      createdAt: lb.createdAt,
-    })));
+    res.json(lookBoards.map(serializeLb));
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getLookBoardFeed(req, res, next) {
+  try {
+    const lookBoards = await prisma.lookBoard.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, telegramUsername: true, avatar: true },
+        },
+      },
+    });
+    res.json(lookBoards.map(serializeLb));
   } catch (err) {
     next(err);
   }
@@ -22,22 +51,21 @@ async function getMyLookBoards(req, res, next) {
 
 async function createLookBoard(req, res, next) {
   try {
-    const { title } = req.body;
-    // S3: file.location; local: file.filename
+    const { title, description } = req.body;
     const images = (req.files || []).map(f => f.location || f.filename);
 
     if (!images.length) return res.status(400).json({ error: 'At least one image required' });
 
     const lb = await prisma.lookBoard.create({
-      data: { title: title || null, images, userId: req.userId },
+      data: { title: title || null, description: description || null, images, userId: req.userId },
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, telegramUsername: true, avatar: true },
+        },
+      },
     });
 
-    res.status(201).json({
-      id: lb.id,
-      title: lb.title,
-      images: lb.images.map(resolveUrl),
-      createdAt: lb.createdAt,
-    });
+    res.status(201).json(serializeLb(lb));
   } catch (err) {
     next(err);
   }
@@ -56,4 +84,4 @@ async function deleteLookBoard(req, res, next) {
   }
 }
 
-module.exports = { getMyLookBoards, createLookBoard, deleteLookBoard };
+module.exports = { getMyLookBoards, getLookBoardFeed, createLookBoard, deleteLookBoard };

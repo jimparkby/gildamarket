@@ -16,6 +16,7 @@ const CATEGORIES = [
 
 const NO_SIZE = ['Аксессуары'];
 const SHOE_SIZE = ['Обувь'];
+const BOTTOMS_SIZE = ['Штаны/Джинсы'];
 
 const CLOTHING_SIZES = [
   { label: 'One\nSize', value: 'One Size' },
@@ -25,6 +26,8 @@ const CLOTHING_SIZES = [
   { label: 'L', value: 'L' },
   { label: 'XL', value: 'XL' },
 ];
+
+const BOTTOMS_SIZES = ['26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44'].map(s => ({ label: s, value: s }));
 
 const SHOE_SIZES = ['35','36','37','38','39','40','41','42','43','44','45','46'].map(s => ({ label: s, value: s }));
 
@@ -67,6 +70,7 @@ export default function AddItem() {
 
   const getSizes = () => {
     if (SHOE_SIZE.includes(form.category)) return SHOE_SIZES;
+    if (BOTTOMS_SIZE.includes(form.category)) return BOTTOMS_SIZES;
     if (NO_SIZE.includes(form.category)) return null;
     return CLOTHING_SIZES;
   };
@@ -159,7 +163,7 @@ export default function AddItem() {
       </div>
       <div className="wizard__scroll">
         {sizes ? (
-          <div className={`size-grid${SHOE_SIZE.includes(form.category) ? ' shoe' : ''}`}>
+          <div className={`size-grid${(SHOE_SIZE.includes(form.category) || BOTTOMS_SIZE.includes(form.category)) ? ' shoe' : ''}`}>
             {sizes.map(s => (
               <button
                 key={s.value}

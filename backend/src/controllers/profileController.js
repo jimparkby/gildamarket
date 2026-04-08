@@ -16,15 +16,47 @@ function serializeUser(user, isOwner = false) {
     createdAt: user.createdAt,
     itemsCount: user._count?.items ?? 0,
     shopLikesCount: user._count?.shopLikedBy ?? 0,
+    followingCount: user._count?.likedShops ?? 0,
     isOwner,
   };
+}
+
+function serializeItem(i) {
+  return {
+    id: i.id, title: i.title, brand: i.brand,
+    price: parseFloat(i.price), currency: i.currency,
+    images: (i.images || []).map(resolveUrl),
+    condition: i.condition, isSold: i.isSold, status: i.status,
+    category: i.category,
+  };
+}
+
+async function searchUsers(req, res, next) {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 1) return res.json([]);
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { firstName: { contains: q, mode: 'insensitive' } },
+          { lastName: { contains: q, mode: 'insensitive' } },
+          { telegramUsername: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      take: 20,
+      include: { _count: { select: { items: true, shopLikedBy: true, likedShops: true } } },
+    });
+    res.json(users.map(u => serializeUser(u, false)));
+  } catch (err) {
+    next(err);
+  }
 }
 
 async function getMe(req, res, next) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      include: { _count: { select: { items: true, shopLikedBy: true } } },
+      include: { _count: { select: { items: true, shopLikedBy: true, likedShops: true } } },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(serializeUser(user, true));
@@ -42,16 +74,14 @@ async function getShop(req, res, next) {
       prisma.user.findUnique({
         where: { id },
         include: {
-          _count: { select: { items: true, shopLikedBy: true } },
+          _count: { select: { items: true, shopLikedBy: true, likedShops: true } },
           items: {
             where: {
-              isSold: false,
-              // Владелец видит все свои товары; чужой профиль — только одобренные
               ...(viewerId === id ? {} : { status: 'approved' }),
             },
             orderBy: { createdAt: 'desc' },
             select: {
-              id: true, title: true, brand: true, price: true, currency: true,
+              id: true, title: true, brand: true, category: true, price: true, currency: true,
               images: true, condition: true, isSold: true, status: true,
             },
           },
@@ -65,17 +95,16 @@ async function getShop(req, res, next) {
 
     if (!user) return res.status(404).json({ error: 'Shop not found' });
 
+    const activeItems = user.items.filter(i => !i.isSold);
+    const archivedItems = user.items.filter(i => i.isSold);
+
     res.json({
       ...serializeUser(user, viewerId === id),
       isShopLiked: !!isLiked,
-      items: user.items.map(i => ({
-        id: i.id, title: i.title, brand: i.brand,
-        price: parseFloat(i.price), currency: i.currency,
-        images: (i.images || []).map(resolveUrl),
-        condition: i.condition, isSold: i.isSold, status: i.status,
-      })),
+      items: activeItems.map(serializeItem),
+      archivedItems: archivedItems.map(serializeItem),
       lookBoards: user.lookBoards.map(lb => ({
-        id: lb.id, title: lb.title,
+        id: lb.id, title: lb.title, description: lb.description,
         images: (lb.images || []).map(resolveUrl),
         createdAt: lb.createdAt,
       })),
@@ -95,7 +124,7 @@ async function updateProfile(req, res, next) {
         firstName: firstName !== undefined ? firstName : undefined,
         lastName: lastName !== undefined ? lastName : undefined,
       },
-      include: { _count: { select: { items: true, shopLikedBy: true } } },
+      include: { _count: { select: { items: true, shopLikedBy: true, likedShops: true } } },
     });
     res.json(serializeUser(user, true));
   } catch (err) {
@@ -106,7 +135,6 @@ async function updateProfile(req, res, next) {
 async function uploadAvatar(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    // S3: req.file.location; local: req.file.filename
     const avatar = req.file.location || req.file.filename;
     const user = await prisma.user.update({
       where: { id: req.userId },
@@ -132,4 +160,4 @@ async function uploadBackground(req, res, next) {
   }
 }
 
-module.exports = { getMe, getShop, updateProfile, uploadAvatar, uploadBackground };
+module.exports = { getMe, getShop, updateProfile, uploadAvatar, uploadBackground, searchUsers };

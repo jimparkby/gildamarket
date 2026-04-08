@@ -9,7 +9,7 @@ import './Favorites.css';
 
 export default function Favorites() {
   const { language } = useSettings();
-  const [tab, setTab] = useState('items'); // items | shops
+  const [tab, setTab] = useState('shops'); // shops | items
   const [items, setItems] = useState([]);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,21 +40,21 @@ export default function Favorites() {
       {/* Tabs */}
       <div className="favorites__tabs">
         <button
+          className={`favorites__tab${tab === 'shops' ? ' active' : ''}`}
+          onClick={() => setTab('shops')}
+        >
+          {t(language, 'shops')}
+          {shops.length > 0 && (
+            <span className="favorites__count">{shops.length}</span>
+          )}
+        </button>
+        <button
           className={`favorites__tab${tab === 'items' ? ' active' : ''}`}
           onClick={() => setTab('items')}
         >
           {t(language, 'items')}
           {items.length > 0 && (
             <span className="favorites__count">{items.length}</span>
-          )}
-        </button>
-        <button
-          className={`favorites__tab${tab === 'shops' ? ' active' : ''}`}
-          onClick={() => setTab('shops')}
-        >
-          {language === 'ru' ? 'Магазины' : 'Shops'}
-          {shops.length > 0 && (
-            <span className="favorites__count">{shops.length}</span>
           )}
         </button>
       </div>

@@ -38,13 +38,16 @@ function serializeItem(item, userId, includeStatus = false) {
 
 async function getItems(req, res, next) {
   try {
-    const { search, page, mode } = req.query;
+    const { search, page, mode, category, isSold, feed } = req.query;
     const userId = req.userId;
 
     let skip = 0;
     let take = INITIAL_PAGE_SIZE;
 
-    if (mode === 'more') {
+    // feed=true — возвращаем все товары без пагинации (для группировки по категориям)
+    if (feed === 'true') {
+      take = 200;
+    } else if (mode === 'more') {
       skip = INITIAL_PAGE_SIZE;
       take = VIEW_MORE_SIZE;
     } else if (page && parseInt(page) > 0) {
@@ -53,16 +56,19 @@ async function getItems(req, res, next) {
       take = PAGINATION_SIZE;
     }
 
-    // Лента показывает только одобренные товары (после prisma db push на проде)
-    // Если колонка status ещё не добавлена — фильтр игнорируется через OR-трюк
     const statusFilter = process.env.MODERATION_ENABLED === 'true'
       ? { status: 'approved' }
       : {};
 
+    // isSold фильтр: если не передан — показываем только доступные (isSold:false)
+    // если isSold=true — показываем только проданные (архив)
+    const soldFilter = isSold === 'true' ? { isSold: true } : { isSold: false };
+
     const where = {
       ...statusFilter,
-      // Авторизованный пользователь не видит в ленте уже лайкнутые товары
-      ...(userId ? { NOT: { likes: { some: { userId } } } } : {}),
+      ...soldFilter,
+      ...(userId && isSold !== 'true' ? { NOT: { likes: { some: { userId } } } } : {}),
+      ...(category ? { category } : {}),
       ...(search
         ? {
             OR: [
