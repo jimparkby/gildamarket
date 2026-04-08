@@ -24,12 +24,12 @@ async function login(req, res, next) {
       }
     }
 
-    // Upsert user
+    // Upsert user — при обновлении НЕ перезаписываем firstName/lastName,
+    // чтобы пользователь мог сменить имя через профиль.
+    // Только username обновляем (он не редактируется в приложении).
     const user = await prisma.user.upsert({
       where: { telegramUserId: String(tgUser.id) },
       update: {
-        firstName: tgUser.first_name || null,
-        lastName: tgUser.last_name || null,
         telegramUsername: tgUser.username || null,
       },
       create: {

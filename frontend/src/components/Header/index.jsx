@@ -40,7 +40,7 @@ export default function Header() {
     '/search':    language === 'ru' ? 'ПОИСК' : 'SEARCH',
     '/favorites': language === 'ru' ? 'ИЗБРАННОЕ' : 'SAVED',
     '/add':       language === 'ru' ? 'НОВОЕ ОБЪЯВЛЕНИЕ' : 'NEW LISTING',
-    '/profile':   language === 'ru' ? 'МОЙ МАГАЗИН' : 'MY SHOP',
+    '/profile':   language === 'ru' ? 'МОЙ ПРОФИЛЬ' : 'MY PROFILE',
   };
 
   const isShopRoute = location.pathname.startsWith('/shop/');

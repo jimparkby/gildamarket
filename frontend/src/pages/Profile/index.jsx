@@ -251,11 +251,6 @@ export default function Profile() {
         {/* Stats */}
         <div className="profile__stats">
           <div className="profile__stat">
-            <span className="profile__stat-num">{shop.itemsCount ?? items.length}</span>
-            <span className="profile__stat-label">{t(language, 'items')}</span>
-          </div>
-          <div className="profile__stat-divider" />
-          <div className="profile__stat">
             <span className="profile__stat-num">{shop.shopLikesCount ?? 0}</span>
             <span className="profile__stat-label">{t(language, 'followers')}</span>
           </div>
@@ -324,49 +319,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── Лукбук Section ── */}
-      <section className="profile__section">
-        <div className="profile__section-header">
-          <h3 className="profile__section-label">{t(language, 'lookBoard')}</h3>
-          {isOwner && (
-            <button className="profile__add-lb" onClick={openLbModal} disabled={lbUploading}>
-              {lbUploading ? '…' : t(language, 'addLook')}
-            </button>
-          )}
-        </div>
-        {lookBoards.length === 0 ? (
-          isOwner ? (
-            <div className="profile__lb-empty">
-              <p>{t(language, 'createFirstLook')}</p>
-            </div>
-          ) : null
-        ) : (
-          <div className="profile__lb-feed">
-            {lookBoards.map(lb => (
-              <div key={lb.id} className="profile__lb-post">
-                <div className="profile__lb-scroll">
-                  {lb.images.map((img, i) => (
-                    <img key={i} src={img} alt="" className="profile__lb-scroll-img" />
-                  ))}
-                </div>
-                {(lb.title || lb.description) && (
-                  <div className="profile__lb-text">
-                    {lb.title && <p className="profile__lb-title">{lb.title}</p>}
-                    {lb.description && <p className="profile__lb-desc">{lb.description}</p>}
-                  </div>
-                )}
-                {isOwner && (
-                  <button className="profile__lb-delete" onClick={() => handleDeleteLb(lb.id)}>
-                    {t(language, 'remove')}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ── Мои товары Section ── */}
+      {/* ── Каталог Section ── */}
       <section className="profile__section">
         <div className="profile__section-header">
           <h3 className="profile__section-label">{t(language, 'myListings')}</h3>
@@ -416,6 +369,48 @@ export default function Profile() {
                       {t(language, 'delete')}
                     </button>
                   </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Лукбук Section ── */}
+      <section className="profile__section">
+        <div className="profile__section-header">
+          <h3 className="profile__section-label">{t(language, 'lookBoard')}</h3>
+          {isOwner && (
+            <button className="profile__add-lb" onClick={openLbModal} disabled={lbUploading}>
+              {lbUploading ? '…' : t(language, 'addLook')}
+            </button>
+          )}
+        </div>
+        {lookBoards.length === 0 ? (
+          isOwner ? (
+            <div className="profile__lb-empty">
+              <p>{t(language, 'createFirstLook')}</p>
+            </div>
+          ) : null
+        ) : (
+          <div className="profile__lb-feed">
+            {lookBoards.map(lb => (
+              <div key={lb.id} className="profile__lb-post">
+                <div className="profile__lb-scroll">
+                  {lb.images.map((img, i) => (
+                    <img key={i} src={img} alt="" className="profile__lb-scroll-img" />
+                  ))}
+                </div>
+                {(lb.title || lb.description) && (
+                  <div className="profile__lb-text">
+                    {lb.title && <p className="profile__lb-title">{lb.title}</p>}
+                    {lb.description && <p className="profile__lb-desc">{lb.description}</p>}
+                  </div>
+                )}
+                {isOwner && (
+                  <button className="profile__lb-delete" onClick={() => handleDeleteLb(lb.id)}>
+                    {t(language, 'remove')}
+                  </button>
                 )}
               </div>
             ))}
