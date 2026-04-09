@@ -1,29 +1,34 @@
 .fw-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
   z-index: 500;
+  background: var(--white);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  animation: overlay-in 220ms ease;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .fw-sheet {
   width: 100%;
-  max-height: 70vh;
+  height: 100%;
   background: var(--white);
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--gray-200);
-  animation: sheet-in 260ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fw-sheet__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: calc(var(--tg-safe-top, 0px) + var(--header-h)) 20px 14px;
   border-bottom: 1px solid var(--gray-200);
   flex-shrink: 0;
+  background: var(--white);
 }
 
 .fw-sheet__title {
@@ -47,6 +52,7 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-h) + var(--tg-safe-bottom, 0px));
 }
 
 .fw-sheet__empty {

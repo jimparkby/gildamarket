@@ -35,8 +35,8 @@ export default function FollowersModal({ shopId, mode, onClose }) {
   const title = mode === 'followers' ? 'ПОДПИСЧИКИ' : 'ПОДПИСКИ';
 
   return (
-    <div className="fw-overlay" onClick={onClose}>
-      <div className="fw-sheet" onClick={e => e.stopPropagation()}>
+    <div className="fw-overlay">
+      <div className="fw-sheet">
         <div className="fw-sheet__header">
           <span className="fw-sheet__title">{title}</span>
           <button className="fw-sheet__close" onClick={onClose}>
