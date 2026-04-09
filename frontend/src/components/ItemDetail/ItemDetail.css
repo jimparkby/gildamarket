@@ -40,21 +40,20 @@
 }
 
 .item-detail__overlay-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.88);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(30,30,30,0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--black);
+  color: #fff;
   pointer-events: all;
   transition: background var(--transition);
-  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
 }
-.item-detail__overlay-btn:active { background: rgba(255,255,255,1); }
+.item-detail__overlay-btn:active { background: rgba(30,30,30,0.92); }
 
 /* Бренд + лайк под фото */
 .item-detail__brand-row {
