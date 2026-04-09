@@ -41,9 +41,6 @@ export default function ItemCard({ item, onClick }) {
           </span>
           {item.size && <span className="item-card__size">{item.size}</span>}
         </div>
-        <span className="item-card__condition">
-          {CONDITION_LABELS[item.condition] || item.condition}
-        </span>
       </div>
     </article>
   );
