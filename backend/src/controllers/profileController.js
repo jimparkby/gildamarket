@@ -21,13 +21,15 @@ function serializeUser(user, isOwner = false) {
   };
 }
 
-function serializeItem(i) {
+function serializeItem(i, seller = null) {
   return {
     id: i.id, title: i.title, brand: i.brand,
     price: parseFloat(i.price), currency: i.currency,
     images: (i.images || []).map(resolveUrl),
     condition: i.condition, isSold: i.isSold, status: i.status,
-    category: i.category,
+    category: i.category, subcategory: i.subcategory || null,
+    size: i.size || null, description: i.description || null,
+    seller,
   };
 }
 
@@ -98,11 +100,19 @@ async function getShop(req, res, next) {
     const activeItems = user.items.filter(i => !i.isSold);
     const archivedItems = user.items.filter(i => i.isSold);
 
+    const sellerInfo = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      telegramUsername: user.telegramUsername,
+      avatar: resolveUrl(user.avatar),
+    };
+
     res.json({
       ...serializeUser(user, viewerId === id),
       isShopLiked: !!isLiked,
-      items: activeItems.map(serializeItem),
-      archivedItems: archivedItems.map(serializeItem),
+      items: activeItems.map(i => serializeItem(i, sellerInfo)),
+      archivedItems: archivedItems.map(i => serializeItem(i, sellerInfo)),
       lookBoards: user.lookBoards.map(lb => ({
         id: lb.id, title: lb.title, description: lb.description,
         images: (lb.images || []).map(resolveUrl),

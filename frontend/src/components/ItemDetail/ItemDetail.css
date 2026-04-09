@@ -255,9 +255,8 @@
 .item-detail__actions {
   display: flex;
   gap: 10px;
-  padding: 16px 20px 32px;
+  padding: 16px 20px calc(var(--nav-h) + max(16px, env(safe-area-inset-bottom, 16px)));
   border-top: 1px solid var(--gray-100);
-  margin-top: auto;
 }
 
 .item-detail__btn-primary,

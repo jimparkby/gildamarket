@@ -52,6 +52,9 @@
   display: flex;
   border-bottom: 1px solid var(--gray-200);
   background: var(--white);
+  position: sticky;
+  top: 45px;
+  z-index: 9;
 }
 
 .search-page__mode-tab {
@@ -80,6 +83,9 @@
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
   scrollbar-width: none;
+  position: sticky;
+  top: 89px;
+  z-index: 8;
 }
 .search-page__cats::-webkit-scrollbar { display: none; }
 

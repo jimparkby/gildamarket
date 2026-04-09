@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toggleItemLike } from '../../api/client';
 import { useSettings } from '../../App';
@@ -19,6 +19,15 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const [activeImg, setActiveImg] = useState(0);
   const [isLiked, setIsLiked] = useState(item?.isLiked ?? false);
   const touchStartX = useRef(null);
+
+  // Перехватываем Telegram BackButton — закрываем деталь вместо navigate(-1)
+  useEffect(() => {
+    const tg = window?.Telegram?.WebApp;
+    if (!tg?.BackButton) return;
+    tg.BackButton.show();
+    tg.BackButton.onClick(onClose);
+    return () => tg.BackButton.offClick(onClose);
+  }, [onClose]);
 
   const handleTouchStart = useCallback((e) => {
     touchStartX.current = e.touches[0].clientX;
