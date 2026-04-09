@@ -19,6 +19,8 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const [activeImg, setActiveImg] = useState(0);
   const [isLiked, setIsLiked] = useState(item?.isLiked ?? false);
   const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const imgWrapRef = useRef(null);
 
   // Перехватываем Telegram BackButton — закрываем деталь вместо navigate(-1)
   useEffect(() => {
@@ -29,8 +31,23 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     return () => tg.BackButton.offClick(onClose);
   }, [onClose]);
 
+  // Non-passive touchmove — блокирует перехват свайпа Telegram при горизонтальном жесте
+  useEffect(() => {
+    const el = imgWrapRef.current;
+    if (!el) return;
+    const onMove = (e) => {
+      if (touchStartX.current === null) return;
+      const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+      const dy = Math.abs(e.touches[0].clientY - (touchStartY.current ?? 0));
+      if (dx > dy && dx > 5) e.preventDefault();
+    };
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, []);
+
   const handleTouchStart = useCallback((e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   }, []);
 
   const handleTouchEnd = useCallback((e) => {
@@ -42,6 +59,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
       else setActiveImg(prev => Math.max(prev - 1, 0));
     }
     touchStartX.current = null;
+    touchStartY.current = null;
   }, [item?.images?.length]);
 
   const handleLike = useCallback(async () => {
@@ -79,6 +97,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
           {images.length > 0 ? (
             <>
               <div
+                ref={imgWrapRef}
                 className="item-detail__main-img-wrap"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
