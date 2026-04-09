@@ -57,9 +57,8 @@ async function getItems(req, res, next) {
       take = PAGINATION_SIZE;
     }
 
-    const statusFilter = process.env.MODERATION_ENABLED === 'true'
-      ? { status: 'approved' }
-      : {};
+    // Показываем все товары кроме явно отклонённых — pending сразу в ленте
+    const statusFilter = { status: { not: 'rejected' } };
 
     // isSold фильтр: если не передан — показываем только доступные (isSold:false)
     // если isSold=true — показываем только проданные (архив)

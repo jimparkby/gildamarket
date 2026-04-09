@@ -85,7 +85,7 @@ function buildItemCaption(item) {
   const price = `${parseFloat(item.price).toLocaleString('ru-RU')} ${item.currency}`;
 
   const lines = [
-    `🆕 <b>Новый товар на модерацию</b>`,
+    `🆕 <b>Новый товар — уже в ленте</b>`,
     ``,
     `🏷 <b>${esc(item.title)}</b> — ${price}`,
     `📦 Категория: ${esc(item.category)}`,
@@ -107,8 +107,10 @@ function buildKeyboard(itemId, sellerId, flags) {
   return {
     inline_keyboard: [
       [
-        { text: '✅ Одобрить',            callback_data: `ia:${itemId}` },
-        { text: '🗑 Удалить товар',       callback_data: `id:${itemId}:${flags}` },
+        { text: '✅ Одобрено (верифицировать)', callback_data: `ia:${itemId}` },
+      ],
+      [
+        { text: '🗑 Удалить из ленты',         callback_data: `id:${itemId}:${flags}` },
       ],
       [{ text: optText(OPT_BAD_PHOTO),    callback_data: `io:${itemId}:${flags}:${OPT_BAD_PHOTO}` }],
       [{ text: optText(OPT_WRONG_INFO),   callback_data: `io:${itemId}:${flags}:${OPT_WRONG_INFO}` }],
@@ -317,7 +319,7 @@ function registerHandlers() {
         ? selectedFlags.map(f => OPT_BUTTON_LABELS[f]).join(', ')
         : 'без причины';
       const base = reviewCaptions.get(key) || buildItemCaption(item);
-      await editAdminMessage(chatId, messageId, hasPhoto, `🗑 Удалён [${reasonLabel}]: ${admin}\n\n${base}`, null);
+      await editAdminMessage(chatId, messageId, hasPhoto, `🗑 Удалён из ленты [${reasonLabel}]: ${admin}\n\n${base}`, null);
       reviewCaptions.delete(key);
 
       // Уведомить продавца
