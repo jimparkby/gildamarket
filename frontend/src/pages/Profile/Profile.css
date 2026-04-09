@@ -566,7 +566,7 @@
 .lb-modal__desc:focus { border-bottom-color: var(--black); }
 
 .lb-modal__footer {
-  padding: 12px 20px calc(12px + var(--tg-safe-bottom, 0px));
+  padding: 12px 20px calc(var(--nav-h) + max(12px, env(safe-area-inset-bottom, 12px)));
   border-top: 1px solid var(--gray-200);
 }
 
