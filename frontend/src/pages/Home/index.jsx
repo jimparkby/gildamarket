@@ -39,8 +39,7 @@ export default function Home() {
     } else {
       setItems(prev => prev.map(i => i.id === itemId ? { ...i, isLiked: false } : i));
     }
-    if (selected?.id === itemId) setSelected(null);
-  }, [selected?.id]);
+  }, []);
 
   if (loading) return (
     <main className="page home"><div className="spinner" /></main>

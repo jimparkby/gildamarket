@@ -426,6 +426,10 @@
   background: var(--white);
   margin-top: 1px;
 }
+.profile__items-grid::after {
+  content: '';
+  background: var(--gray-50);
+}
 .profile__item-wrap {
   background: var(--gray-50);
   padding: 12px;
