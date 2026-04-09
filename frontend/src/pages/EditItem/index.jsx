@@ -1,9 +1,9 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createItem } from '../../api/client';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { updateItem, getItem } from '../../api/client';
 import { useTelegram } from '../../hooks/useTelegram';
 import { compressImages } from '../../utils/imageCompression';
-import './AddItem.css';
+import '../AddItem/AddItem.css';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const CATEGORIES = [
@@ -42,24 +42,48 @@ const BOTTOMS_SIZES = ['26','27','28','29','30','31','32','33','34','35','36','3
 
 const SHOE_SIZES = ['35','36','37','38','39','40','41','42','43','44','45','46'].map(s => ({ label: s, value: s }));
 
-
 const TOTAL_STEPS = 4;
 
-export default function AddItem() {
+export default function EditItem() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { haptic } = useTelegram();
   const fileRef = useRef();
 
+  const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [form, setForm] = useState({
     title: '', brand: '', category: '', subcategory: '', size: '',
     condition: 'good', price: '', currency: 'RUB', description: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [agreed, setAgreed] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    getItem(id)
+      .then(item => {
+        setForm({
+          title: item.title || '',
+          brand: item.brand || '',
+          category: item.category || '',
+          subcategory: item.subcategory || '',
+          size: item.size || '',
+          condition: item.condition || 'good',
+          price: item.price?.toString() || '',
+          currency: item.currency || 'RUB',
+          description: item.description || '',
+        });
+        setExistingImages(item.images || []);
+      })
+      .catch(() => {
+        setError('Failed to load item');
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const setField = useCallback((field, val) => {
     setForm(prev => {
@@ -99,6 +123,10 @@ export default function AddItem() {
     });
   }, []);
 
+  const removeExistingImage = useCallback((idx) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== idx));
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!form.title.trim()) return setError('Item name is required');
     if (!form.price || isNaN(parseFloat(form.price))) return setError('Valid price is required');
@@ -109,12 +137,18 @@ export default function AddItem() {
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+
+      // Send existing images that weren't deleted
+      existingImages.forEach(img => fd.append('existingImages', img));
+
+      // Send new photos
       photos.forEach(p => fd.append('images', p.file));
-      await createItem(fd);
+
+      await updateItem(id, fd);
       haptic('medium');
       navigate('/profile');
     } catch (err) {
-      console.error('Publish error:', err);
+      console.error('Update error:', err);
       if (err.code === 'ECONNABORTED') {
         setError('Request timed out. Try uploading fewer or smaller photos.');
       } else if (err.response?.status === 413) {
@@ -124,12 +158,15 @@ export default function AddItem() {
       } else if (!navigator.onLine) {
         setError('No internet connection. Please check your network.');
       } else {
-        setError('Failed to publish. Please try again.');
+        setError('Failed to update. Please try again.');
       }
     } finally {
       setSubmitting(false);
     }
-  }, [form, photos, haptic, navigate]);
+  }, [form, photos, existingImages, id, haptic, navigate]);
+
+  if (loading) return <main className="page"><div className="spinner" /></main>;
+  if (error && !form.title) return <main className="page"><div className="empty-state"><p>{error}</p></div></main>;
 
   // ── Step indicator ───────────────────────────────────────────────────────────
   const StepBar = () => (
@@ -161,7 +198,6 @@ export default function AddItem() {
           ))}
         </div>
 
-        {/* Подкатегории для Штаны/Джинсы */}
         {form.category === 'Штаны/Джинсы' && (
           <div className="subcat-section">
             <p className="subcat-title">Тип</p>
@@ -244,16 +280,24 @@ export default function AddItem() {
       </div>
       <div className="wizard__scroll">
         <div className="photos-grid">
-          {photos.map((p, i) => (
-            <div key={i} className="photo-thumb">
-              <img src={p.preview} alt="" />
-              <button className="photo-thumb__del" onClick={() => removePhoto(i)}>
+          {existingImages.map((img, i) => (
+            <div key={`existing-${i}`} className="photo-thumb">
+              <img src={img} alt="" />
+              <button className="photo-thumb__del" onClick={() => removeExistingImage(i)}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
               {i === 0 && <span className="photo-thumb__cover">Cover</span>}
             </div>
           ))}
-          {photos.length < 10 && (
+          {photos.map((p, i) => (
+            <div key={`new-${i}`} className="photo-thumb">
+              <img src={p.preview} alt="" />
+              <button className="photo-thumb__del" onClick={() => removePhoto(i)}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          ))}
+          {(existingImages.length + photos.length) < 10 && (
             <button className="photo-add" onClick={() => fileRef.current?.click()}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
               <span>Add photo</span>
@@ -264,9 +308,7 @@ export default function AddItem() {
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handlePhotos} />
       </div>
       <div className="wizard__footer">
-        <button className="wizard__next" onClick={next}>
-          {photos.length === 0 ? 'Skip' : 'Continue'}
-        </button>
+        <button className="wizard__next" onClick={next}>Continue</button>
       </div>
     </main>
   );
@@ -304,67 +346,13 @@ export default function AddItem() {
         </div>
 
         {error && <div className="wizard__error">{error}</div>}
-
-        {/* Чекбокс согласия с правилами */}
-        <label className="wizard__agree">
-          <span
-            className={`wizard__checkbox${agreed ? ' checked' : ''}`}
-            onClick={() => setAgreed(v => !v)}
-            role="checkbox"
-            aria-checked={agreed}
-          >
-            {agreed && (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            )}
-          </span>
-          <span className="wizard__agree-text">
-            I agree to the{' '}
-            <span className="wizard__agree-link" onClick={(e) => { e.preventDefault(); setRulesOpen(true); }}>
-              listing rules
-            </span>
-          </span>
-        </label>
       </div>
 
       <div className="wizard__footer">
-        <button className="wizard__next" onClick={handleSubmit} disabled={submitting || !agreed}>
-          {submitting ? 'Publishing…' : 'Publish Listing'}
+        <button className="wizard__next" onClick={handleSubmit} disabled={submitting}>
+          {submitting ? 'Updating…' : 'Update Listing'}
         </button>
       </div>
-
-      {/* Модальное окно с правилами */}
-      {rulesOpen && (
-        <div className="rules-overlay" onClick={() => setRulesOpen(false)}>
-          <div className="rules-modal" onClick={e => e.stopPropagation()}>
-            <div className="rules-modal__header">
-              <h3 className="rules-modal__title">Listing Rules</h3>
-              <button className="rules-modal__close" onClick={() => setRulesOpen(false)}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
-            <div className="rules-modal__body">
-              <p className="rules-modal__rule"><strong>1. Authenticity</strong><br/>Only list genuine items. Counterfeits, replicas, or items presented as something they are not are strictly prohibited.</p>
-              <p className="rules-modal__rule"><strong>2. Accurate description</strong><br/>Photos and description must honestly reflect the item's condition. Hide no visible damage, stains, or defects.</p>
-              <p className="rules-modal__rule"><strong>3. Availability</strong><br/>Only list items you actually own and are ready to sell. Do not list items that have already been sold elsewhere.</p>
-              <p className="rules-modal__rule"><strong>4. Appropriate content</strong><br/>Prohibited items include: weapons, drugs, adult content, stolen goods, or anything illegal under applicable law.</p>
-              <p className="rules-modal__rule"><strong>5. Fair pricing</strong><br/>Set a real price. Listings with placeholder prices (0, 1, 9999) will be removed.</p>
-              <p className="rules-modal__rule"><strong>6. One listing per item</strong><br/>Do not create duplicate listings for the same item.</p>
-            </div>
-            <div className="rules-modal__footer">
-              <button
-                className="rules-modal__accept"
-                onClick={() => { setAgreed(true); setRulesOpen(false); }}
-              >
-                I understand and agree
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

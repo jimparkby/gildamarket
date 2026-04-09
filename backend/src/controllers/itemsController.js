@@ -205,6 +205,49 @@ async function toggleLike(req, res, next) {
   }
 }
 
+async function updateItem(req, res, next) {
+  try {
+    const id = parseInt(req.params.id);
+    const { title, brand, category, subcategory, size, condition, price, currency, description, existingImages } = req.body;
+
+    const item = await prisma.item.findUnique({ where: { id } });
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    if (item.sellerId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+
+    // S3: use file.location (full URL); local: use file.filename
+    const newImages = (req.files || []).map(f => f.location || f.filename);
+
+    // Combine existing images (that weren't deleted) with new uploads
+    let keepExisting = [];
+    if (existingImages) {
+      // existingImages can be a string or array
+      keepExisting = Array.isArray(existingImages) ? existingImages : [existingImages];
+    }
+    const images = [...keepExisting, ...newImages];
+
+    const updated = await prisma.item.update({
+      where: { id },
+      data: {
+        title: title || item.title,
+        brand: brand !== undefined ? brand : item.brand,
+        category: category || item.category,
+        subcategory: subcategory !== undefined ? subcategory : item.subcategory,
+        size: size !== undefined ? size : item.size,
+        condition: condition || item.condition,
+        price: price ? parseFloat(price) : item.price,
+        currency: currency || item.currency,
+        description: description !== undefined ? description : item.description,
+        images: images.length > 0 ? images : item.images,
+      },
+      include: { seller: true, _count: { select: { likes: true } } },
+    });
+
+    res.json(serializeItem(updated, req.userId, true));
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function markSold(req, res, next) {
   try {
     const id = parseInt(req.params.id);
@@ -224,4 +267,4 @@ async function markSold(req, res, next) {
   }
 }
 
-module.exports = { getItems, getItem, createItem, deleteItem, toggleLike, markSold };
+module.exports = { getItems, getItem, createItem, updateItem, deleteItem, toggleLike, markSold };

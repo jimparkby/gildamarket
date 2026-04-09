@@ -37,8 +37,11 @@ export default function Header() {
   };
 
   const isShopRoute = location.pathname.startsWith('/shop/');
+  const isEditRoute = location.pathname.startsWith('/edit/');
   const title = isShopRoute
     ? (language === 'ru' ? 'МАГАЗИН' : 'SHOP')
+    : isEditRoute
+    ? (language === 'ru' ? 'РЕДАКТИРОВАНИЕ' : 'EDIT LISTING')
     : PAGE_TITLES[location.pathname] ?? null;
 
   return (

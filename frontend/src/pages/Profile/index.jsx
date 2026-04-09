@@ -373,6 +373,9 @@ export default function Profile() {
                 <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
                 {isOwner && (
                   <div className="profile__item-actions">
+                    <button onClick={() => navigate(`/edit/${item.id}`)} className="profile__item-edit">
+                      {t(language, 'edit')}
+                    </button>
                     <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
                       {item.isSold ? t(language, 'markAvailable') : t(language, 'markSold')}
                     </button>
@@ -442,6 +445,9 @@ export default function Profile() {
                 <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
                 {isOwner && (
                   <div className="profile__item-actions">
+                    <button onClick={() => navigate(`/edit/${item.id}`)} className="profile__item-edit">
+                      {t(language, 'edit')}
+                    </button>
                     <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
                       {t(language, 'markAvailable')}
                     </button>

@@ -25,7 +25,13 @@ export const getItem = (id) =>
 export const createItem = (formData) =>
   api.post('/items', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 60000,
+    timeout: 120000, // 2 minutes for large images
+  }).then(r => r.data);
+
+export const updateItem = (id, formData) =>
+  api.put(`/items/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000, // 2 minutes for large images
   }).then(r => r.data);
 
 export const deleteItem = (id) =>

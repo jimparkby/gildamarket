@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Search from './pages/Search';
 import Favorites from './pages/Favorites';
 import AddItem from './pages/AddItem';
+import EditItem from './pages/EditItem';
 import Profile from './pages/Profile';
 
 // ─── Auth Context ────────────────────────────────────────
@@ -123,6 +124,7 @@ export default function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/add" element={<AddItem />} />
+          <Route path="/edit/:id" element={<EditItem />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/shop/:id" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />

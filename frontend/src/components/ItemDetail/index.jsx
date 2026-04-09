@@ -158,9 +158,6 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
                     <p className="item-detail__seller-tg">@{item.seller.telegramUsername}</p>
                   )}
                 </div>
-                <svg className="item-detail__seller-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
               </div>
             </div>
           )}
