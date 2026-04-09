@@ -31,6 +31,13 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     return () => tg.BackButton.offClick(onClose);
   }, [onClose]);
 
+  // Блокируем вертикальный свайп Telegram (закрытие приложения) пока открыта деталь
+  useEffect(() => {
+    const tg = window?.Telegram?.WebApp;
+    tg?.disableVerticalSwipes?.();
+    return () => tg?.enableVerticalSwipes?.();
+  }, []);
+
   // Non-passive touchmove — блокирует перехват свайпа Telegram при горизонтальном жесте
   useEffect(() => {
     const el = imgWrapRef.current;
