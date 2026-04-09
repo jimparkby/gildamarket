@@ -20,13 +20,15 @@ export default function Header() {
       tg.BackButton.hide();
     } else {
       tg.BackButton.show();
-      const handler = () => navigate(-1);
+      // Вкладки нижней навигации — возвращаем на главную
+      const isBottomTab = ['/search', '/favorites', '/profile'].includes(location.pathname);
+      const handler = () => isBottomTab ? navigate('/') : navigate(-1);
       tg.BackButton.onClick(handler);
       return () => {
         tg.BackButton.offClick(handler);
       };
     }
-  }, [isHome, navigate]);
+  }, [isHome, location.pathname, navigate]);
 
   // ── Заголовок страницы ───────────────────────────────────────────────────────
   const PAGE_TITLES = {

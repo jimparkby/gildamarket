@@ -105,62 +105,65 @@ export default function Search() {
   return (
     <>
       <main className="page search-page">
-        {/* Строка поиска */}
-        <div className="search-page__bar">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="search-page__icon">
-            <circle cx="11" cy="11" r="7"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            ref={inputRef}
-            className="search-page__input"
-            placeholder={mode === 'shops' ? t(language, 'searchShopsPlaceholder') : t(language, 'searchPlaceholder')}
-            value={query}
-            onChange={handleChange}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-          />
-          {query && (
-            <button className="search-page__clear" onClick={clearQuery}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
+        {/* Sticky-блок: поиск + переключатель + категории */}
+        <div className="search-page__controls">
+          {/* Строка поиска */}
+          <div className="search-page__bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="search-page__icon">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              ref={inputRef}
+              className="search-page__input"
+              placeholder={mode === 'shops' ? t(language, 'searchShopsPlaceholder') : t(language, 'searchPlaceholder')}
+              value={query}
+              onChange={handleChange}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            {query && (
+              <button className="search-page__clear" onClick={clearQuery}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Переключатель Вещи / Магазины */}
+          <div className="search-page__mode-tabs">
+            <button
+              className={`search-page__mode-tab${mode === 'items' ? ' active' : ''}`}
+              onClick={() => handleModeSwitch('items')}
+            >
+              {t(language, 'items')}
             </button>
+            <button
+              className={`search-page__mode-tab${mode === 'shops' ? ' active' : ''}`}
+              onClick={() => handleModeSwitch('shops')}
+            >
+              {t(language, 'shops')}
+            </button>
+          </div>
+
+          {/* Категории (только для режима items) */}
+          {mode === 'items' && (
+            <div className="search-page__cats">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  className={`search-page__cat${selectedCat === cat ? ' active' : ''}`}
+                  onClick={() => handleCatSelect(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           )}
         </div>
-
-        {/* Переключатель Вещи / Магазины */}
-        <div className="search-page__mode-tabs">
-          <button
-            className={`search-page__mode-tab${mode === 'items' ? ' active' : ''}`}
-            onClick={() => handleModeSwitch('items')}
-          >
-            {t(language, 'items')}
-          </button>
-          <button
-            className={`search-page__mode-tab${mode === 'shops' ? ' active' : ''}`}
-            onClick={() => handleModeSwitch('shops')}
-          >
-            {t(language, 'shops')}
-          </button>
-        </div>
-
-        {/* Категории (только для режима items) */}
-        {mode === 'items' && (
-          <div className="search-page__cats">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                className={`search-page__cat${selectedCat === cat ? ' active' : ''}`}
-                onClick={() => handleCatSelect(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Состояния */}
         {loading ? (
