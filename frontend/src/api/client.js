@@ -50,6 +50,12 @@ export const getMe = () =>
 export const getShop = (id) =>
   api.get(`/profile/${id}`).then(r => r.data);
 
+export const getFollowers = (id) =>
+  api.get(`/profile/${id}/followers`).then(r => r.data);
+
+export const getFollowing = (id) =>
+  api.get(`/profile/${id}/following`).then(r => r.data);
+
 export const updateProfile = (data) =>
   api.put('/profile/me', data).then(r => r.data);
 

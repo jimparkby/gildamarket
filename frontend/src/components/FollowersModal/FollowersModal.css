@@ -1,0 +1,113 @@
+.fw-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+}
+
+.fw-sheet {
+  width: 100%;
+  max-height: 70vh;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--gray-200);
+  animation: sheet-in 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fw-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.fw-sheet__title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--black);
+}
+
+.fw-sheet__close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-500);
+}
+
+.fw-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fw-sheet__empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.fw-user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  background: var(--white);
+  text-align: left;
+  width: 100%;
+  transition: background var(--transition);
+}
+.fw-user-row:active { background: var(--gray-50); }
+.fw-user-row:last-child { border-bottom: none; }
+
+.fw-user-row__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--gray-500);
+}
+.fw-user-row__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fw-user-row__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fw-user-row__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--black);
+}
+
+.fw-user-row__tg {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.fw-user-row__count {
+  font-size: 11px;
+  color: var(--gray-500);
+  flex-shrink: 0;
+}

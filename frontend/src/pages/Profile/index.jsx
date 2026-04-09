@@ -11,6 +11,7 @@ import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
 import SideMenu from '../../components/SideMenu';
+import FollowersModal from '../../components/FollowersModal';
 import './Profile.css';
 
 const CATEGORIES = ['Обувь','Верхняя одежда','Средний слой','Штаны/Джинсы','Аксессуары','Прочее'];
@@ -35,6 +36,7 @@ export default function Profile() {
   const [lbDesc, setLbDesc] = useState('');
   const [lbFiles, setLbFiles] = useState([]);
   const [lbPreviews, setLbPreviews] = useState([]);
+  const [followersModal, setFollowersModal] = useState(null); // null | 'followers' | 'following'
   const avatarRef = useRef();
   const bgRef = useRef();
   const lbFileRef = useRef();
@@ -261,15 +263,15 @@ export default function Profile() {
 
         {/* Stats */}
         <div className="profile__stats">
-          <div className="profile__stat">
+          <button className="profile__stat profile__stat--btn" onClick={() => setFollowersModal('followers')}>
             <span className="profile__stat-num">{shop.shopLikesCount ?? 0}</span>
             <span className="profile__stat-label">{t(language, 'followers')}</span>
-          </div>
+          </button>
           <div className="profile__stat-divider" />
-          <div className="profile__stat">
+          <button className="profile__stat profile__stat--btn" onClick={() => setFollowersModal('following')}>
             <span className="profile__stat-num">{shop.followingCount ?? 0}</span>
             <span className="profile__stat-label">{t(language, 'following')}</span>
-          </div>
+          </button>
         </div>
 
         {/* Action buttons */}
@@ -532,6 +534,14 @@ export default function Profile() {
       )}
 
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+
+      {followersModal && (
+        <FollowersModal
+          shopId={shopId}
+          mode={followersModal}
+          onClose={() => setFollowersModal(null)}
+        />
+      )}
     </main>
   );
 }

@@ -170,4 +170,40 @@ async function uploadBackground(req, res, next) {
   }
 }
 
-module.exports = { getMe, getShop, updateProfile, uploadAvatar, uploadBackground, searchUsers };
+async function getFollowers(req, res, next) {
+  try {
+    const id = parseInt(req.params.id);
+    const likes = await prisma.shopLike.findMany({
+      where: { shopId: id },
+      include: {
+        user: {
+          include: { _count: { select: { items: true, shopLikedBy: true, likedShops: true } } },
+        },
+      },
+      orderBy: { userId: 'desc' },
+    });
+    res.json(likes.map(l => serializeUser(l.user)));
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getFollowing(req, res, next) {
+  try {
+    const id = parseInt(req.params.id);
+    const likes = await prisma.shopLike.findMany({
+      where: { userId: id },
+      include: {
+        shop: {
+          include: { _count: { select: { items: true, shopLikedBy: true, likedShops: true } } },
+        },
+      },
+      orderBy: { shopId: 'desc' },
+    });
+    res.json(likes.map(l => serializeUser(l.shop)));
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getMe, getShop, updateProfile, uploadAvatar, uploadBackground, searchUsers, getFollowers, getFollowing };
