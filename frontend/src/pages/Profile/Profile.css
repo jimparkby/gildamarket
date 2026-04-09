@@ -1,5 +1,5 @@
 .profile {
-  background: var(--gray-50);
+  background: var(--white);
   padding-top: var(--header-h);
 }
 
@@ -428,10 +428,10 @@
 }
 .profile__items-grid::after {
   content: '';
-  background: var(--gray-50);
+  background: var(--white);
 }
 .profile__item-wrap {
-  background: var(--gray-50);
+  background: var(--white);
   padding: 12px;
   display: flex;
   flex-direction: column;

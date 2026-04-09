@@ -43,8 +43,12 @@
   background: var(--gray-200);
 }
 .favorites__grid > * {
-  background: var(--gray-50);
+  background: var(--white);
   padding: 12px;
+}
+.favorites__grid::after {
+  content: '';
+  background: var(--white);
 }
 
 .favorites__shops {

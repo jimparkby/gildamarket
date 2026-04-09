@@ -9,6 +9,10 @@
   gap: 1px;
   background: var(--gray-200);
 }
+.home__grid::after {
+  content: '';
+  background: var(--white);
+}
 
 .home__more {
   display: flex;
