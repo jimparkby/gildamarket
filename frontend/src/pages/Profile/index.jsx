@@ -96,7 +96,7 @@ export default function Profile() {
   }, [shop?.id]);
 
   const handleShare = useCallback(() => {
-    const url = `https://t.me/GildamarketBot/app?startapp=shop_${shop.id}`;
+    const url = `https://t.me/Gildamarket_bot/app?startapp=shop_${shop.id}`;
     if (navigator.share) {
       navigator.share({ title: shop.firstName, url }).catch(() => {});
     } else if (window.Telegram?.WebApp) {
