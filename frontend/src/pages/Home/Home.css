@@ -6,8 +6,9 @@
 .home__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--gray-200);
+  gap: 8px;
+  background: var(--white);
+  padding: 8px;
 }
 .home__grid::after {
   content: '';
