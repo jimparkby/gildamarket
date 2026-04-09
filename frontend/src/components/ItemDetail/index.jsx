@@ -6,10 +6,10 @@ import { useTelegram } from '../../hooks/useTelegram';
 import './ItemDetail.css';
 
 const CONDITION_LABELS = {
-  new: 'New with tags',
-  like_new: 'Like new',
-  good: 'Good condition',
-  fair: 'Fair condition',
+  new: 'Новое с биркой',
+  like_new: 'Как новое',
+  good: 'Хорошее',
+  fair: 'Удовлетворительное',
 };
 
 export default function ItemDetail({ item, onClose, onLikeChange }) {

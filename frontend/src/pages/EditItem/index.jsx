@@ -182,7 +182,7 @@ export default function EditItem() {
     <main className="page wizard">
       <div className="wizard__header">
         <StepBar />
-        <h2 className="wizard__title">Category</h2>
+        <h2 className="wizard__title">Категория</h2>
       </div>
       <div className="wizard__scroll">
         <div className="cat-grid">
@@ -236,7 +236,7 @@ export default function EditItem() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <StepBar />
-        <h2 className="wizard__title">Size</h2>
+        <h2 className="wizard__title">Размер</h2>
       </div>
       <div className="wizard__scroll">
         {sizes ? (
@@ -254,15 +254,15 @@ export default function EditItem() {
           </div>
         ) : (
           <div className="wizard__no-size">
-            <p>No size needed for this category</p>
+            <p>Размер для этой категории не нужен</p>
           </div>
         )}
       </div>
       <div className="wizard__footer">
         {NO_SIZE.includes(form.category) ? (
-          <button className="wizard__next" onClick={next}>Skip</button>
+          <button className="wizard__next" onClick={next}>Пропустить</button>
         ) : (
-          <button className="wizard__next" disabled={!form.size} onClick={next}>Continue</button>
+          <button className="wizard__next" disabled={!form.size} onClick={next}>Продолжить</button>
         )}
       </div>
     </main>
@@ -276,7 +276,7 @@ export default function EditItem() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <StepBar />
-        <h2 className="wizard__title">Photos</h2>
+        <h2 className="wizard__title">Фотографии</h2>
       </div>
       <div className="wizard__scroll">
         <div className="photos-grid">
@@ -286,7 +286,7 @@ export default function EditItem() {
               <button className="photo-thumb__del" onClick={() => removeExistingImage(i)}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-              {i === 0 && <span className="photo-thumb__cover">Cover</span>}
+              {i === 0 && <span className="photo-thumb__cover">Обложка</span>}
             </div>
           ))}
           {photos.map((p, i) => (
@@ -300,15 +300,15 @@ export default function EditItem() {
           {(existingImages.length + photos.length) < 10 && (
             <button className="photo-add" onClick={() => fileRef.current?.click()}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-              <span>Add photo</span>
+              <span>Добавить фото</span>
             </button>
           )}
         </div>
-        <p className="wizard__hint">Up to 10 photos · First photo is the cover</p>
+        <p className="wizard__hint">До 10 фото · Первое фото — обложка</p>
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handlePhotos} />
       </div>
       <div className="wizard__footer">
-        <button className="wizard__next" onClick={next}>Continue</button>
+        <button className="wizard__next" onClick={next}>Продолжить</button>
       </div>
     </main>
   );
@@ -321,12 +321,12 @@ export default function EditItem() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <StepBar />
-        <h2 className="wizard__title">Details</h2>
+        <h2 className="wizard__title">Детали</h2>
       </div>
       <div className="wizard__scroll wizard__scroll--form">
 
         <div className="form-field">
-          <label className="form-label">Item Name *</label>
+          <label className="form-label">Название *</label>
           <input className="form-input" placeholder="Например: Винтажные джинсы Levi's 501" value={form.title} onChange={e => setField('title', e.target.value)} />
         </div>
 
@@ -341,8 +341,8 @@ export default function EditItem() {
         <div className="form-divider" />
 
         <div className="form-field">
-          <label className="form-label">Description</label>
-          <textarea className="form-textarea" placeholder="Measurements, fabric, styling notes, any flaws…" rows={4} value={form.description} onChange={e => setField('description', e.target.value)} />
+          <label className="form-label">Описание</label>
+          <textarea className="form-textarea" placeholder="Замеры, ткань, состояние, недостатки…" rows={4} value={form.description} onChange={e => setField('description', e.target.value)} />
         </div>
 
         {error && <div className="wizard__error">{error}</div>}
@@ -350,7 +350,7 @@ export default function EditItem() {
 
       <div className="wizard__footer">
         <button className="wizard__next" onClick={handleSubmit} disabled={submitting}>
-          {submitting ? 'Updating…' : 'Update Listing'}
+          {submitting ? 'Сохраняем…' : 'Сохранить'}
         </button>
       </div>
     </main>

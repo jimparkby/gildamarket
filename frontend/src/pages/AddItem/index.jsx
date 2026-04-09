@@ -100,8 +100,8 @@ export default function AddItem() {
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (!form.title.trim()) return setError('Item name is required');
-    if (!form.price || isNaN(parseFloat(form.price))) return setError('Valid price is required');
+    if (!form.title.trim()) return setError('Введите название вещи');
+    if (!form.price || isNaN(parseFloat(form.price))) return setError('Введите корректную цену');
 
     haptic('medium');
     setSubmitting(true);
@@ -116,15 +116,15 @@ export default function AddItem() {
     } catch (err) {
       console.error('Publish error:', err);
       if (err.code === 'ECONNABORTED') {
-        setError('Request timed out. Try uploading fewer or smaller photos.');
+        setError('Превышено время ожидания. Попробуйте меньше или меньших фото.');
       } else if (err.response?.status === 413) {
-        setError('Files too large. Maximum 10MB per photo.');
+        setError('Файлы слишком большие. Максимум 10 МБ на фото.');
       } else if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else if (!navigator.onLine) {
-        setError('No internet connection. Please check your network.');
+        setError('Нет подключения к интернету. Проверьте сеть.');
       } else {
-        setError('Failed to publish. Please try again.');
+        setError('Не удалось опубликовать. Попробуйте ещё раз.');
       }
     } finally {
       setSubmitting(false);
@@ -145,7 +145,7 @@ export default function AddItem() {
     <main className="page wizard">
       <div className="wizard__header">
         <StepBar />
-        <h2 className="wizard__title">Category</h2>
+        <h2 className="wizard__title">Категория</h2>
       </div>
       <div className="wizard__scroll">
         <div className="cat-grid">
@@ -185,7 +185,7 @@ export default function AddItem() {
           disabled={!form.category || (form.category === 'Штаны/Джинсы' && !form.subcategory)}
           onClick={next}
         >
-          Continue
+          Продолжить
         </button>
       </div>
     </main>
@@ -200,7 +200,7 @@ export default function AddItem() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <StepBar />
-        <h2 className="wizard__title">Size</h2>
+        <h2 className="wizard__title">Размер</h2>
       </div>
       <div className="wizard__scroll">
         {sizes ? (
@@ -218,15 +218,15 @@ export default function AddItem() {
           </div>
         ) : (
           <div className="wizard__no-size">
-            <p>No size needed for this category</p>
+            <p>Размер для этой категории не нужен</p>
           </div>
         )}
       </div>
       <div className="wizard__footer">
         {NO_SIZE.includes(form.category) ? (
-          <button className="wizard__next" onClick={next}>Skip</button>
+          <button className="wizard__next" onClick={next}>Пропустить</button>
         ) : (
-          <button className="wizard__next" disabled={!form.size} onClick={next}>Continue</button>
+          <button className="wizard__next" disabled={!form.size} onClick={next}>Продолжить</button>
         )}
       </div>
     </main>
@@ -240,7 +240,7 @@ export default function AddItem() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <StepBar />
-        <h2 className="wizard__title">Photos</h2>
+        <h2 className="wizard__title">Фотографии</h2>
       </div>
       <div className="wizard__scroll">
         <div className="photos-grid">
@@ -250,22 +250,22 @@ export default function AddItem() {
               <button className="photo-thumb__del" onClick={() => removePhoto(i)}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-              {i === 0 && <span className="photo-thumb__cover">Cover</span>}
+              {i === 0 && <span className="photo-thumb__cover">Обложка</span>}
             </div>
           ))}
           {photos.length < 10 && (
             <button className="photo-add" onClick={() => fileRef.current?.click()}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-              <span>Add photo</span>
+              <span>Добавить фото</span>
             </button>
           )}
         </div>
-        <p className="wizard__hint">Up to 10 photos · First photo is the cover</p>
+        <p className="wizard__hint">До 10 фото · Первое фото — обложка</p>
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handlePhotos} />
       </div>
       <div className="wizard__footer">
         <button className="wizard__next" onClick={next}>
-          {photos.length === 0 ? 'Skip' : 'Continue'}
+          {photos.length === 0 ? 'Пропустить' : 'Продолжить'}
         </button>
       </div>
     </main>
@@ -279,12 +279,12 @@ export default function AddItem() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <StepBar />
-        <h2 className="wizard__title">Details</h2>
+        <h2 className="wizard__title">Детали</h2>
       </div>
       <div className="wizard__scroll wizard__scroll--form">
 
         <div className="form-field">
-          <label className="form-label">Item Name *</label>
+          <label className="form-label">Название *</label>
           <input className="form-input" placeholder="Например: Винтажные джинсы Levi's 501" value={form.title} onChange={e => setField('title', e.target.value)} />
         </div>
 
@@ -299,8 +299,8 @@ export default function AddItem() {
         <div className="form-divider" />
 
         <div className="form-field">
-          <label className="form-label">Description</label>
-          <textarea className="form-textarea" placeholder="Measurements, fabric, styling notes, any flaws…" rows={4} value={form.description} onChange={e => setField('description', e.target.value)} />
+          <label className="form-label">Описание</label>
+          <textarea className="form-textarea" placeholder="Замеры, ткань, состояние, недостатки…" rows={4} value={form.description} onChange={e => setField('description', e.target.value)} />
         </div>
 
         {error && <div className="wizard__error">{error}</div>}
@@ -320,9 +320,9 @@ export default function AddItem() {
             )}
           </span>
           <span className="wizard__agree-text">
-            I agree to the{' '}
+            Я согласен с{' '}
             <span className="wizard__agree-link" onClick={(e) => { e.preventDefault(); setRulesOpen(true); }}>
-              listing rules
+              правилами размещения
             </span>
           </span>
         </label>
@@ -330,7 +330,7 @@ export default function AddItem() {
 
       <div className="wizard__footer">
         <button className="wizard__next" onClick={handleSubmit} disabled={submitting || !agreed}>
-          {submitting ? 'Publishing…' : 'Publish Listing'}
+          {submitting ? 'Публикуем…' : 'Опубликовать'}
         </button>
       </div>
 
@@ -339,7 +339,7 @@ export default function AddItem() {
         <div className="rules-overlay" onClick={() => setRulesOpen(false)}>
           <div className="rules-modal" onClick={e => e.stopPropagation()}>
             <div className="rules-modal__header">
-              <h3 className="rules-modal__title">Listing Rules</h3>
+              <h3 className="rules-modal__title">Правила размещения</h3>
               <button className="rules-modal__close" onClick={() => setRulesOpen(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -347,19 +347,19 @@ export default function AddItem() {
               </button>
             </div>
             <div className="rules-modal__body">
-              <p className="rules-modal__rule"><strong>1. Authenticity</strong><br/>Only list genuine items. Counterfeits, replicas, or items presented as something they are not are strictly prohibited.</p>
-              <p className="rules-modal__rule"><strong>2. Accurate description</strong><br/>Photos and description must honestly reflect the item's condition. Hide no visible damage, stains, or defects.</p>
-              <p className="rules-modal__rule"><strong>3. Availability</strong><br/>Only list items you actually own and are ready to sell. Do not list items that have already been sold elsewhere.</p>
-              <p className="rules-modal__rule"><strong>4. Appropriate content</strong><br/>Prohibited items include: weapons, drugs, adult content, stolen goods, or anything illegal under applicable law.</p>
-              <p className="rules-modal__rule"><strong>5. Fair pricing</strong><br/>Set a real price. Listings with placeholder prices (0, 1, 9999) will be removed.</p>
-              <p className="rules-modal__rule"><strong>6. One listing per item</strong><br/>Do not create duplicate listings for the same item.</p>
+              <p className="rules-modal__rule"><strong>1. Подлинность</strong><br/>Размещайте только оригинальные вещи. Подделки, реплики и товары, выдаваемые за то, чем они не являются, строго запрещены.</p>
+              <p className="rules-modal__rule"><strong>2. Честное описание</strong><br/>Фотографии и описание должны правдиво отражать состояние вещи. Не скрывайте видимые повреждения, пятна или дефекты.</p>
+              <p className="rules-modal__rule"><strong>3. Наличие</strong><br/>Размещайте только те вещи, которые у вас есть и которые вы готовы продать. Не публикуйте уже проданные товары.</p>
+              <p className="rules-modal__rule"><strong>4. Допустимый контент</strong><br/>Запрещено: оружие, наркотики, товары для взрослых, краденые вещи и всё, что нарушает действующее законодательство.</p>
+              <p className="rules-modal__rule"><strong>5. Честная цена</strong><br/>Указывайте реальную цену. Объявления с заглушками (0, 1, 9999) будут удалены.</p>
+              <p className="rules-modal__rule"><strong>6. Одно объявление на вещь</strong><br/>Не создавайте дублирующие объявления для одной и той же вещи.</p>
             </div>
             <div className="rules-modal__footer">
               <button
                 className="rules-modal__accept"
                 onClick={() => { setAgreed(true); setRulesOpen(false); }}
               >
-                I understand and agree
+                Понятно, согласен
               </button>
             </div>
           </div>
