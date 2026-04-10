@@ -57,8 +57,8 @@ async function getItems(req, res, next) {
       take = PAGINATION_SIZE;
     }
 
-    // Показываем все товары кроме явно отклонённых — pending сразу в ленте
-    const statusFilter = { status: { not: 'rejected' } };
+    // Показываем только одобренные товары
+    const statusFilter = { status: 'approved' };
 
     // isSold фильтр: если не передан — показываем только доступные (isSold:false)
     // если isSold=true — показываем только проданные (архив)
