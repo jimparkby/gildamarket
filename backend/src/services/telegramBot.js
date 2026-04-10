@@ -85,7 +85,7 @@ function buildItemCaption(item) {
   const price = `${parseFloat(item.price).toLocaleString('ru-RU')} ${item.currency}`;
 
   const lines = [
-    `🆕 <b>Новый товар на модерацию</b>`,
+    `🆕 <b>Новый товар — уже в ленте</b>`,
     ``,
     `🏷 <b>${esc(item.title)}</b> — ${price}`,
     `📦 Категория: ${esc(item.category)}`,

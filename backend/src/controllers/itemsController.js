@@ -57,8 +57,8 @@ async function getItems(req, res, next) {
       take = PAGINATION_SIZE;
     }
 
-    // Показываем только одобренные товары
-    const statusFilter = { status: 'approved' };
+    // Показываем все товары кроме удалённых модератором
+    const statusFilter = { status: { not: 'rejected' } };
 
     // isSold фильтр: если не передан — показываем только доступные (isSold:false)
     // если isSold=true — показываем только проданные (архив)

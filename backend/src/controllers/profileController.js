@@ -79,7 +79,7 @@ async function getShop(req, res, next) {
           _count: { select: { items: true, shopLikedBy: true, likedShops: true } },
           items: {
             where: {
-              ...(viewerId === id ? {} : { status: 'approved' }),
+              status: { not: 'rejected' },
             },
             orderBy: { createdAt: 'desc' },
             select: {
