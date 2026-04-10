@@ -1,6 +1,7 @@
 .home {
   padding-left: 0;
   padding-right: 0;
+  padding-top: 0;
 }
 
 .home__tabs {
@@ -9,20 +10,21 @@
   background: var(--white);
   border-bottom: 1px solid var(--gray-100);
   padding: 0 20px;
-  position: sticky;
+  position: fixed;
   top: var(--header-h);
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }
 
 .home__tab {
   flex: 1;
-  padding: 16px 12px;
+  padding: 12px 12px;
   font-family: var(--font-condensed);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: lowercase;
-  font-style: italic;
   color: var(--gray-400);
   background: none;
   border: none;
@@ -44,6 +46,7 @@
   gap: 16px;
   background: var(--white);
   padding: 12px;
+  margin-top: 49px;
 }
 .home__grid::after {
   content: '';
