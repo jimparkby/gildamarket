@@ -106,6 +106,7 @@ async function getShop(req, res, next) {
       lastName: user.lastName,
       telegramUsername: user.telegramUsername,
       avatar: resolveUrl(user.avatar),
+      about: user.about,
     };
 
     res.json({

@@ -39,7 +39,7 @@ function serializeItem(item, userId, includeStatus = false) {
 
 async function getItems(req, res, next) {
   try {
-    const { search, page, mode, category, isSold, feed } = req.query;
+    const { search, page, mode, category, isSold, feed, following } = req.query;
     const userId = req.userId;
 
     let skip = 0;
@@ -64,10 +64,27 @@ async function getItems(req, res, next) {
     // если isSold=true — показываем только проданные (архив)
     const soldFilter = isSold === 'true' ? { isSold: true } : { isSold: false };
 
+    // following=true — показываем только товары от продавцов на которых подписан
+    let followingFilter = {};
+    if (following === 'true' && userId) {
+      const followedShops = await prisma.shopLike.findMany({
+        where: { userId },
+        select: { shopId: true },
+      });
+      const followedIds = followedShops.map(f => f.shopId);
+      if (followedIds.length > 0) {
+        followingFilter = { sellerId: { in: followedIds } };
+      } else {
+        // Если не подписан ни на кого, возвращаем пустой результат
+        followingFilter = { sellerId: -1 };
+      }
+    }
+
     const where = {
       ...statusFilter,
       ...soldFilter,
-      ...(userId && isSold !== 'true' ? { NOT: { likes: { some: { userId } } } } : {}),
+      ...followingFilter,
+      ...(userId && isSold !== 'true' && following !== 'true' ? { NOT: { likes: { some: { userId } } } } : {}),
       ...(category ? { category } : {}),
       ...(search
         ? {
@@ -88,7 +105,7 @@ async function getItems(req, res, next) {
         orderBy: { createdAt: 'desc' },
         include: {
           seller: {
-            select: { id: true, firstName: true, lastName: true, telegramUsername: true, avatar: true },
+            select: { id: true, firstName: true, lastName: true, telegramUsername: true, avatar: true, about: true },
           },
           likes: userId ? { where: { userId } } : false,
           _count: { select: { likes: true } },
