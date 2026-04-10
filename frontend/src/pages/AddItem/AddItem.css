@@ -198,7 +198,7 @@
 .size-card__label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--gray-800, #222);
+  color: var(--black);
   transition: color 200ms;
   white-space: pre-line;
   text-align: center;
