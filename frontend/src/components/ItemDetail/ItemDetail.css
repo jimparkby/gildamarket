@@ -251,6 +251,15 @@
   color: var(--gray-300);
 }
 
+.item-detail__seller-about {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--gray-600);
+  line-height: 1.6;
+  margin-top: 12px;
+  letter-spacing: 0.01em;
+}
+
 /* Actions */
 .item-detail__actions {
   display: flex;

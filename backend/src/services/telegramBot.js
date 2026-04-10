@@ -442,7 +442,9 @@ async function notifyAdminAboutNewItem(itemId) {
     // Если локальный путь — склеиваем с MINI_APP_URL
     const photoUrl = raw.startsWith('http')
       ? raw
-      : `${(process.env.MINI_APP_URL || '').replace(/\/$/, '')}${raw}`;
+      : `${(process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net').replace(/\/$/, '')}${raw}`;
+
+    console.log('[AdminBot] Отправка фото:', photoUrl);
 
     try {
       message = await bot.sendPhoto(chatId, photoUrl, {
@@ -451,7 +453,8 @@ async function notifyAdminAboutNewItem(itemId) {
         reply_markup: keyboard,
       });
     } catch (err) {
-      console.warn('[AdminBot] Не удалось отправить фото, отправляю текст:', err.message);
+      console.error('[AdminBot] Ошибка отправки фото:', err.message);
+      console.error('[AdminBot] URL фото:', photoUrl);
     }
   }
 
