@@ -8,7 +8,7 @@ import ItemDetail from '../../components/ItemDetail';
 import './Search.css';
 
 const CATEGORIES = [
-  'Обувь', 'Верхняя одежда', 'Средний слой', 'Штаны/Джинсы', 'Аксессуары', 'Прочее',
+  'Обувь', 'Верхняя одежда', 'Футболки', 'Средний слой', 'Штаны/Джинсы', 'Сумки', 'Аксессуары', 'Прочее',
 ];
 
 export default function Search() {

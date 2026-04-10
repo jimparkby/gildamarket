@@ -7,12 +7,14 @@ import '../AddItem/AddItem.css';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { value: 'Обувь', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18c0-2 1-5 4-7l2-5h4l1 4 3 1c2 1 6 2 6 4v3H2v-1z"/></svg> },
-  { value: 'Верхняя одежда', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l4-3 5 3 5-3 4 3v3l-3-1v11H6V9L3 10V7z"/><path d="M9 4l3 3 3-3"/></svg> },
-  { value: 'Средний слой', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6l3-3h3l3 3 3-3h3l3 3-3 3v11H6V9L3 6z"/></svg> },
-  { value: 'Штаны/Джинсы', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 3h16v5l-4 13H8L4 8V3z"/><line x1="12" y1="8" x2="12" y2="21"/></svg> },
-  { value: 'Аксессуары', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M8 7V5a4 4 0 018 0v2"/></svg> },
-  { value: 'Прочее', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg> },
+  { value: 'Обувь', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 19h20v1.5H2V19z"/><path d="M4 19l1.5-5.5H9l.5 2.5c2-1.5 4-2 5.5-2H20c1.1 0 2 .9 2 2.5V19H4z"/><path d="M7 13.5L8 7h2l-1 6.5"/></svg> },
+  { value: 'Верхняя одежда', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21V9L2 7l5-4 2 2.5c.7.9 1.7 1.5 3 1.5s2.3-.6 3-1.5L17 3l5 4-2 2v12H4z"/><path d="M9 3.5L12 7l3-3.5"/></svg> },
+  { value: 'Футболки', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l3.5-5h3.5l2 2 2-2h3.5L21 9l-3 2v10H6V11L3 9z"/></svg> },
+  { value: 'Средний слой', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 4c0 2 2 4 5 4s5-2 5-4l3 5-3 2v10H6V11L3 9l4-5z"/><path d="M10 4a2 2 0 004 0"/></svg> },
+  { value: 'Штаны/Джинсы', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 3h16v4l-3 14h-4l-1-8-1 8H7L4 7V3z"/><line x1="12" y1="7" x2="12" y2="11"/></svg> },
+  { value: 'Сумки', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h14l-2 13H7L5 8z"/><path d="M9 8V6a3 3 0 016 0v2"/><line x1="5" y1="13" x2="19" y2="13"/></svg> },
+  { value: 'Аксессуары', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 9v3l2 2"/><path d="M9 4h6v3H9zM9 17h6v3H9z"/></svg> },
+  { value: 'Прочее', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg> },
 ];
 
 const NO_SIZE = ['Аксессуары'];
