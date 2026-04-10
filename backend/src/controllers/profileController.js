@@ -83,7 +83,8 @@ async function getShop(req, res, next) {
             },
             orderBy: { createdAt: 'desc' },
             select: {
-              id: true, title: true, brand: true, category: true, price: true, currency: true,
+              id: true, title: true, brand: true, category: true, subcategory: true,
+              size: true, price: true, currency: true, description: true,
               images: true, isSold: true, status: true,
             },
           },

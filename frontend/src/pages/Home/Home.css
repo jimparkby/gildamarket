@@ -19,13 +19,13 @@
 
 .home__tab {
   flex: 1;
-  padding: 12px 12px;
+  padding: 14px 12px;
   font-family: var(--font-condensed);
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: lowercase;
-  color: var(--gray-400);
+  color: var(--gray-700);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -36,7 +36,7 @@
 
 .home__tab.active {
   color: var(--black);
-  font-weight: 500;
+  font-weight: 600;
   border-bottom-color: var(--black);
 }
 
@@ -46,7 +46,7 @@
   gap: 16px;
   background: var(--white);
   padding: 12px;
-  margin-top: 49px;
+  margin-top: 51px;
 }
 .home__grid::after {
   content: '';
