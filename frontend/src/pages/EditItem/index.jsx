@@ -58,7 +58,7 @@ export default function EditItem() {
   const [existingImages, setExistingImages] = useState([]);
   const [form, setForm] = useState({
     title: '', brand: '', category: '', subcategory: '', size: '',
-    condition: 'good', price: '', currency: 'RUB', description: '',
+    price: '', currency: 'RUB', description: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -74,7 +74,6 @@ export default function EditItem() {
           category: item.category || '',
           subcategory: item.subcategory || '',
           size: item.size || '',
-          condition: item.condition || 'good',
           price: item.price?.toString() || '',
           currency: item.currency || 'RUB',
           description: item.description || '',

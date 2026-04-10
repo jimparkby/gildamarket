@@ -2,13 +2,6 @@ import React from 'react';
 import { useSettings } from '../../App';
 import './ItemCard.css';
 
-const CONDITION_LABELS = {
-  new: 'New',
-  like_new: 'Like New',
-  good: 'Good',
-  fair: 'Fair',
-};
-
 export default function ItemCard({ item, onClick }) {
   const { currency } = useSettings();
 

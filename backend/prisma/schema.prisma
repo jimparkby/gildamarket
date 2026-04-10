@@ -34,7 +34,6 @@ model Item {
   category    String
   subcategory String?
   size        String?
-  condition   String    // new, like_new, good, fair
   price       Decimal   @db.Decimal(10, 2)
   currency    String    @default("RUB")
   description String?

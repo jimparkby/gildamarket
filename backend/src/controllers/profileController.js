@@ -26,7 +26,7 @@ function serializeItem(i, seller = null) {
     id: i.id, title: i.title, brand: i.brand,
     price: parseFloat(i.price), currency: i.currency,
     images: (i.images || []).map(resolveUrl),
-    condition: i.condition, isSold: i.isSold, status: i.status,
+    isSold: i.isSold, status: i.status,
     category: i.category, subcategory: i.subcategory || null,
     size: i.size || null, description: i.description || null,
     seller,
@@ -84,7 +84,7 @@ async function getShop(req, res, next) {
             orderBy: { createdAt: 'desc' },
             select: {
               id: true, title: true, brand: true, category: true, price: true, currency: true,
-              images: true, condition: true, isSold: true, status: true,
+              images: true, isSold: true, status: true,
             },
           },
           lookBoards: { orderBy: { createdAt: 'desc' } },

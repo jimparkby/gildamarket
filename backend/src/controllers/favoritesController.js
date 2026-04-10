@@ -38,7 +38,6 @@ async function getFavorites(req, res, next) {
       brand: i.brand,
       price: parseFloat(i.price),
       currency: i.currency,
-      condition: i.condition,
       images: (i.images || []).map(resolveUrl),
       isSold: i.isSold,
       isLiked: true,
@@ -49,6 +48,7 @@ async function getFavorites(req, res, next) {
         lastName: i.seller.lastName,
         telegramUsername: i.seller.telegramUsername,
         avatar: resolveUrl(i.seller.avatar),
+        about: i.seller.about,
       },
     }));
 

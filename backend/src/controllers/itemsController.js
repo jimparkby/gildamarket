@@ -16,7 +16,6 @@ function serializeItem(item, userId, includeStatus = false) {
     category: item.category,
     subcategory: item.subcategory || null,
     size: item.size,
-    condition: item.condition,
     price: parseFloat(item.price),
     currency: item.currency,
     description: item.description,
@@ -31,6 +30,7 @@ function serializeItem(item, userId, includeStatus = false) {
       lastName: item.seller.lastName,
       telegramUsername: item.seller.telegramUsername,
       avatar: resolveUrl(item.seller.avatar),
+      about: item.seller.about,
     } : null,
   };
   if (includeStatus) result.status = item.status;
@@ -130,13 +130,13 @@ async function getItem(req, res, next) {
 
 async function createItem(req, res, next) {
   try {
-    const { title, brand, category, subcategory, size, condition, price, currency, description } = req.body;
+    const { title, brand, category, subcategory, size, price, currency, description } = req.body;
 
     // S3: use file.location (full URL); local: use file.filename
     const images = (req.files || []).map(f => f.location || f.filename);
 
-    if (!title || !category || !condition || !price) {
-      return res.status(400).json({ error: 'title, category, condition, price are required' });
+    if (!title || !category || !price) {
+      return res.status(400).json({ error: 'title, category, price are required' });
     }
 
     const item = await prisma.item.create({
@@ -146,7 +146,6 @@ async function createItem(req, res, next) {
         category,
         subcategory: subcategory || null,
         size: size || null,
-        condition,
         price: parseFloat(price),
         currency: currency || 'USD',
         description: description || null,
@@ -207,7 +206,7 @@ async function toggleLike(req, res, next) {
 async function updateItem(req, res, next) {
   try {
     const id = parseInt(req.params.id);
-    const { title, brand, category, subcategory, size, condition, price, currency, description, existingImages } = req.body;
+    const { title, brand, category, subcategory, size, price, currency, description, existingImages } = req.body;
 
     const item = await prisma.item.findUnique({ where: { id } });
     if (!item) return res.status(404).json({ error: 'Item not found' });
@@ -232,7 +231,6 @@ async function updateItem(req, res, next) {
         category: category || item.category,
         subcategory: subcategory !== undefined ? subcategory : item.subcategory,
         size: size !== undefined ? size : item.size,
-        condition: condition || item.condition,
         price: price ? parseFloat(price) : item.price,
         currency: currency || item.currency,
         description: description !== undefined ? description : item.description,

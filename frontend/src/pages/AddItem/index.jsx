@@ -56,7 +56,7 @@ export default function AddItem() {
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState({
     title: '', brand: '', category: '', subcategory: '', size: '',
-    condition: 'good', price: '', currency: 'RUB', description: '',
+    price: '', currency: 'RUB', description: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');

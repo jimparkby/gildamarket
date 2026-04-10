@@ -5,13 +5,6 @@ import { useSettings } from '../../App';
 import { useTelegram } from '../../hooks/useTelegram';
 import './ItemDetail.css';
 
-const CONDITION_LABELS = {
-  new: 'Новое с биркой',
-  like_new: 'Как новое',
-  good: 'Хорошее',
-  fair: 'Удовлетворительное',
-};
-
 export default function ItemDetail({ item, onClose, onLikeChange }) {
   const navigate = useNavigate();
   const { currency } = useSettings();
@@ -156,7 +149,6 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
             <span className="item-detail__price">{item.price} {currency || item.currency}</span>
             {item.size && <span className="item-detail__pill">{item.size}</span>}
             {item.subcategory && <span className="item-detail__pill">{item.subcategory}</span>}
-            <span className="item-detail__pill">{CONDITION_LABELS[item.condition] || item.condition}</span>
           </div>
 
           {item.description && (
@@ -186,6 +178,9 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
                   )}
                 </div>
               </div>
+              {item.seller.about && (
+                <p className="item-detail__seller-about">{item.seller.about}</p>
+              )}
             </div>
           )}
         </div>

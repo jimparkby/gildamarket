@@ -54,14 +54,6 @@ const OPT_USER_LINES = {
     '🚫 <b>Запрещённый товар</b> — такие товары нельзя продавать на нашей площадке.',
 };
 
-// Лейблы состояния товара для красивого отображения в сообщении
-const CONDITION_LABELS = {
-  new:      '🌟 Новое с биркой',
-  like_new: '✨ Как новое',
-  good:     '👍 Хорошее',
-  fair:     '👌 Удовлетворительное',
-};
-
 // ── Утилиты ───────────────────────────────────────────────────────────────────
 
 function esc(text) {
@@ -81,7 +73,6 @@ function buildItemCaption(item) {
     ? [seller.firstName, seller.lastName].filter(Boolean).join(' ') || '—'
     : '—';
 
-  const condition = CONDITION_LABELS[item.condition] ?? esc(item.condition);
   const price = `${parseFloat(item.price).toLocaleString('ru-RU')} ${item.currency}`;
 
   const lines = [
@@ -92,7 +83,6 @@ function buildItemCaption(item) {
   ];
   if (item.brand)       lines.push(`👑 Бренд: ${esc(item.brand)}`);
   if (item.size)        lines.push(`📏 Размер: ${esc(item.size)}`);
-  lines.push(`⭐ Состояние: ${condition}`);
   if (item.description) lines.push(``, `📝 <i>${esc(item.description)}</i>`);
   lines.push(``, `🛍 Продавец: ${sellerHandle} (${esc(sellerName)})`);
 
