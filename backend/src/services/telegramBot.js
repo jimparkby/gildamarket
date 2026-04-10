@@ -195,6 +195,24 @@ async function editAdminMessage(chatId, messageId, hasPhoto, text, keyboard) {
 // ── Обработчики callback-кнопок ───────────────────────────────────────────────
 
 function registerHandlers() {
+  // ── /approve_all — Одобрить все pending товары ────────────────────────────────
+  bot.onText(/\/approve_all/, async (msg) => {
+    const chatId = msg.chat.id;
+    const adminChatId = process.env.ADMIN_REVIEW_CHAT_ID;
+    if (String(chatId) !== String(adminChatId)) return;
+
+    try {
+      const result = await prisma.item.updateMany({
+        where: { status: 'pending' },
+        data: { status: 'approved' },
+      });
+      await bot.sendMessage(chatId, `✅ Одобрено ${result.count} товаров со статусом pending.`);
+    } catch (err) {
+      console.error('[AdminBot] /approve_all error:', err);
+      await bot.sendMessage(chatId, `❌ Ошибка: ${err.message}`);
+    }
+  });
+
   // ── /start — Приветственное сообщение ────────────────────────────────────────
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
