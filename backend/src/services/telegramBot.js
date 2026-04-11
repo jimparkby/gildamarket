@@ -54,6 +54,14 @@ const OPT_USER_LINES = {
     '🚫 <b>Запрещённый товар</b> — такие товары нельзя продавать на нашей площадке.',
 };
 
+// Лейблы состояния товара для красивого отображения в сообщении
+const CONDITION_LABELS = {
+  new:      '🌟 Новое с биркой',
+  like_new: '✨ Как новое',
+  good:     '👍 Хорошее',
+  fair:     '👌 Удовлетворительное',
+};
+
 // ── Утилиты ───────────────────────────────────────────────────────────────────
 
 function esc(text) {
@@ -73,6 +81,7 @@ function buildItemCaption(item) {
     ? [seller.firstName, seller.lastName].filter(Boolean).join(' ') || '—'
     : '—';
 
+  const condition = CONDITION_LABELS[item.condition] ?? esc(item.condition);
   const price = `${parseFloat(item.price).toLocaleString('ru-RU')} ${item.currency}`;
 
   const lines = [
@@ -83,6 +92,7 @@ function buildItemCaption(item) {
   ];
   if (item.brand)       lines.push(`👑 Бренд: ${esc(item.brand)}`);
   if (item.size)        lines.push(`📏 Размер: ${esc(item.size)}`);
+  lines.push(`⭐ Состояние: ${condition}`);
   if (item.description) lines.push(``, `📝 <i>${esc(item.description)}</i>`);
   lines.push(``, `🛍 Продавец: ${sellerHandle} (${esc(sellerName)})`);
 
@@ -183,9 +193,28 @@ async function editAdminMessage(chatId, messageId, hasPhoto, text, keyboard) {
 // ── Обработчики callback-кнопок ───────────────────────────────────────────────
 
 function registerHandlers() {
+  // ── /approve_all — Одобрить все pending товары ────────────────────────────────
+  bot.onText(/\/approve_all/, async (msg) => {
+    const chatId = msg.chat.id;
+    const adminChatId = process.env.ADMIN_REVIEW_CHAT_ID;
+    if (String(chatId) !== String(adminChatId)) return;
+
+    try {
+      const result = await prisma.item.updateMany({
+        where: { status: 'pending' },
+        data: { status: 'approved' },
+      });
+      await bot.sendMessage(chatId, `✅ Одобрено ${result.count} товаров со статусом pending.`);
+    } catch (err) {
+      console.error('[AdminBot] /approve_all error:', err);
+      await bot.sendMessage(chatId, `❌ Ошибка: ${err.message}`);
+    }
+  });
+
   // ── /start — Приветственное сообщение ────────────────────────────────────────
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
+    const firstName = msg.from?.first_name || 'друг';
     const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
 
     const text = [
@@ -352,7 +381,7 @@ function registerHandlers() {
     if (err.code === 'ETELEGRAM' && err.response?.body?.error_code === 403) return;
     console.error('[AdminBot] Polling error:', err.message);
   });
-} // ← КОНЕЦ registerHandlers()
+} // ← ИСПРАВЛЕНИЕ: закрывающая скобка registerHandlers()
 
 // ── Публичный API ──────────────────────────────────────────────────────────────
 
