@@ -15,24 +15,25 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const touchStartY = useRef(null);
   const imgWrapRef = useRef(null);
 
-  // Добавляем запись в историю при открытии модалки
+  // Управление Telegram BackButton при открытии модалки
   useEffect(() => {
-    // Добавляем фиктивную запись в историю
-    window.history.pushState({ modal: true }, '');
+    const tg = window?.Telegram?.WebApp;
+    if (!tg?.BackButton) return;
 
-    // При попытке вернуться назад - закрываем модалку
-    const handlePopState = (e) => {
+    // Показываем BackButton
+    tg.BackButton.show();
+
+    // При нажатии - закрываем модалку
+    const handleBack = () => {
       onClose();
     };
 
-    window.addEventListener('popstate', handlePopState);
+    tg.BackButton.onClick(handleBack);
 
     return () => {
-      window.removeEventListener('popstate', handlePopState);
-      // Если модалка закрывается программно (не через back), убираем запись из истории
-      if (window.history.state?.modal) {
-        window.history.back();
-      }
+      tg.BackButton.offClick(handleBack);
+      // Скрываем BackButton при закрытии модалки
+      tg.BackButton.hide();
     };
   }, [onClose]);
 
