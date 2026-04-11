@@ -186,7 +186,6 @@ function registerHandlers() {
   // ── /start — Приветственное сообщение ────────────────────────────────────────
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    const firstName = msg.from?.first_name || 'друг';
     const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
 
     const text = [
@@ -218,7 +217,7 @@ function registerHandlers() {
     const hasPhoto = !!(msg.photo?.length);
     const key = msgKey(chatId, messageId);
 
-    // ── ✅ ia:{itemId} — Оставить товар ──────────────────────────────────────────────
+    // ── ✅ ia:{itemId} — Оставить товар ──────────────────────────────────────
     if (data.startsWith('ia:')) {
       const itemId = parseInt(data.slice(3));
 
@@ -303,7 +302,6 @@ function registerHandlers() {
       await editAdminMessage(chatId, messageId, hasPhoto, `🗑 Удалён из ленты [${reasonLabel}]: ${admin}\n\n${base}`, null);
       reviewCaptions.delete(key);
 
-      // Уведомить продавца
       if (item.seller?.telegramUserId) {
         await notifyUser(
           item.seller.telegramUserId,
@@ -327,13 +325,11 @@ function registerHandlers() {
       const { telegramUserId } = user;
 
       try {
-        // Сохранить бан до удаления пользователя
         await prisma.bannedTelegramUser.upsert({
           where:  { telegramUserId },
           update: {},
           create: { telegramUserId },
         });
-        // Каскадное удаление: товары, лайки, lookboards
         await prisma.user.delete({ where: { id: userId } });
       } catch (err) {
         console.error('[AdminBot] Ошибка бана:', err);
@@ -351,11 +347,12 @@ function registerHandlers() {
     }
   });
 
-  // Обработка ошибок polling
+  // ── Обработка ошибок polling ─────────────────────────────────────────────────
   bot.on('polling_error', (err) => {
     if (err.code === 'ETELEGRAM' && err.response?.body?.error_code === 403) return;
-  console.error('Bot polling error:', err.message);
-});
+    console.error('[AdminBot] Polling error:', err.message);
+  });
+} // ← КОНЕЦ registerHandlers()
 
 // ── Публичный API ──────────────────────────────────────────────────────────────
 
@@ -419,7 +416,6 @@ async function notifyAdminAboutNewItem(itemId) {
 
   if (firstImage) {
     const raw = resolveUrl(firstImage);
-    // Если локальный путь — склеиваем с MINI_APP_URL
     const photoUrl = raw.startsWith('http')
       ? raw
       : `${(process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net').replace(/\/$/, '')}${raw}`;
