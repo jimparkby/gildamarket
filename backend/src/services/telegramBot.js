@@ -410,13 +410,20 @@ function startBot() {
  * @param {number} itemId
  */
 async function notifyAdminAboutNewItem(itemId) {
-  if (!bot) return;
+  console.log('[AdminBot] notifyAdminAboutNewItem вызвана для товара', itemId);
+
+  if (!bot) {
+    console.warn('[AdminBot] Бот не инициализирован, уведомление не отправлено');
+    return;
+  }
 
   const chatId = process.env.ADMIN_REVIEW_CHAT_ID;
   if (!chatId) {
     console.warn('[AdminBot] ADMIN_REVIEW_CHAT_ID не задан');
     return;
   }
+
+  console.log('[AdminBot] Отправка уведомления в чат', chatId);
 
   let item;
   try {
@@ -472,6 +479,9 @@ async function notifyAdminAboutNewItem(itemId) {
 
   if (message) {
     reviewCaptions.set(msgKey(message.chat.id, message.message_id), caption);
+    console.log('[AdminBot] Уведомление успешно отправлено, message_id:', message.message_id);
+  } else {
+    console.error('[AdminBot] Не удалось отправить уведомление');
   }
 }
 
