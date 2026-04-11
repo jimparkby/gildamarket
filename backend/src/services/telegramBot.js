@@ -376,12 +376,13 @@ function registerHandlers() {
     }
   });
 
-  // ── Обработка ошибок polling ─────────────────────────────────────────────────
   bot.on('polling_error', (err) => {
-    if (err.code === 'ETELEGRAM' && err.response?.body?.error_code === 403) return;
-    console.error('[AdminBot] Polling error:', err.message);
-  });
-} // ← ИСПРАВЛЕНИЕ: закрывающая скобка registerHandlers()
+    console.error('[AdminBot] Polling error (ignored):', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('[AdminBot] Unhandled rejection (ignored):', reason?.message || reason);
+});
 
 // ── Публичный API ──────────────────────────────────────────────────────────────
 
