@@ -25,6 +25,35 @@
   to   { transform: translateY(0); }
 }
 
+/* Кнопка закрытия */
+.item-detail__close-btn {
+  position: fixed;
+  top: calc(var(--tg-safe-top, 0px) + 16px);
+  left: 16px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(30, 30, 30, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: none;
+  color: var(--white);
+  font-family: var(--font-condensed);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.item-detail__close-btn:active {
+  background: rgba(30, 30, 30, 0.9);
+  transform: scale(0.96);
+}
+
 /* ── Hero (фото + оверлей-кнопки) ── */
 .item-detail__hero {
   position: relative;

@@ -97,10 +97,8 @@ function buildKeyboard(itemId, sellerId, flags) {
   return {
     inline_keyboard: [
       [
-        { text: '✅ Одобрено (верифицировать)', callback_data: `ia:${itemId}` },
-      ],
-      [
-        { text: '🗑 Удалить из ленты',         callback_data: `id:${itemId}:${flags}` },
+        { text: '✅ Оставить товар', callback_data: `ia:${itemId}` },
+        { text: '🗑 Удалить',        callback_data: `id:${itemId}:${flags}` },
       ],
       [{ text: optText(OPT_BAD_PHOTO),    callback_data: `io:${itemId}:${flags}:${OPT_BAD_PHOTO}` }],
       [{ text: optText(OPT_WRONG_INFO),   callback_data: `io:${itemId}:${flags}:${OPT_WRONG_INFO}` }],
@@ -185,24 +183,6 @@ async function editAdminMessage(chatId, messageId, hasPhoto, text, keyboard) {
 // ── Обработчики callback-кнопок ───────────────────────────────────────────────
 
 function registerHandlers() {
-  // ── /approve_all — Одобрить все pending товары ────────────────────────────────
-  bot.onText(/\/approve_all/, async (msg) => {
-    const chatId = msg.chat.id;
-    const adminChatId = process.env.ADMIN_REVIEW_CHAT_ID;
-    if (String(chatId) !== String(adminChatId)) return;
-
-    try {
-      const result = await prisma.item.updateMany({
-        where: { status: 'pending' },
-        data: { status: 'approved' },
-      });
-      await bot.sendMessage(chatId, `✅ Одобрено ${result.count} товаров со статусом pending.`);
-    } catch (err) {
-      console.error('[AdminBot] /approve_all error:', err);
-      await bot.sendMessage(chatId, `❌ Ошибка: ${err.message}`);
-    }
-  });
-
   // ── /start — Приветственное сообщение ────────────────────────────────────────
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
@@ -238,7 +218,7 @@ function registerHandlers() {
     const hasPhoto = !!(msg.photo?.length);
     const key = msgKey(chatId, messageId);
 
-    // ── ✅ ia:{itemId} — Одобрить ──────────────────────────────────────────────
+    // ── ✅ ia:{itemId} — Оставить товар ──────────────────────────────────────────────
     if (data.startsWith('ia:')) {
       const itemId = parseInt(data.slice(3));
 
@@ -250,18 +230,11 @@ function registerHandlers() {
         return bot.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
       }
 
-      try {
-        await prisma.item.update({ where: { id: itemId }, data: { status: 'approved' } });
-      } catch (err) {
-        console.error('[AdminBot] Ошибка одобрения:', err);
-        return bot.answerCallbackQuery(query.id, { text: 'Ошибка при одобрении', show_alert: true });
-      }
-
       const admin = getAdminName(query.from);
       const base = reviewCaptions.get(key) || buildItemCaption(item);
-      await editAdminMessage(chatId, messageId, hasPhoto, `✅ Одобрено: ${admin}\n\n${base}`, null);
+      await editAdminMessage(chatId, messageId, hasPhoto, `✅ Оставлен: ${admin}\n\n${base}`, null);
       reviewCaptions.delete(key);
-      return bot.answerCallbackQuery(query.id, { text: 'Товар одобрен ✅' });
+      return bot.answerCallbackQuery(query.id, { text: 'Товар оставлен ✅' });
     }
 
     // ── io:{itemId}:{flags}:{option} — Переключить причину ───────────────────
