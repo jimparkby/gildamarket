@@ -353,9 +353,9 @@ function registerHandlers() {
 
   // Обработка ошибок polling
   bot.on('polling_error', (err) => {
-    console.error('[AdminBot] Polling error:', err.message);
-  });
-}
+    if (err.code === 'ETELEGRAM' && err.response?.body?.error_code === 403) return;
+  console.error('Bot polling error:', err.message);
+});
 
 // ── Публичный API ──────────────────────────────────────────────────────────────
 
