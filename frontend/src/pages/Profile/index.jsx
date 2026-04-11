@@ -14,7 +14,7 @@ import SideMenu from '../../components/SideMenu';
 import FollowersModal from '../../components/FollowersModal';
 import './Profile.css';
 
-const CATEGORIES = ['Обувь','Верхняя одежда','Футболки','Средний слой','Штаны/Джинсы','Сумки','Аксессуары','Прочее'];
+const CATEGORIES = ['Обувь','Верхняя одежда','Футболки','Средний слой','Штаны/Джинсы/Юбки','Сумки','Аксессуары','Прочее'];
 
 export default function Profile() {
   const { id } = useParams();

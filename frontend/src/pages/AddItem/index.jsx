@@ -11,7 +11,7 @@ const CATEGORIES = [
   { value: 'Верхняя одежда', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l4-3 5 3 5-3 4 3v3l-3-1v11H6V9L3 10V7z"/><path d="M9 4l3 3 3-3"/></svg> },
   { value: 'Футболки', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7l4-3 5 3 5-3 4 3v3l-3-1v11H6V9L3 10V7z"/></svg> },
   { value: 'Средний слой', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6l3-3h3l3 3 3-3h3l3 3-3 3v11H6V9L3 6z"/></svg> },
-  { value: 'Штаны/Джинсы', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 3h16v5l-4 13H8L4 8V3z"/><line x1="12" y1="8" x2="12" y2="21"/></svg> },
+  { value: 'Штаны/Джинсы/Юбки', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 3h16v5l-4 13H8L4 8V3z"/><line x1="12" y1="8" x2="12" y2="21"/></svg> },
   { value: 'Сумки', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M8 7V5a2 2 0 014 0v2M12 5a2 2 0 014 0v2"/></svg> },
   { value: 'Аксессуары', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M8 7V5a4 4 0 018 0v2"/></svg> },
   { value: 'Прочее', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg> },
@@ -19,17 +19,8 @@ const CATEGORIES = [
 
 const NO_SIZE = ['Аксессуары'];
 const SHOE_SIZE = ['Обувь'];
-const BOTTOMS_SIZE = ['Штаны/Джинсы'];
-
-const BOTTOMS_SUBCATEGORIES = [
-  'Джинсы',
-  'Брюки',
-  'Шорты',
-  'Джоггеры',
-  'Леггинсы',
-  'Комбинезоны',
-  'Трекинговые штаны',
-];
+const BOTTOMS_SIZE = ['Штаны/Джинсы/Юбки'];
+const BAG_SIZE = ['Сумки'];
 
 const CLOTHING_SIZES = [
   { label: 'One\nSize', value: 'One Size' },
@@ -43,6 +34,10 @@ const CLOTHING_SIZES = [
 const BOTTOMS_SIZES = ['26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44'].map(s => ({ label: s, value: s }));
 
 const SHOE_SIZES = ['35','36','37','38','39','40','41','42','43','44','45','46'].map(s => ({ label: s, value: s }));
+
+const BAG_SIZES = [
+  { label: 'One\nSize', value: 'One Size' },
+];
 
 
 const TOTAL_STEPS = 4;
@@ -76,6 +71,7 @@ export default function AddItem() {
   const getSizes = () => {
     if (SHOE_SIZE.includes(form.category)) return SHOE_SIZES;
     if (BOTTOMS_SIZE.includes(form.category)) return BOTTOMS_SIZES;
+    if (BAG_SIZE.includes(form.category)) return BAG_SIZES;
     if (NO_SIZE.includes(form.category)) return null;
     return CLOTHING_SIZES;
   };
@@ -162,29 +158,11 @@ export default function AddItem() {
             </button>
           ))}
         </div>
-
-        {/* Подкатегории для Штаны/Джинсы */}
-        {form.category === 'Штаны/Джинсы' && (
-          <div className="subcat-section">
-            <p className="subcat-title">Тип</p>
-            <div className="subcat-grid">
-              {BOTTOMS_SUBCATEGORIES.map(sub => (
-                <button
-                  key={sub}
-                  className={`subcat-chip${form.subcategory === sub ? ' selected' : ''}`}
-                  onClick={() => setField('subcategory', sub)}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
       <div className="wizard__footer">
         <button
           className="wizard__next"
-          disabled={!form.category || (form.category === 'Штаны/Джинсы' && !form.subcategory)}
+          disabled={!form.category}
           onClick={next}
         >
           Продолжить
