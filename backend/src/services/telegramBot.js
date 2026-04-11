@@ -1,11 +1,5 @@
 /**
  * Gilda Market — Telegram Admin Bot
- *
- * Отправляет уведомление в ADMIN_REVIEW_CHAT_ID при добавлении нового товара.
- * Модератор может:
- *   ✅ Одобрить   — товар становится видимым в ленте
- *   🗑️ Удалить   — удаляет только товар, уведомляет продавца с причиной
- *   🚫 Забанить  — удаляет пользователя и все его данные
  */
 
 let TelegramBot;
@@ -23,18 +17,15 @@ const prisma = new PrismaClient();
 /** @type {import('node-telegram-bot-api')|null} */
 let bot = null;
 
-// ── In-memory хранилище базовых подписей для review-сообщений ─────────────────
-// key: `${chatId}:${messageId}` → исходный caption (без статусной строки)
 const reviewCaptions = new Map();
 
 function msgKey(chatId, messageId) {
   return `${chatId}:${messageId}`;
 }
 
-// ── Флаги причин отклонения ───────────────────────────────────────────────────
-const OPT_BAD_PHOTO  = 1; // Плохое/неподходящее фото
-const OPT_WRONG_INFO = 2; // Неверное описание или цена
-const OPT_PROHIBITED = 4; // Запрещённый товар
+const OPT_BAD_PHOTO  = 1;
+const OPT_WRONG_INFO = 2;
+const OPT_PROHIBITED = 4;
 
 const OPT_ORDER = [OPT_BAD_PHOTO, OPT_WRONG_INFO, OPT_PROHIBITED];
 
@@ -44,7 +35,6 @@ const OPT_BUTTON_LABELS = {
   [OPT_PROHIBITED]: 'запрещённый товар',
 };
 
-// Строки для сообщения пользователю при удалении товара
 const OPT_USER_LINES = {
   [OPT_BAD_PHOTO]:
     '📷 <b>Фотографии товара</b> — снимки не показывают товар, слишком низкое качество или на фото посторонние предметы.',
@@ -54,15 +44,12 @@ const OPT_USER_LINES = {
     '🚫 <b>Запрещённый товар</b> — такие товары нельзя продавать на нашей площадке.',
 };
 
-// Лейблы состояния товара для красивого отображения в сообщении
 const CONDITION_LABELS = {
   new:      '🌟 Новое с биркой',
   like_new: '✨ Как новое',
   good:     '👍 Хорошее',
   fair:     '👌 Удовлетворительное',
 };
-
-// ── Утилиты ───────────────────────────────────────────────────────────────────
 
 function esc(text) {
   if (!text) return '—';
@@ -127,8 +114,6 @@ function getAdminName(from) {
   return from.username ? `@${from.username}` : `id${from.id}`;
 }
 
-// ── Уведомления пользователю ──────────────────────────────────────────────────
-
 function buildDeclineNotification(itemTitle, flags) {
   const reasons = OPT_ORDER
     .filter(opt => flags & opt)
@@ -159,16 +144,14 @@ const BAN_NOTIFICATION =
   `Твой аккаунт был заблокирован за нарушение правил площадки.\n\n` +
   `Если считаешь, что произошла ошибка — свяжись с поддержкой.`;
 
-async function notifyUser(telegramUserId, text, parseMode = 'HTML') {
+async function notifyUser(telegramUserId, text, parseMode) {
   if (!bot) return;
   try {
-    await bot.sendMessage(telegramUserId, text, { parse_mode: parseMode });
+    await bot.sendMessage(telegramUserId, text, { parse_mode: parseMode || 'HTML' });
   } catch (err) {
     console.warn(`[AdminBot] Не удалось отправить сообщение пользователю ${telegramUserId}:`, err.message);
   }
 }
-
-// ── Редактирование admin-сообщения ────────────────────────────────────────────
 
 async function editAdminMessage(chatId, messageId, hasPhoto, text, keyboard) {
   try {
@@ -190,10 +173,7 @@ async function editAdminMessage(chatId, messageId, hasPhoto, text, keyboard) {
   }
 }
 
-// ── Обработчики callback-кнопок ───────────────────────────────────────────────
-
 function registerHandlers() {
-  // ── /approve_all — Одобрить все pending товары ────────────────────────────────
   bot.onText(/\/approve_all/, async (msg) => {
     const chatId = msg.chat.id;
     const adminChatId = process.env.ADMIN_REVIEW_CHAT_ID;
@@ -211,10 +191,8 @@ function registerHandlers() {
     }
   });
 
-  // ── /start — Приветственное сообщение ────────────────────────────────────────
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    const firstName = msg.from?.first_name || 'друг';
     const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
 
     const text = [
@@ -243,21 +221,15 @@ function registerHandlers() {
 
     const chatId = msg.chat.id;
     const messageId = msg.message_id;
-    const hasPhoto = !!(msg.photo?.length);
+    const hasPhoto = !!(msg.photo && msg.photo.length);
     const key = msgKey(chatId, messageId);
 
-    // ── ✅ ia:{itemId} — Оставить товар ──────────────────────────────────────
     if (data.startsWith('ia:')) {
       const itemId = parseInt(data.slice(3));
-
-      const item = await prisma.item.findUnique({
-        where: { id: itemId },
-        include: { seller: true },
-      });
+      const item = await prisma.item.findUnique({ where: { id: itemId }, include: { seller: true } });
       if (!item) {
         return bot.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
       }
-
       const admin = getAdminName(query.from);
       const base = reviewCaptions.get(key) || buildItemCaption(item);
       await editAdminMessage(chatId, messageId, hasPhoto, `✅ Оставлен: ${admin}\n\n${base}`, null);
@@ -265,7 +237,6 @@ function registerHandlers() {
       return bot.answerCallbackQuery(query.id, { text: 'Товар оставлен ✅' });
     }
 
-    // ── io:{itemId}:{flags}:{option} — Переключить причину ───────────────────
     if (data.startsWith('io:')) {
       const parts = data.split(':');
       const itemId = parseInt(parts[1]);
@@ -276,16 +247,12 @@ function registerHandlers() {
         return bot.answerCallbackQuery(query.id, { text: 'Неизвестная опция', show_alert: true });
       }
 
-      const item = await prisma.item.findUnique({
-        where: { id: itemId },
-        include: { seller: true },
-      });
+      const item = await prisma.item.findUnique({ where: { id: itemId }, include: { seller: true } });
       if (!item) {
         return bot.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
       }
 
       const newFlags = flags ^ option;
-
       let base = reviewCaptions.get(key);
       if (!base) {
         base = buildItemCaption(item);
@@ -301,16 +268,12 @@ function registerHandlers() {
       return bot.answerCallbackQuery(query.id, { text: 'Обновлено' });
     }
 
-    // ── 🗑 id:{itemId}:{flags} — Удалить товар ────────────────────────────────
     if (data.startsWith('id:')) {
       const parts = data.split(':');
       const itemId = parseInt(parts[1]);
       const flags  = parseInt(parts[2]);
 
-      const item = await prisma.item.findUnique({
-        where: { id: itemId },
-        include: { seller: true },
-      });
+      const item = await prisma.item.findUnique({ where: { id: itemId }, include: { seller: true } });
       if (!item) {
         return bot.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
       }
@@ -325,23 +288,19 @@ function registerHandlers() {
       const admin = getAdminName(query.from);
       const selectedFlags = OPT_ORDER.filter(opt => flags & opt);
       const reasonLabel = selectedFlags.length
-        ? selectedFlags.map(f => OPT_BUTTON_LABELS[f]).join(', ')
+        ? selectedFlags.map(function(f) { return OPT_BUTTON_LABELS[f]; }).join(', ')
         : 'без причины';
       const base = reviewCaptions.get(key) || buildItemCaption(item);
-      await editAdminMessage(chatId, messageId, hasPhoto, `🗑 Удалён из ленты [${reasonLabel}]: ${admin}\n\n${base}`, null);
+      await editAdminMessage(chatId, messageId, hasPhoto, `🗑 Удалён [${reasonLabel}]: ${admin}\n\n${base}`, null);
       reviewCaptions.delete(key);
 
-      if (item.seller?.telegramUserId) {
-        await notifyUser(
-          item.seller.telegramUserId,
-          buildDeclineNotification(item.title, flags),
-        );
+      if (item.seller && item.seller.telegramUserId) {
+        await notifyUser(item.seller.telegramUserId, buildDeclineNotification(item.title, flags), 'HTML');
       }
 
       return bot.answerCallbackQuery(query.id, { text: 'Товар удалён 🗑' });
     }
 
-    // ── 🚫 ib:{userId}:{itemId} — Забанить пользователя ─────────────────────
     if (data.startsWith('ib:')) {
       const parts = data.split(':');
       const userId = parseInt(parts[1]);
@@ -351,13 +310,13 @@ function registerHandlers() {
         return bot.answerCallbackQuery(query.id, { text: 'Пользователь не найден', show_alert: true });
       }
 
-      const { telegramUserId } = user;
+      const telegramUserId = user.telegramUserId;
 
       try {
         await prisma.bannedTelegramUser.upsert({
-          where:  { telegramUserId },
+          where:  { telegramUserId: telegramUserId },
           update: {},
-          create: { telegramUserId },
+          create: { telegramUserId: telegramUserId },
         });
         await prisma.user.delete({ where: { id: userId } });
       } catch (err) {
@@ -376,19 +335,15 @@ function registerHandlers() {
     }
   });
 
-  bot.on('polling_error', (err) => {
+  bot.on('polling_error', function(err) {
     console.error('[AdminBot] Polling error (ignored):', err.message);
+  });
+}
+
+process.on('unhandledRejection', function(reason) {
+  console.error('[AdminBot] Unhandled rejection (ignored):', reason && reason.message ? reason.message : reason);
 });
 
-process.on('unhandledRejection', (reason) => {
-    console.error('[AdminBot] Unhandled rejection (ignored):', reason?.message || reason);
-});
-
-// ── Публичный API ──────────────────────────────────────────────────────────────
-
-/**
- * Запустить бота (вызывать один раз при старте сервера)
- */
 function startBot() {
   if (!TelegramBot) {
     console.warn('[AdminBot] Пропуск запуска — node-telegram-bot-api не установлен');
@@ -398,17 +353,13 @@ function startBot() {
     console.warn('[AdminBot] BOT_TOKEN не задан — бот не запущен');
     return;
   }
-  if (bot) return; // уже запущен
+  if (bot) return;
 
   bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
   registerHandlers();
   console.log('[AdminBot] Бот запущен (polling)');
 }
 
-/**
- * Отправить уведомление в admin-чат о новом товаре.
- * @param {number} itemId
- */
 async function notifyAdminAboutNewItem(itemId) {
   console.log('[AdminBot] notifyAdminAboutNewItem вызвана для товара', itemId);
 
@@ -422,8 +373,6 @@ async function notifyAdminAboutNewItem(itemId) {
     console.warn('[AdminBot] ADMIN_REVIEW_CHAT_ID не задан');
     return;
   }
-
-  console.log('[AdminBot] Отправка уведомления в чат', chatId);
 
   let item;
   try {
@@ -442,7 +391,7 @@ async function notifyAdminAboutNewItem(itemId) {
   const keyboard = buildKeyboard(item.id, item.sellerId, 0);
 
   let message = null;
-  const firstImage = item.images?.[0];
+  const firstImage = item.images && item.images[0];
 
   if (firstImage) {
     const raw = resolveUrl(firstImage);
@@ -450,17 +399,14 @@ async function notifyAdminAboutNewItem(itemId) {
       ? raw
       : `${(process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net').replace(/\/$/, '')}${raw}`;
 
-    console.log('[AdminBot] Отправка фото:', photoUrl);
-
     try {
       message = await bot.sendPhoto(chatId, photoUrl, {
-        caption,
+        caption: caption,
         parse_mode: 'HTML',
         reply_markup: keyboard,
       });
     } catch (err) {
       console.error('[AdminBot] Ошибка отправки фото:', err.message);
-      console.error('[AdminBot] URL фото:', photoUrl);
     }
   }
 
@@ -478,10 +424,8 @@ async function notifyAdminAboutNewItem(itemId) {
 
   if (message) {
     reviewCaptions.set(msgKey(message.chat.id, message.message_id), caption);
-    console.log('[AdminBot] Уведомление успешно отправлено, message_id:', message.message_id);
-  } else {
-    console.error('[AdminBot] Не удалось отправить уведомление');
+    console.log('[AdminBot] Уведомление отправлено, message_id:', message.message_id);
   }
 }
 
-module.exports = { startBot, notifyAdminAboutNewItem };
+module.exports = { startBot: startBot, notifyAdminAboutNewItem: notifyAdminAboutNewItem };
