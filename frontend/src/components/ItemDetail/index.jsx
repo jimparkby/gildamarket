@@ -103,15 +103,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     <div className="item-detail-overlay" onClick={onClose}>
       <div className="item-detail" onClick={e => e.stopPropagation()}>
 
-        {/* Кнопка закрытия */}
-        <button className="item-detail__close-btn" onClick={onClose} aria-label="Закрыть">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-          <span>Закрыть</span>
-        </button>
-
-        {/* Фото — занимает верхнюю часть, кнопка назад поверх него */}
+        {/* Фото — занимает верхнюю часть */}
         <div className="item-detail__hero">
 
           {images.length > 0 ? (
