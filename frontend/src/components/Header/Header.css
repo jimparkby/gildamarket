@@ -4,10 +4,11 @@
   left: 0;
   right: 0;
   height: calc(var(--header-h) + var(--tg-safe-top));
-  background: transparent;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
   display: flex;
   align-items: flex-end;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0 16px 8px;
   z-index: 200;
 }
@@ -19,7 +20,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--white);
+  color: var(--black);
   opacity: 1;
 }
 
@@ -39,9 +40,8 @@
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: var(--white);
+  color: var(--black);
   user-select: none;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
 }
 
 .header__page-title {

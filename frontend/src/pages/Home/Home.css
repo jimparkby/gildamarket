@@ -1,40 +1,6 @@
 .home {
   padding-left: 0;
   padding-right: 0;
-  padding-top: 0;
-}
-
-.home__tabs {
-  display: flex;
-  gap: 24px;
-  background: transparent;
-  padding: 0 20px;
-  position: fixed;
-  top: calc(var(--header-h) + 40px);
-  left: 0;
-  right: 0;
-  z-index: 100;
-  justify-content: center;
-}
-
-.home__tab {
-  padding: 8px 0;
-  font-family: var(--font-condensed);
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.5);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all var(--transition);
-  position: relative;
-}
-
-.home__tab.active {
-  color: var(--white);
-  font-weight: 500;
 }
 
 .home__grid {
@@ -43,7 +9,6 @@
   gap: 16px;
   background: var(--white);
   padding: 12px;
-  margin-top: calc(var(--header-h) + 40px + 31px + 16px);
 }
 .home__grid::after {
   content: '';
