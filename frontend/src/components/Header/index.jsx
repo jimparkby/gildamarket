@@ -20,9 +20,7 @@ export default function Header() {
       tg.BackButton.hide();
     } else {
       tg.BackButton.show();
-      // Вкладки нижней навигации — возвращаем на главную
-      const isBottomTab = ['/search', '/favorites', '/profile'].includes(location.pathname);
-      const handler = () => isBottomTab ? navigate('/') : navigate(-1);
+      const handler = () => navigate(-1);
       tg.BackButton.onClick(handler);
       return () => {
         tg.BackButton.offClick(handler);
