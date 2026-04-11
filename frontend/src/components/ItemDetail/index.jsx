@@ -15,13 +15,25 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const touchStartY = useRef(null);
   const imgWrapRef = useRef(null);
 
-  // Перехватываем Telegram BackButton — закрываем деталь вместо navigate(-1)
+  // Добавляем запись в историю при открытии модалки
   useEffect(() => {
-    const tg = window?.Telegram?.WebApp;
-    if (!tg?.BackButton) return;
-    tg.BackButton.show();
-    tg.BackButton.onClick(onClose);
-    return () => tg.BackButton.offClick(onClose);
+    // Добавляем фиктивную запись в историю
+    window.history.pushState({ modal: true }, '');
+
+    // При попытке вернуться назад - закрываем модалку
+    const handlePopState = (e) => {
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // Если модалка закрывается программно (не через back), убираем запись из истории
+      if (window.history.state?.modal) {
+        window.history.back();
+      }
+    };
   }, [onClose]);
 
   // Блокируем вертикальный свайп Telegram (закрытие приложения) пока открыта деталь
