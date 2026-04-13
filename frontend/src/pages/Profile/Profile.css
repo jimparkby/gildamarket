@@ -593,3 +593,16 @@
   letter-spacing: 0.06em;
 }
 .lb-modal__submit:disabled { opacity: 0.4; }
+
+.profile__show-more {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  border: 1.5px solid var(--gray-200);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--black);
+  background: transparent;
+  text-transform: uppercase;
+}
