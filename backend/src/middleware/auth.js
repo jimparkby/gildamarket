@@ -1,47 +1,48 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-
+ 
 /**
  * Validate Telegram Web App initData using HMAC-SHA256
+ * Supports multiple bots via BOT_TOKEN and BOT_TOKEN_2
  */
 function validateTelegramInitData(initData) {
-  const botToken = process.env.BOT_TOKEN;
-  if (!botToken) throw new Error('BOT_TOKEN not set');
-
+  const tokens = [process.env.BOT_TOKEN, process.env.BOT_TOKEN_2].filter(Boolean);
+  if (tokens.length === 0) throw new Error('BOT_TOKEN not set');
+ 
   const urlParams = new URLSearchParams(initData);
   const hash = urlParams.get('hash');
   if (!hash) return null;
-
+ 
   urlParams.delete('hash');
-
   const dataCheckString = Array.from(urlParams.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
-
-  const secretKey = crypto
-    .createHmac('sha256', 'WebAppData')
-    .update(botToken)
-    .digest();
-
-  const computedHash = crypto
-    .createHmac('sha256', secretKey)
-    .update(dataCheckString)
-    .digest('hex');
-
-  if (computedHash !== hash) return null;
-
-  // Parse user from initData
-  const userStr = urlParams.get('user');
-  if (!userStr) return null;
-
-  try {
-    return JSON.parse(userStr);
-  } catch {
-    return null;
+ 
+  for (const botToken of tokens) {
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(botToken)
+      .digest();
+    const computedHash = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString)
+      .digest('hex');
+ 
+    if (computedHash === hash) {
+      const userStr = urlParams.get('user');
+      if (!userStr) return null;
+      try {
+        return JSON.parse(userStr);
+      } catch {
+        return null;
+      }
+    }
   }
+ 
+  return null;
 }
-
+ 
 /**
  * Middleware: verify JWT token
  */
@@ -50,7 +51,6 @@ function requireAuth(req, res, next) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
   const token = authHeader.slice(7);
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
@@ -61,7 +61,7 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
-
+ 
 /**
  * Optional auth – attaches userId if token present, doesn't block
  */
@@ -75,5 +75,6 @@ function optionalAuth(req, res, next) {
   }
   next();
 }
-
+ 
 module.exports = { validateTelegramInitData, requireAuth, optionalAuth };
+ 
