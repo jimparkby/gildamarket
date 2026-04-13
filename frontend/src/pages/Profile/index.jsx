@@ -13,18 +13,20 @@ import ItemDetail from '../../components/ItemDetail';
 import SideMenu from '../../components/SideMenu';
 import FollowersModal from '../../components/FollowersModal';
 import './Profile.css';
-
+ 
 const CATEGORIES = ['Обувь','Верхняя одежда','Футболки','Средний слой','Штаны/Джинсы/Юбки','Сумки','Аксессуары','Прочее'];
-
+const ITEMS_PER_PAGE = 4;
+ 
 export default function Profile() {
   const { id } = useParams();
   const { user: authUser } = useAuth();
   const { language } = useSettings();
   const navigate = useNavigate();
-
+ 
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [editingAbout, setEditingAbout] = useState(false);
@@ -36,14 +38,14 @@ export default function Profile() {
   const [lbDesc, setLbDesc] = useState('');
   const [lbFiles, setLbFiles] = useState([]);
   const [lbPreviews, setLbPreviews] = useState([]);
-  const [followersModal, setFollowersModal] = useState(null); // null | 'followers' | 'following'
+  const [followersModal, setFollowersModal] = useState(null);
   const avatarRef = useRef();
   const bgRef = useRef();
   const lbFileRef = useRef();
-
+ 
   const isOwner = !id || (authUser && String(authUser.id) === id);
   const shopId = id || (authUser ? String(authUser.id) : null);
-
+ 
   useEffect(() => {
     if (!shopId) return;
     setLoading(true);
@@ -56,7 +58,7 @@ export default function Profile() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [shopId]);
-
+ 
   const handleAvatar = useCallback(async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -65,7 +67,7 @@ export default function Profile() {
     const res = await uploadAvatar(fd);
     setShop(prev => ({ ...prev, avatar: res.avatar }));
   }, []);
-
+ 
   const handleBg = useCallback(async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -74,7 +76,7 @@ export default function Profile() {
     const res = await uploadBackground(fd);
     setShop(prev => ({ ...prev, backgroundImage: res.backgroundImage }));
   }, []);
-
+ 
   const saveName = useCallback(async () => {
     const parts = nameDraft.trim().split(' ');
     const firstName = parts[0] || '';
@@ -83,18 +85,18 @@ export default function Profile() {
     setShop(prev => ({ ...prev, firstName: updated.firstName, lastName: updated.lastName }));
     setEditingName(false);
   }, [nameDraft]);
-
+ 
   const saveAbout = useCallback(async () => {
     const updated = await updateProfile({ about: aboutDraft });
     setShop(prev => ({ ...prev, about: updated.about }));
     setEditingAbout(false);
   }, [aboutDraft]);
-
+ 
   const handleFollow = useCallback(async () => {
     const res = await toggleShopLike(shop.id);
     setShop(prev => ({ ...prev, isShopLiked: res.liked }));
   }, [shop?.id]);
-
+ 
   const handleShare = useCallback(() => {
     const url = `https://t.me/Gildamarket_bot/app?startapp=shop_${shop.id}`;
     if (navigator.share) {
@@ -103,27 +105,26 @@ export default function Profile() {
       window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shop.firstName || 'Gilda Market Shop')}`);
     }
   }, [shop]);
-
+ 
   const handleMessage = useCallback(() => {
     if (shop?.telegramUsername) {
       window.Telegram?.WebApp?.openTelegramLink(`https://t.me/${shop.telegramUsername}`);
     }
   }, [shop?.telegramUsername]);
-
-  /* ── Lookbook ── */
+ 
   const openLbModal = useCallback(() => {
     setLbDesc('');
     setLbFiles([]);
     setLbPreviews([]);
     setLbModalOpen(true);
   }, []);
-
+ 
   const handleLbFileSelect = useCallback((e) => {
     const files = Array.from(e.target.files || []);
     setLbFiles(files);
     setLbPreviews(files.map(f => URL.createObjectURL(f)));
   }, []);
-
+ 
   const handleLbSubmit = useCallback(async () => {
     if (!lbFiles.length) return;
     setLbUploading(true);
@@ -138,13 +139,12 @@ export default function Profile() {
       setLbUploading(false);
     }
   }, [lbFiles, lbDesc]);
-
+ 
   const handleDeleteLb = useCallback(async (lbId) => {
     await deleteLookBoard(lbId);
     setShop(prev => ({ ...prev, lookBoards: prev.lookBoards.filter(l => l.id !== lbId) }));
   }, []);
-
-  /* ── Items ── */
+ 
   const handleDeleteItem = useCallback(async (itemId) => {
     await deleteItem(itemId);
     setShop(prev => ({
@@ -154,7 +154,7 @@ export default function Profile() {
     }));
     setSelected(null);
   }, []);
-
+ 
   const handleMarkSold = useCallback(async (itemId) => {
     const res = await markItemSold(itemId);
     setShop(prev => {
@@ -173,19 +173,25 @@ export default function Profile() {
       };
     });
   }, []);
-
+ 
+  const handleFilterChange = useCallback((filter) => {
+    setActiveFilter(filter);
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, []);
+ 
   if (loading) return <main className="page"><div className="spinner" /></main>;
   if (!shop) return <main className="page"><div className="empty-state"><p>{t(language, 'shopNotFound')}</p></div></main>;
-
+ 
   const lookBoards = shop.lookBoards || [];
   const items = shop.items || [];
   const archivedItems = shop.archivedItems || [];
-
+ 
   const availableCategories = CATEGORIES.filter(cat => items.some(i => i.category === cat));
   const filteredItems = activeFilter === 'all' ? items : items.filter(i => i.category === activeFilter);
-
+  const visibleItems = filteredItems.slice(0, visibleCount);
+ 
   const shopName = `${shop.firstName || ''}${shop.lastName ? ' ' + shop.lastName : ''}`.trim() || (isOwner ? t(language, 'addShopName') : '');
-
+ 
   return (
     <main className="page profile">
       {/* ── Hero / Banner ── */}
@@ -204,7 +210,7 @@ export default function Profile() {
           }
           {isOwner && <input ref={bgRef} type="file" accept="image/*" hidden onChange={handleBg} />}
         </div>
-
+ 
         <div className="profile__avatar-wrap" onClick={() => isOwner && avatarRef.current?.click()}>
           {shop.avatar
             ? <img src={shop.avatar} alt="" className="profile__avatar" />
@@ -225,10 +231,9 @@ export default function Profile() {
           )}
         </div>
       </div>
-
+ 
       {/* ── Info ── */}
       <div className="profile__info">
-        {/* Name row */}
         <div className="profile__name-row">
           {editingName ? (
             <div className="profile__name-edit-wrap">
@@ -260,8 +265,7 @@ export default function Profile() {
             </button>
           )}
         </div>
-
-        {/* Stats */}
+ 
         <div className="profile__stats">
           <button className="profile__stat profile__stat--btn" onClick={() => setFollowersModal('followers')}>
             <span className="profile__stat-num">{shop.shopLikesCount ?? 0}</span>
@@ -273,8 +277,7 @@ export default function Profile() {
             <span className="profile__stat-label">{t(language, 'following')}</span>
           </button>
         </div>
-
-        {/* Action buttons */}
+ 
         {!isOwner && (
           <div className="profile__actions">
             <button
@@ -307,8 +310,7 @@ export default function Profile() {
             </button>
           </div>
         )}
-
-        {/* About */}
+ 
         <div className="profile__about">
           {editingAbout ? (
             <div className="profile__about-edit">
@@ -331,7 +333,7 @@ export default function Profile() {
           )}
         </div>
       </div>
-
+ 
       {/* ── Каталог Section ── */}
       <section className="profile__section">
         <div className="profile__section-header">
@@ -342,13 +344,12 @@ export default function Profile() {
             </button>
           )}
         </div>
-
-        {/* Filter chips */}
+ 
         {items.length > 0 && (
           <div className="profile__filters">
             <button
               className={`profile__filter-chip${activeFilter === 'all' ? ' active' : ''}`}
-              onClick={() => setActiveFilter('all')}
+              onClick={() => handleFilterChange('all')}
             >
               Все
             </button>
@@ -356,42 +357,53 @@ export default function Profile() {
               <button
                 key={cat}
                 className={`profile__filter-chip${activeFilter === cat ? ' active' : ''}`}
-                onClick={() => setActiveFilter(cat)}
+                onClick={() => handleFilterChange(cat)}
               >
                 {cat}
               </button>
             ))}
           </div>
         )}
-
+ 
         {items.length === 0 ? (
           <div className="empty-state">
             <p>{isOwner ? t(language, 'listFirstItem') : t(language, 'noItemsYet')}</p>
           </div>
         ) : (
-          <div className="profile__items-grid">
-            {filteredItems.map(item => (
-              <div key={item.id} className="profile__item-wrap">
-                <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
-                {isOwner && (
-                  <div className="profile__item-actions">
-                    <button onClick={() => navigate(`/edit/${item.id}`)} className="profile__item-edit">
-                      {t(language, 'edit')}
-                    </button>
-                    <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
-                      {item.isSold ? t(language, 'markAvailable') : t(language, 'markSold')}
-                    </button>
-                    <button onClick={() => handleDeleteItem(item.id)} className="profile__item-del">
-                      {t(language, 'delete')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="profile__items-grid">
+              {visibleItems.map(item => (
+                <div key={item.id} className="profile__item-wrap">
+                  <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
+                  {isOwner && (
+                    <div className="profile__item-actions">
+                      <button onClick={() => navigate(`/edit/${item.id}`)} className="profile__item-edit">
+                        {t(language, 'edit')}
+                      </button>
+                      <button onClick={() => handleMarkSold(item.id)} className="profile__item-sold">
+                        {item.isSold ? t(language, 'markAvailable') : t(language, 'markSold')}
+                      </button>
+                      <button onClick={() => handleDeleteItem(item.id)} className="profile__item-del">
+                        {t(language, 'delete')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+ 
+            {visibleCount < filteredItems.length && (
+              <button
+                className="profile__show-more"
+                onClick={() => setVisibleCount(v => v + ITEMS_PER_PAGE)}
+              >
+                Показать ещё
+              </button>
+            )}
+          </>
         )}
       </section>
-
+ 
       {/* ── Лукбук Section ── */}
       <section className="profile__section">
         <div className="profile__section-header">
@@ -433,7 +445,7 @@ export default function Profile() {
           </div>
         )}
       </section>
-
+ 
       {/* ── Архив Section ── */}
       {archivedItems.length > 0 && (
         <section className="profile__section profile__section--archive">
@@ -463,7 +475,7 @@ export default function Profile() {
           </div>
         </section>
       )}
-
+ 
       {/* Lookbook Create Modal */}
       {lbModalOpen && (
         <div className="lb-modal-overlay" onClick={() => setLbModalOpen(false)}>
@@ -524,7 +536,7 @@ export default function Profile() {
           </div>
         </div>
       )}
-
+ 
       {selected && (
         <ItemDetail
           item={selected}
@@ -532,9 +544,9 @@ export default function Profile() {
           onLikeChange={() => {}}
         />
       )}
-
+ 
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-
+ 
       {followersModal && (
         <FollowersModal
           shopId={shopId}
