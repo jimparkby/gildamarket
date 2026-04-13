@@ -23,6 +23,7 @@ model User {
   likedShops      ShopLike[]  @relation("UserLikesShop")
   shopLikedBy     ShopLike[]  @relation("ShopLikedByUser")
   lookBoards      LookBoard[]
+  drafts          ItemDraft[]
 
   @@map("users")
 }
@@ -37,7 +38,7 @@ model Item {
   price       Decimal   @db.Decimal(10, 2)
   currency    String    @default("RUB")
   description String?
-  images      String[]  // array of file paths
+  images      String[]
   isSold      Boolean   @default(false) @map("is_sold")
   status      String    @default("pending") // pending | approved | rejected
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -47,6 +48,20 @@ model Item {
   likes       ItemLike[]
 
   @@map("items")
+}
+
+model ItemDraft {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  description String?
+  price       String?
+  images      String[] // URLs скачанных фото
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userId      Int      @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("item_drafts")
 }
 
 model BannedTelegramUser {
@@ -80,7 +95,7 @@ model LookBoard {
   id          Int      @id @default(autoincrement())
   title       String?
   description String?
-  images      String[] // array of file paths
+  images      String[]
   createdAt   DateTime @default(now()) @map("created_at")
 
   userId    Int      @map("user_id")
