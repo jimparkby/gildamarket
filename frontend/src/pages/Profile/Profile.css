@@ -431,12 +431,11 @@
   width: 160px;
 }
 
-/* ── Items Grid ── */
 .profile__items-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1px;
-  background: var(--white);
+  background: var(--gray-100);
   margin-top: 1px;
 }
 .profile__items-grid::after {
@@ -445,11 +444,10 @@
 }
 .profile__item-wrap {
   background: var(--white);
-  padding: 12px;
+  padding: 0;
   display: flex;
   flex-direction: column;
 }
-
 .profile__item-actions {
   display: flex;
   gap: 6px;
