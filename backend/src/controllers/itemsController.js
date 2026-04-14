@@ -8,6 +8,44 @@ const INITIAL_PAGE_SIZE = 20;
 const VIEW_MORE_SIZE = 10;
 const PAGINATION_SIZE = 30;
 
+function normalizeToArray(value) {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.flatMap(v => normalizeToArray(v));
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    // multipart формы часто присылают JSON-строкой
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return normalizeToArray(parsed);
+      } catch (_) {
+        // fallback ниже
+      }
+    }
+
+    return [trimmed];
+  }
+
+  return [];
+}
+
+function collectImages({ files, draftImages, existingImages = [] }) {
+  // S3: use file.location (full URL); local: use file.filename
+  const uploadedImages = (files || []).map(f => f.location || f.filename).filter(Boolean);
+
+  const normalizedDraftImages = normalizeToArray(draftImages);
+  const normalizedExistingImages = normalizeToArray(existingImages);
+
+  // Сохраняем порядок: уже существующие -> черновые -> новые
+  return [...normalizedExistingImages, ...normalizedDraftImages, ...uploadedImages];
+}
+
 function serializeItem(item, userId, includeStatus = false) {
   const result = {
     id: item.id,
@@ -147,10 +185,9 @@ async function getItem(req, res, next) {
 
 async function createItem(req, res, next) {
   try {
-    const { title, brand, category, subcategory, size, price, currency, description } = req.body;
+    const { title, brand, category, subcategory, size, price, currency, description, draftImages } = req.body;
 
-    // S3: use file.location (full URL); local: use file.filename
-    const images = (req.files || []).map(f => f.location || f.filename);
+    const images = collectImages({ files: req.files, draftImages });
 
     if (!title || !category || !price) {
       return res.status(400).json({ error: 'title, category, price are required' });
@@ -223,22 +260,18 @@ async function toggleLike(req, res, next) {
 async function updateItem(req, res, next) {
   try {
     const id = parseInt(req.params.id);
-    const { title, brand, category, subcategory, size, price, currency, description, existingImages } = req.body;
+    const { title, brand, category, subcategory, size, price, currency, description, existingImages, draftImages } = req.body;
 
     const item = await prisma.item.findUnique({ where: { id } });
     if (!item) return res.status(404).json({ error: 'Item not found' });
     if (item.sellerId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
 
-    // S3: use file.location (full URL); local: use file.filename
-    const newImages = (req.files || []).map(f => f.location || f.filename);
-
-    // Combine existing images (that weren't deleted) with new uploads
-    let keepExisting = [];
-    if (existingImages) {
-      // existingImages can be a string or array
-      keepExisting = Array.isArray(existingImages) ? existingImages : [existingImages];
-    }
-    const images = [...keepExisting, ...newImages];
+    // Combine existing images (that weren't deleted), draftImages and new uploads
+    const images = collectImages({
+      files: req.files,
+      draftImages,
+      existingImages,
+    });
 
     const updated = await prisma.item.update({
       where: { id },
