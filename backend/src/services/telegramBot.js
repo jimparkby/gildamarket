@@ -84,15 +84,19 @@ async function downloadTelegramPhoto(fileId) {
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     const fileName = `draft_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
     const filePath = path.join(uploadDir, fileName);
- 
+
     await new Promise((resolve, reject) => {
       const file = fs.createWriteStream(filePath);
-      https.get(fileUrl, (res) => {
+      const req = https.get(fileUrl, (res) => {
         res.pipe(file);
         file.on('finish', () => { file.close(); resolve(); });
-      }).on('error', reject);
+        res.on('error', (err) => { file.close(); reject(err); });
+      });
+      // Таймаут 15 сек — если Telegram недоступен, не зависаем
+      req.setTimeout(15000, () => { req.destroy(new Error('Download timeout')); });
+      req.on('error', reject);
     });
- 
+
     return `/uploads/${fileName}`;
   } catch (err) {
     console.error('[AdminBot] Ошибка скачивания фото:', err.message);
@@ -517,20 +521,20 @@ async function notifyAdminAboutNewItem(itemId) {
   if (firstImage) {
     const raw = resolveUrl(firstImage);
 
-    // Локальный файл (/uploads/...) — отправляем поток с диска,
-    // иначе Telegram не может скачать URL с нашего сервера
+    // Пробуем читать файл с диска (и для /uploads/... и для старых полных URL).
+    // Это надёжнее, чем давать Telegram HTTP-ссылку на наш сервер.
     let photoSource;
-    if (raw && raw.startsWith('/uploads/')) {
-      const fileName = path.basename(raw);
-      const filePath = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads', fileName);
+    const uploadDir = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
+    const fileName = path.basename(raw); // работает и для /uploads/name.jpg, и для https://.../name.jpg
+    if (fileName) {
+      const filePath = path.join(uploadDir, fileName);
       if (fs.existsSync(filePath)) {
         photoSource = fs.createReadStream(filePath);
       }
     }
-    if (!photoSource) {
-      photoSource = raw.startsWith('http')
-        ? raw
-        : `${(process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net').replace(/\/$/, '')}${raw}`;
+    // Фallback — S3 или внешний URL (для таких Telegram может скачать сам)
+    if (!photoSource && raw.startsWith('http')) {
+      photoSource = raw;
     }
 
     try {
