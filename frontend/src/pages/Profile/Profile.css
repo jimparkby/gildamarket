@@ -434,13 +434,10 @@
 .profile__items-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1px;
-  background: var(--gray-100);
-  margin-top: 1px;
-}
-.profile__items-grid::after {
-  content: '';
+  gap: 16px;
   background: var(--white);
+  padding: 12px;
+  margin-top: 1px;
 }
 .profile__item-wrap {
   background: var(--white);
