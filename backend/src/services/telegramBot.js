@@ -390,48 +390,6 @@ function registerHandlers(botInstance, token) {
         return;
       }
 
-      // ── Проверка: пользователь может пересылать только из своего канала ────────
-      if (msg.forward_from_chat) {
-        if (msg.forward_from_chat.type === 'channel') {
-          try {
-            const admins = await botInstance.getChatAdministrators(msg.forward_from_chat.id);
-            const isAdmin = admins.some(a => String(a.user.id) === String(msg.from.id));
-            if (!isAdmin) {
-              await botInstance.sendMessage(chatId,
-                '❌ <b>Нельзя пересылать посты из чужого канала.</b>\n\n' +
-                'Публикуйте только свои товары из каналов, где вы являетесь администратором.',
-                { parse_mode: 'HTML' }
-              );
-              return;
-            }
-          } catch (err) {
-            console.warn('[Bot] getChatAdministrators error:', err.message);
-            await botInstance.sendMessage(chatId,
-              '❌ <b>Не удалось проверить права в канале.</b>\n\n' +
-              'Чтобы бот мог проверить, что вы владелец канала, добавьте его туда как администратора и попробуйте снова.',
-              { parse_mode: 'HTML' }
-            );
-            return;
-          }
-        } else if (msg.forward_from_chat.type === 'group' || msg.forward_from_chat.type === 'supergroup') {
-          // Пересылка из групп — не поддерживается
-          await botInstance.sendMessage(chatId,
-            '❌ Пересылка из групп не поддерживается. Пересылайте посты только из своего канала.',
-            { parse_mode: 'HTML' }
-          );
-          return;
-        }
-      } else if (msg.forward_from && String(msg.forward_from.id) !== String(msg.from.id)) {
-        // Переслано от другого пользователя — запрещаем
-        await botInstance.sendMessage(chatId,
-          '❌ <b>Нельзя пересылать чужие сообщения.</b>\n\n' +
-          'Пересылайте только свои публикации из вашего канала.',
-          { parse_mode: 'HTML' }
-        );
-        return;
-      }
-      // ─────────────────────────────────────────────────────────────────────────
-
       const photos = [];
       if (msg.photo && msg.photo.length > 0) {
         const bestPhoto = msg.photo[msg.photo.length - 1];
