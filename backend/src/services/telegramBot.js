@@ -329,12 +329,13 @@ function registerHandlers(botInstance, token) {
     const chatId = msg.chat.id;
     const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
     const text = [
-      `Привет! 🙌🏻`,
-      `Это маркетплейс нового формата.`,
+      `Gilda — рессейл-платформа нового формата`,
       ``,
-      `Создавай свой магазин 🛒`,
-      `Находи уникальные вещи 🖤`,
-      `Подписывайся на любимых продавцов`,
+      `🔗 Создавай свой магазин`,
+      `🔗 Находи уникальные вещи`,
+      `🔗 Подписывайся на любимых продавцов`,
+      ``,
+      `Gilda. Твой магазин в Telegram.`,
     ].join('\n');
     await botInstance.sendMessage(chatId, text, {
       parse_mode: 'HTML',
