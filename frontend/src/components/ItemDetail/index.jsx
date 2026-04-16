@@ -85,7 +85,8 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   }, [item?.id, haptic, onLikeChange]);
 
   const openShop = useCallback(() => {
-    navigate(`/shop/${item.seller?.id}`, { state: { fromItem: item } });
+    sessionStorage.setItem('returnItem', JSON.stringify(item));
+    navigate(`/shop/${item.seller?.id}`);
     onClose();
   }, [item, navigate, onClose]);
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
 import { getItems } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
@@ -12,7 +11,6 @@ const VIEW_MORE = 10;
 
 export default function Home() {
   const { language } = useSettings();
-  const location = useLocation();
   const [items, setItems] = useState([]);
   const [visible, setVisible] = useState(INITIAL);
   const [loading, setLoading] = useState(true);
@@ -21,10 +19,10 @@ export default function Home() {
 
   // Восстановить открытый товар при возврате из магазина продавца
   useEffect(() => {
-    const fromItem = location.state?.fromItem;
-    if (fromItem) {
-      setSelected(fromItem);
-      window.history.replaceState({}, '', '/');
+    const saved = sessionStorage.getItem('returnItem');
+    if (saved) {
+      try { setSelected(JSON.parse(saved)); } catch {}
+      sessionStorage.removeItem('returnItem');
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
