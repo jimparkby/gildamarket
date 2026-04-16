@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const { startBot } = require('./services/telegramBot');
+const { startBot, createWebhookRouter } = require('./services/telegramBot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +22,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
 app.use('/uploads', express.static(uploadDir));
+
+// Telegram Webhook (до API-роутов, чтобы не блокировало auth middleware)
+app.use('/bot-webhook', createWebhookRouter());
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));

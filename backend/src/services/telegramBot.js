@@ -530,27 +530,16 @@ function registerHandlers(botInstance, token) {
     }
   });
 
-  // 409 — rolling restart на TimeWeb: ждём 15 сек, перезапускаем polling
-  botInstance.on('polling_error', function(err) {
-    if (err.message && err.message.includes('409 Conflict')) {
-      console.warn(`[Bot:${token.slice(0, 10)}] 409 Conflict — ждём 15 сек и перезапускаем polling`);
-      botInstance.stopPolling().then(function() {
-        setTimeout(function() {
-          botInstance.startPolling();
-          console.log(`[Bot:${token.slice(0, 10)}] Polling перезапущен после 409`);
-        }, 15000);
-      });
-      return;
-    }
-    console.error(`[Bot:${token.slice(0, 10)}] Polling error:`, err.message);
-  });
 }
 
 process.on('unhandledRejection', function(reason) {
   console.error('[Bot] Unhandled rejection:', reason && reason.message ? reason.message : reason);
 });
 
-// ── Запуск ────────────────────────────────────────────────────────────────────
+// ── Карта бот-инстансов по токену (для webhook-роутера) ──────────────────────
+const botsByToken = new Map();
+
+// ── Запуск через Webhook (без polling — нет 409 при multi-instance деплое) ───
 function startBot() {
   if (!TelegramBot) {
     console.warn('[Bot] Пропуск запуска — node-telegram-bot-api не установлен');
@@ -563,12 +552,36 @@ function startBot() {
     return;
   }
 
+  const baseUrl = (process.env.MINI_APP_URL || '').replace(/\/$/, '');
+
   tokens.forEach(function(token, index) {
-    const botInstance = new TelegramBot(token, { polling: true });
+    // polling: false — обновления приходят через webhook, не через long-poll
+    const botInstance = new TelegramBot(token, { polling: false });
     registerHandlers(botInstance, token);
+    botsByToken.set(token, botInstance);
     if (index === 0) primaryBot = botInstance;
-    console.log(`[Bot ${index + 1}] Запущен (polling), токен: ${token.slice(0, 10)}...`);
+
+    // Регистрируем webhook в Telegram
+    const webhookUrl = `${baseUrl}/bot-webhook/${token}`;
+    botInstance.setWebHook(webhookUrl)
+      .then(() => console.log(`[Bot ${index + 1}] Webhook: ${webhookUrl}`))
+      .catch(err => console.error(`[Bot ${index + 1}] Ошибка webhook:`, err.message));
   });
+}
+
+// ── Express-роутер для входящих webhook-запросов от Telegram ─────────────────
+function createWebhookRouter() {
+  const { Router } = require('express');
+  const router = Router();
+  // Telegram шлёт POST /bot-webhook/<token> с JSON-телом update
+  router.post('/:token', function(req, res) {
+    const botInstance = botsByToken.get(req.params.token);
+    if (botInstance) {
+      botInstance.processUpdate(req.body);
+    }
+    res.sendStatus(200); // всегда 200 — иначе Telegram будет ретраить
+  });
+  return router;
 }
 
 // ── Уведомление admin-чата о новом товаре (через primaryBot) ─────────────────
@@ -636,4 +649,4 @@ async function notifyAdminAboutNewItem(itemId) {
   console.error('[Bot] Не удалось отправить admin уведомление после 3 попыток');
 }
 
-module.exports = { startBot, notifyAdminAboutNewItem };
+module.exports = { startBot, notifyAdminAboutNewItem, createWebhookRouter };
