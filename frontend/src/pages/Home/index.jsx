@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getItems } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
@@ -11,11 +12,21 @@ const VIEW_MORE = 10;
 
 export default function Home() {
   const { language } = useSettings();
+  const location = useLocation();
   const [items, setItems] = useState([]);
   const [visible, setVisible] = useState(INITIAL);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
   const [selected, setSelected] = useState(null);
+
+  // Восстановить открытый товар при возврате из магазина продавца
+  useEffect(() => {
+    const fromItem = location.state?.fromItem;
+    if (fromItem) {
+      setSelected(fromItem);
+      window.history.replaceState({}, '', '/');
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false;
