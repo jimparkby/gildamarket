@@ -324,6 +324,14 @@ function registerHandlers(botInstance, token) {
     }
   });
 
+  // /chatid — временная команда для получения ID чата
+  botInstance.onText(/\/chatid/, async (msg) => {
+    await botInstance.sendMessage(msg.chat.id,
+      `Chat ID: <code>${msg.chat.id}</code>\nType: ${msg.chat.type}`,
+      { parse_mode: 'HTML' }
+    );
+  });
+
   // /start
   botInstance.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
