@@ -12,7 +12,7 @@ try {
 }
 
 const { PrismaClient } = require('@prisma/client');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const resolveUrl = require('../utils/resolveUrl');
 const https = require('https');
 const fs = require('fs');
@@ -104,6 +104,54 @@ async function uploadBufferToS3(buffer, fileName) {
   // Публичный URL
   const endpoint = process.env.S3_ENDPOINT.replace(/\/$/, '');
   return `${endpoint}/${process.env.S3_BUCKET}/${key}`;
+}
+
+// ── Скачать файл из S3 в буфер ───────────────────────────────────────────────
+async function downloadFromS3(s3Url) {
+  try {
+    const endpoint = (process.env.S3_ENDPOINT || '').replace(/\/$/, '');
+    const bucket   = process.env.S3_BUCKET || '';
+    const prefix   = `${endpoint}/${bucket}/`;
+    if (!s3Url.startsWith(prefix)) return null;
+    const key = s3Url.slice(prefix.length);
+
+    const s3 = new S3Client({
+      endpoint,
+      region:   process.env.S3_REGION || 'ru-1',
+      credentials: {
+        accessKeyId:     process.env.S3_ACCESS_KEY,
+        secretAccessKey: process.env.S3_SECRET_KEY,
+      },
+      forcePathStyle: true,
+    });
+    const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const chunks = [];
+    for await (const chunk of res.Body) chunks.push(Buffer.from(chunk));
+    return Buffer.concat(chunks);
+  } catch (err) {
+    console.warn('[Bot] Ошибка скачивания из S3:', err.message);
+    return null;
+  }
+}
+
+// Получить буфер для любого фото товара (S3 URL или локальный файл)
+async function fetchPhotoBuffer(imageValue) {
+  const raw = resolveUrl(imageValue);
+  if (!raw) return null;
+
+  // S3 URL — скачиваем через SDK (не через HTTP-ссылку, которую Telegram не всегда открывает)
+  if (raw.startsWith('http') && useS3()) {
+    return await downloadFromS3(raw);
+  }
+
+  // Локальный файл
+  const fileName = path.basename(raw);
+  const filePath = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads', fileName);
+  if (fs.existsSync(filePath)) {
+    return fs.readFileSync(filePath);
+  }
+
+  return null;
 }
 
 // ── Скачать фото из Telegram ──────────────────────────────────────────────────
@@ -545,55 +593,47 @@ async function notifyAdminAboutNewItem(itemId) {
   const caption  = buildItemCaption(item);
   const keyboard = buildKeyboard(item.id, item.sellerId, 0);
 
-  let message = null;
-  const firstImage = item.images && item.images[0];
+  // Retry: до 3 попыток с паузой 10 сек (на случай если бот в момент публикации перезапускался)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      let message = null;
+      const firstImage = item.images && item.images[0];
 
-  if (firstImage) {
-    const raw = resolveUrl(firstImage);
-
-    // Для локальных файлов (и старых полных URL на наш сервер) — читаем с диска
-    let photoSource;
-    const uploadDir = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
-    const fileName  = path.basename(raw);
-    if (fileName) {
-      const filePath = path.join(uploadDir, fileName);
-      if (fs.existsSync(filePath)) {
-        photoSource = fs.createReadStream(filePath);
+      if (firstImage) {
+        // Скачиваем фото в буфер и отправляем напрямую — Telegram не тянет URL сам
+        const photoBuffer = await fetchPhotoBuffer(firstImage);
+        if (photoBuffer) {
+          try {
+            message = await primaryBot.sendPhoto(chatId, photoBuffer, {
+              caption:      caption,
+              parse_mode:   'HTML',
+              reply_markup: keyboard,
+            });
+          } catch (err) {
+            console.warn(`[Bot] Попытка ${attempt}: ошибка отправки фото:`, err.message);
+          }
+        }
       }
-    }
-    // Fallback — S3 или внешний URL
-    if (!photoSource && raw.startsWith('http')) {
-      photoSource = raw;
-    }
 
-    if (photoSource) {
-      try {
-        message = await primaryBot.sendPhoto(chatId, photoSource, {
-          caption:      caption,
+      if (!message) {
+        message = await primaryBot.sendMessage(chatId, caption, {
           parse_mode:   'HTML',
           reply_markup: keyboard,
         });
-      } catch (err) {
-        console.error('[Bot] Ошибка отправки фото:', err.message);
       }
-    }
-  }
 
-  if (!message) {
-    try {
-      message = await primaryBot.sendMessage(chatId, caption, {
-        parse_mode:   'HTML',
-        reply_markup: keyboard,
-      });
+      if (message) {
+        reviewCaptions.set(msgKey(message.chat.id, message.message_id), caption);
+        console.log(`[Bot] Admin уведомление отправлено (попытка ${attempt})`);
+      }
+      return; // успех — выходим из цикла
+
     } catch (err) {
-      console.error('[Bot] Не удалось отправить уведомление:', err.message);
-      return;
+      console.error(`[Bot] Попытка ${attempt}/3 не удалась:`, err.message);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 10000));
     }
   }
-
-  if (message) {
-    reviewCaptions.set(msgKey(message.chat.id, message.message_id), caption);
-  }
+  console.error('[Bot] Не удалось отправить admin уведомление после 3 попыток');
 }
 
 module.exports = { startBot, notifyAdminAboutNewItem };
