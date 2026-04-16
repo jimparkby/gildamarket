@@ -93,8 +93,7 @@ async function downloadTelegramPhoto(fileId) {
       }).on('error', reject);
     });
  
-    const baseUrl = (process.env.MINI_APP_URL || '').replace(/\/$/, '');
-return `${baseUrl}/uploads/${fileName}`;
+    return `/uploads/${fileName}`;
   } catch (err) {
     console.error('[AdminBot] Ошибка скачивания фото:', err.message);
     return null;
@@ -461,6 +460,11 @@ function registerHandlers() {
   });
  
   bot.on('polling_error', function(err) {
+    if (err.message && err.message.includes('409 Conflict')) {
+      console.warn('[AdminBot] 409 Conflict — другой экземпляр уже запущен, останавливаем polling');
+      bot.stopPolling();
+      return;
+    }
     console.error('[AdminBot] Polling error (ignored):', err.message);
   });
 }
@@ -512,12 +516,25 @@ async function notifyAdminAboutNewItem(itemId) {
  
   if (firstImage) {
     const raw = resolveUrl(firstImage);
-    const photoUrl = raw.startsWith('http')
-      ? raw
-      : `${(process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net').replace(/\/$/, '')}${raw}`;
- 
+
+    // Локальный файл (/uploads/...) — отправляем поток с диска,
+    // иначе Telegram не может скачать URL с нашего сервера
+    let photoSource;
+    if (raw && raw.startsWith('/uploads/')) {
+      const fileName = path.basename(raw);
+      const filePath = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads', fileName);
+      if (fs.existsSync(filePath)) {
+        photoSource = fs.createReadStream(filePath);
+      }
+    }
+    if (!photoSource) {
+      photoSource = raw.startsWith('http')
+        ? raw
+        : `${(process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net').replace(/\/$/, '')}${raw}`;
+    }
+
     try {
-      message = await bot.sendPhoto(chatId, photoUrl, {
+      message = await bot.sendPhoto(chatId, photoSource, {
         caption: caption,
         parse_mode: 'HTML',
         reply_markup: keyboard,

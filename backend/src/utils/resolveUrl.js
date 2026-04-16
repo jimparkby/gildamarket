@@ -6,6 +6,7 @@
 function resolveUrl(val) {
   if (!val) return null;
   if (val.startsWith('http')) return val;
+  if (val.startsWith('/')) return val;
   return `/uploads/${val}`;
 }
 
