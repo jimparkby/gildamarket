@@ -64,6 +64,7 @@ export default function AddItem() {
         const draft = res.data.draft;
         if (draft) {
           setHasDraft(true);
+          setAgreed(true);
           setForm(prev => ({
             ...prev,
             description: draft.description || '',
@@ -135,6 +136,7 @@ export default function AddItem() {
   }, []);
  
   const handleSubmit = useCallback(async () => {
+    if (hasDraft && !form.category) return setError('Выберите категорию');
     if (!form.title.trim()) return setError('Введите название вещи');
     if (!form.price || isNaN(parseFloat(form.price))) return setError('Введите корректную цену');
  
@@ -318,13 +320,6 @@ export default function AddItem() {
       </div>
       <div className="wizard__scroll wizard__scroll--form">
  
-        {/* Баннер черновика */}
-        {hasDraft && (
-          <div className="wizard__draft-banner">
-            📨 Данные загружены из пересланного поста. Проверьте и дополните.
-          </div>
-        )}
- 
         {/* Фото из черновика */}
         {draftPhotos.length > 0 && (
           <div className="form-field">
@@ -343,13 +338,25 @@ export default function AddItem() {
           </div>
         )}
  
+        {hasDraft && (
+          <div className="form-field">
+            <label className="form-label">Категория *</label>
+            <select className="form-input" value={form.category} onChange={e => setField('category', e.target.value)}>
+              <option value="">Выберите категорию</option>
+              {CATEGORIES.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.value}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="form-field">
           <label className="form-label">Название *</label>
           <input className="form-input" placeholder="Например: Винтажные джинсы Levi's 501" value={form.title} onChange={e => setField('title', e.target.value)} />
         </div>
- 
+
         <div className="form-divider" />
- 
+
         <p className="form-section-title">Цена</p>
         <div className="price-row">
           <input className="price-input" type="number" placeholder="0" min="0" value={form.price} onChange={e => setField('price', e.target.value)} />

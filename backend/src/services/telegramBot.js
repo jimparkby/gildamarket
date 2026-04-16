@@ -81,8 +81,7 @@ async function downloadTelegramPhoto(fileId) {
     const fileInfo = await bot.getFile(fileId);
     const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${fileInfo.file_path}`;
     const uploadDir = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     const fileName = `draft_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
     const filePath = path.join(uploadDir, fileName);
  
