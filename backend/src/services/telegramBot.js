@@ -597,11 +597,7 @@ process.on('unhandledRejection', function(reason) {
   console.error('[Bot] Unhandled rejection:', reason && reason.message ? reason.message : reason);
 });
 
-// ── Карта бот-инстансов по индексу (для webhook-роутера) ─────────────────────
-// Используем числовой индекс вместо токена в URL — избегаем проблем с ":" в пути
-const botsByIndex = new Map(); // '0', '1', ...
-
-// ── Запуск через Webhook (без polling — нет 409 при multi-instance деплое) ───
+// ── Запуск через Polling ──────────────────────────────────────────────────────
 function startBot() {
   if (!TelegramBot) {
     console.warn('[Bot] Пропуск запуска — node-telegram-bot-api не установлен');
@@ -614,50 +610,47 @@ function startBot() {
     return;
   }
 
-  const baseUrl = (process.env.MINI_APP_URL || '').replace(/\/$/, '');
-
   tokens.forEach(function(token, index) {
-    // polling: false — обновления приходят через webhook, не через long-poll
-    const botInstance = new TelegramBot(token, { polling: false });
-    registerHandlers(botInstance, token);
-    botsByIndex.set(String(index), botInstance);
-    if (index === 0) primaryBot = botInstance;
+    function launch() {
+      // Сначала удаляем webhook чтобы polling работал корректно
+      const tmp = new TelegramBot(token, { polling: false });
+      tmp.deleteWebHook().catch(() => {}).finally(() => {
+        const botInstance = new TelegramBot(token, {
+          polling: {
+            interval:   300,
+            autoStart:  true,
+            params:     { timeout: 10 },
+          },
+        });
 
-    // Webhook URL использует числовой индекс — без спецсимволов в пути
-    const webhookUrl = `${baseUrl}/bot-webhook/${index}`;
-    botInstance.setWebHook(webhookUrl)
-      .then(() => console.log(`[Bot ${index + 1}] Webhook установлен: ${webhookUrl}`))
-      .catch(err => {
-        if (err.message && err.message.includes('409')) {
-          console.log(`[Bot ${index + 1}] Webhook уже устанавливается другим инстансом — ОК`);
-        } else {
-          console.error(`[Bot ${index + 1}] Ошибка webhook:`, err.message);
-        }
+        registerHandlers(botInstance, token);
+        if (index === 0) primaryBot = botInstance;
+        console.log(`[Bot ${index + 1}] Запущен (polling), токен: ${token.substring(0, 10)}...`);
+
+        botInstance.on('polling_error', function(err) {
+          if (err.code === 'ETELEGRAM' && err.message && err.message.includes('409')) {
+            console.log(`[Bot:${token.substring(0, 10)}] 409 Conflict — другой инстанс уже поллит, ждём 15 сек`);
+            botInstance.stopPolling().then(function() {
+              setTimeout(function() {
+                botInstance.startPolling();
+                console.log(`[Bot:${token.substring(0, 10)}] Polling перезапущен`);
+              }, 15000);
+            });
+          } else {
+            console.error(`[Bot:${token.substring(0, 10)}] Polling error:`, err.message);
+          }
+        });
       });
+    }
+    launch();
   });
 }
 
-// ── Express-роутер для входящих webhook-запросов от Telegram ─────────────────
+// ── Заглушка для совместимости с index.js (router не нужен при polling) ───────
 function createWebhookRouter() {
   const { Router } = require('express');
   const router = Router();
-  // Telegram шлёт POST /bot-webhook/<index> с JSON-телом update
-  router.post('/:index', function(req, res) {
-    const idx = req.params.index;
-    console.log('[Webhook] Получен update для бота', idx, '| тип:', req.body && req.body.message ? 'message' : (req.body && req.body.callback_query ? 'callback_query' : 'other'));
-
-    const botInstance = botsByIndex.get(idx);
-    if (botInstance) {
-      try {
-        botInstance.processUpdate(req.body);
-      } catch (err) {
-        console.error('[Webhook] Ошибка processUpdate:', err.message);
-      }
-    } else {
-      console.warn('[Webhook] Бот не найден для индекса:', idx, '| доступные:', [...botsByIndex.keys()]);
-    }
-    res.sendStatus(200); // всегда 200 — иначе Telegram будет ретраить
-  });
+  router.post('/:index', function(req, res) { res.sendStatus(200); });
   return router;
 }
 
