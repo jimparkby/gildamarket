@@ -157,10 +157,8 @@ export default function AddItem() {
  
       await createItem(fd);
  
-      // Удаляем черновик после публикации
-      if (hasDraft) {
-        await api.delete('/items/draft').catch(() => {});
-      }
+      // Всегда удаляем черновик после публикации
+      await api.delete('/items/draft').catch(() => {});
  
       haptic('medium');
       navigate('/profile');

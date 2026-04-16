@@ -344,24 +344,30 @@ function registerHandlers(botInstance, token) {
         },
       });
 
+      // Черновик создан — отправляем подтверждение.
+      // Оборачиваем отдельно: если Telegram недоступен, черновик всё равно сохранён.
       const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
-      await botInstance.sendMessage(chatId,
-        `✅ <b>Пост получен!</b>\n\n` +
-        `${photos.length > 0 ? `📸 Фото: ${photos.length} шт.\n` : '📸 Фото не найдено — добавите вручную\n'}` +
-        `💰 Цена: ${price ? price + ' RUB' : 'не найдена — укажите вручную'}\n\n` +
-        `Откройте приложение чтобы проверить и опубликовать товар:`,
-        {
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [[
-              { text: '📦 Создать товар', web_app: { url: `${appUrl}/add` } },
-            ]],
-          },
-        }
-      );
+      try {
+        await botInstance.sendMessage(chatId,
+          `✅ <b>Пост получен!</b>\n\n` +
+          `${photos.length > 0 ? `📸 Фото: ${photos.length} шт.\n` : '📸 Фото не найдено — добавите вручную\n'}` +
+          `💰 Цена: ${price ? price + ' RUB' : 'не найдена — укажите вручную'}\n\n` +
+          `Откройте приложение чтобы проверить и опубликовать товар:`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [[
+                { text: '📦 Создать товар', web_app: { url: `${appUrl}/add` } },
+              ]],
+            },
+          }
+        );
+      } catch (sendErr) {
+        console.warn('[Bot] Черновик создан, но отправить подтверждение не удалось:', sendErr.message);
+      }
     } catch (err) {
       console.error('[Bot] Ошибка обработки пересланного сообщения:', err);
-      await botInstance.sendMessage(chatId, '❌ Произошла ошибка. Попробуйте ещё раз.');
+      try { await botInstance.sendMessage(chatId, '❌ Произошла ошибка. Попробуйте ещё раз.'); } catch (_) {}
     }
   });
 
