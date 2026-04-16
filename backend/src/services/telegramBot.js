@@ -326,14 +326,20 @@ function registerHandlers(botInstance, token) {
 
   // /chatid — временная команда для получения ID чата
   botInstance.onText(/\/chatid/, async (msg) => {
-    await botInstance.sendMessage(msg.chat.id,
-      `Chat ID: <code>${msg.chat.id}</code>\nType: ${msg.chat.type}`,
-      { parse_mode: 'HTML' }
-    );
+    console.log('[Bot] /chatid от', msg.from.id, 'в чате', msg.chat.id);
+    try {
+      await botInstance.sendMessage(msg.chat.id,
+        `Chat ID: <code>${msg.chat.id}</code>\nType: ${msg.chat.type}`,
+        { parse_mode: 'HTML' }
+      );
+    } catch (err) {
+      console.error('[Bot] /chatid sendMessage error:', err.message);
+    }
   });
 
   // /start
   botInstance.onText(/\/start/, async (msg) => {
+    console.log('[Bot] /start от', msg.from.id);
     const chatId = msg.chat.id;
     const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
     const text = [
@@ -345,14 +351,18 @@ function registerHandlers(botInstance, token) {
       ``,
       `Gilda. Твой магазин в Telegram.`,
     ].join('\n');
-    await botInstance.sendMessage(chatId, text, {
-      parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [[
-          { text: '🛍 Открыть Gilda Market', web_app: { url: appUrl } },
-        ]],
-      },
-    });
+    try {
+      await botInstance.sendMessage(chatId, text, {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '🛍 Открыть Gilda Market', web_app: { url: appUrl } },
+          ]],
+        },
+      });
+    } catch (err) {
+      console.error('[Bot] /start sendMessage error:', err.message);
+    }
   });
 
   // Пересланные сообщения → черновик
@@ -632,9 +642,32 @@ function createWebhookRouter() {
   const router = Router();
   // Telegram шлёт POST /bot-webhook/<token> с JSON-телом update
   router.post('/:token', function(req, res) {
-    const botInstance = botsByToken.get(req.params.token);
+    const rawToken = req.params.token;
+    console.log('[Webhook] Получен update, токен начинается с:', rawToken.substring(0, 10));
+
+    // Прямой поиск по токену
+    let botInstance = botsByToken.get(rawToken);
+
+    // Запасной поиск: токен мог прийти с URL-кодированием или без части после ":"
+    if (!botInstance) {
+      for (const [key, val] of botsByToken.entries()) {
+        if (key.startsWith(rawToken) || rawToken.startsWith(key.split(':')[0])) {
+          botInstance = val;
+          console.log('[Webhook] Бот найден через запасной поиск');
+          break;
+        }
+      }
+    }
+
     if (botInstance) {
-      botInstance.processUpdate(req.body);
+      console.log('[Webhook] Передаю update боту, тип:', req.body && req.body.message ? 'message' : (req.body && req.body.callback_query ? 'callback_query' : 'other'));
+      try {
+        botInstance.processUpdate(req.body);
+      } catch (err) {
+        console.error('[Webhook] Ошибка processUpdate:', err.message);
+      }
+    } else {
+      console.warn('[Webhook] Бот не найден! Зарегистрированные токены:', [...botsByToken.keys()].map(k => k.substring(0, 10)));
     }
     res.sendStatus(200); // всегда 200 — иначе Telegram будет ретраить
   });
