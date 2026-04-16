@@ -597,8 +597,9 @@ process.on('unhandledRejection', function(reason) {
   console.error('[Bot] Unhandled rejection:', reason && reason.message ? reason.message : reason);
 });
 
-// ── Карта бот-инстансов по токену (для webhook-роутера) ──────────────────────
-const botsByToken = new Map();
+// ── Карта бот-инстансов по индексу (для webhook-роутера) ─────────────────────
+// Используем числовой индекс вместо токена в URL — избегаем проблем с ":" в пути
+const botsByIndex = new Map(); // '0', '1', ...
 
 // ── Запуск через Webhook (без polling — нет 409 при multi-instance деплое) ───
 function startBot() {
@@ -619,11 +620,11 @@ function startBot() {
     // polling: false — обновления приходят через webhook, не через long-poll
     const botInstance = new TelegramBot(token, { polling: false });
     registerHandlers(botInstance, token);
-    botsByToken.set(token, botInstance);
+    botsByIndex.set(String(index), botInstance);
     if (index === 0) primaryBot = botInstance;
 
-    // Регистрируем webhook в Telegram (409 при одновременном деплое — безвредно)
-    const webhookUrl = `${baseUrl}/bot-webhook/${token}`;
+    // Webhook URL использует числовой индекс — без спецсимволов в пути
+    const webhookUrl = `${baseUrl}/bot-webhook/${index}`;
     botInstance.setWebHook(webhookUrl)
       .then(() => console.log(`[Bot ${index + 1}] Webhook установлен: ${webhookUrl}`))
       .catch(err => {
@@ -640,34 +641,20 @@ function startBot() {
 function createWebhookRouter() {
   const { Router } = require('express');
   const router = Router();
-  // Telegram шлёт POST /bot-webhook/<token> с JSON-телом update
-  router.post('/:token', function(req, res) {
-    const rawToken = req.params.token;
-    console.log('[Webhook] Получен update, токен начинается с:', rawToken.substring(0, 10));
+  // Telegram шлёт POST /bot-webhook/<index> с JSON-телом update
+  router.post('/:index', function(req, res) {
+    const idx = req.params.index;
+    console.log('[Webhook] Получен update для бота', idx, '| тип:', req.body && req.body.message ? 'message' : (req.body && req.body.callback_query ? 'callback_query' : 'other'));
 
-    // Прямой поиск по токену
-    let botInstance = botsByToken.get(rawToken);
-
-    // Запасной поиск: токен мог прийти с URL-кодированием или без части после ":"
-    if (!botInstance) {
-      for (const [key, val] of botsByToken.entries()) {
-        if (key.startsWith(rawToken) || rawToken.startsWith(key.split(':')[0])) {
-          botInstance = val;
-          console.log('[Webhook] Бот найден через запасной поиск');
-          break;
-        }
-      }
-    }
-
+    const botInstance = botsByIndex.get(idx);
     if (botInstance) {
-      console.log('[Webhook] Передаю update боту, тип:', req.body && req.body.message ? 'message' : (req.body && req.body.callback_query ? 'callback_query' : 'other'));
       try {
         botInstance.processUpdate(req.body);
       } catch (err) {
         console.error('[Webhook] Ошибка processUpdate:', err.message);
       }
     } else {
-      console.warn('[Webhook] Бот не найден! Зарегистрированные токены:', [...botsByToken.keys()].map(k => k.substring(0, 10)));
+      console.warn('[Webhook] Бот не найден для индекса:', idx, '| доступные:', [...botsByIndex.keys()]);
     }
     res.sendStatus(200); // всегда 200 — иначе Telegram будет ретраить
   });
