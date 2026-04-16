@@ -17,15 +17,6 @@ export default function Home() {
   const [apiError, setApiError] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  // Восстановить открытый товар при возврате из магазина продавца
-  useEffect(() => {
-    const saved = sessionStorage.getItem('returnItem');
-    if (saved) {
-      try { setSelected(JSON.parse(saved)); } catch {}
-      sessionStorage.removeItem('returnItem');
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   useEffect(() => {
     let cancelled = false;
     setLoading(true);

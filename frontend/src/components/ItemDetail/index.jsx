@@ -85,10 +85,9 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   }, [item?.id, haptic, onLikeChange]);
 
   const openShop = useCallback(() => {
-    sessionStorage.setItem('returnItem', JSON.stringify(item));
-    navigate(`/shop/${item.seller?.id}`);
     onClose();
-  }, [item, navigate, onClose]);
+    navigate(`/shop/${item.seller?.id}`);
+  }, [item?.seller?.id, navigate, onClose]);
 
   const openTgChat = useCallback(() => {
     if (!item?.seller?.telegramUsername) return;
