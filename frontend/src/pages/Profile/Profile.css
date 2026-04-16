@@ -434,9 +434,9 @@
 .profile__items-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px;
   background: var(--white);
-  padding: 12px;
+  padding: 16px;
   margin-top: 1px;
 }
 .profile__item-wrap {
