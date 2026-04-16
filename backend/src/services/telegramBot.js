@@ -465,8 +465,15 @@ function registerHandlers() {
  
   bot.on('polling_error', function(err) {
     if (err.message && err.message.includes('409 Conflict')) {
-      console.warn('[AdminBot] 409 Conflict — другой экземпляр уже запущен, останавливаем polling');
-      bot.stopPolling();
+      // TimeWeb делает rolling restart: новый инстанс стартует раньше чем старый умирает.
+      // Останавливаем polling и повторяем через 15 сек — к тому времени старый уже мёртв.
+      console.warn('[AdminBot] 409 Conflict — ждём 15 сек и перезапускаем polling');
+      bot.stopPolling().then(function() {
+        setTimeout(function() {
+          bot.startPolling();
+          console.log('[AdminBot] Polling перезапущен после 409');
+        }, 15000);
+      });
       return;
     }
     console.error('[AdminBot] Polling error (ignored):', err.message);
