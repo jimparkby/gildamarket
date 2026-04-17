@@ -7,7 +7,7 @@ import ItemDetail from '../../components/ItemDetail';
 import './Home.css';
 
 const INITIAL = 20;
-const VIEW_MORE = 10;
+const VIEW_MORE = 100;
 
 export default function Home() {
   const { language } = useSettings();

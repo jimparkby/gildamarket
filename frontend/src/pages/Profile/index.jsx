@@ -15,7 +15,7 @@ import FollowersModal from '../../components/FollowersModal';
 import './Profile.css';
  
 const CATEGORIES = ['Обувь','Верхняя одежда','Футболки','Средний слой','Штаны/Джинсы/Юбки','Сумки','Аксессуары','Прочее'];
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 20;
  
 export default function Profile() {
   const { id } = useParams();
