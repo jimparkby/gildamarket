@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getItems } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
-import ItemDetail from '../../components/ItemDetail';
-import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import './Home.css';
 
 const INITIAL = 20;
@@ -13,12 +11,11 @@ const VIEW_MORE = 100;
 
 export default function Home() {
   const { language } = useSettings();
-  const location = useLocation();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [visible, setVisible] = useState(INITIAL);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
-  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +41,7 @@ export default function Home() {
     }
   }, []);
 
-  if (loading && !selected) return (
+  if (loading) return (
     <main className="page home"><div className="spinner" /></main>
   );
 
@@ -73,38 +70,28 @@ export default function Home() {
   const shown = items.slice(0, visible);
 
   return (
-    <>
-      <main className="page home">
-        <div className="home__grid">
-          {shown.map(item => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              onLikeChange={handleLikeChange}
-              onClick={setSelected}
-            />
-          ))}
+    <main className="page home">
+      <div className="home__grid">
+        {shown.map(item => (
+          <ItemCard
+            key={item.id}
+            item={item}
+            onLikeChange={handleLikeChange}
+            onClick={item => navigate(`/item/${item.id}`, { state: { item } })}
+          />
+        ))}
+      </div>
+
+      {visible < items.length && (
+        <div className="home__more">
+          <button
+            className="home__more-btn"
+            onClick={() => setVisible(v => v + VIEW_MORE)}
+          >
+            {t(language, 'viewMore')}
+          </button>
         </div>
-
-        {visible < items.length && (
-          <div className="home__more">
-            <button
-              className="home__more-btn"
-              onClick={() => setVisible(v => v + VIEW_MORE)}
-            >
-              {t(language, 'viewMore')}
-            </button>
-          </div>
-        )}
-      </main>
-
-      {selected && (
-        <ItemDetail
-          item={selected}
-          onClose={() => setSelected(null)}
-          onLikeChange={handleLikeChange}
-        />
       )}
-    </>
+    </main>
   );
 }

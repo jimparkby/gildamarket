@@ -1,11 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getItems, searchUsers } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
-import ItemDetail from '../../components/ItemDetail';
-import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import './Search.css';
 
 const CATEGORIES = [
@@ -15,7 +13,6 @@ const CATEGORIES = [
 export default function Search() {
   const { language } = useSettings();
   const navigate = useNavigate();
-  const location = useLocation();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState('items'); // items | shops
   const [selectedCat, setSelectedCat] = useState('');
@@ -24,7 +21,6 @@ export default function Search() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -101,8 +97,7 @@ export default function Search() {
 
   const handleLikeChange = useCallback((itemId, liked) => {
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, isLiked: liked } : i));
-    if (selected?.id === itemId) setSelected(prev => ({ ...prev, isLiked: liked }));
-  }, [selected?.id]);
+  }, []);
 
   return (
     <>
@@ -225,7 +220,7 @@ export default function Search() {
                   key={item.id}
                   item={item}
                   onLikeChange={handleLikeChange}
-                  onClick={setSelected}
+                  onClick={item => navigate(`/item/${item.id}`, { state: { item } })}
                 />
               ))}
             </div>
@@ -233,13 +228,6 @@ export default function Search() {
         )}
       </main>
 
-      {selected && (
-        <ItemDetail
-          item={selected}
-          onClose={() => setSelected(null)}
-          onLikeChange={handleLikeChange}
-        />
-      )}
     </>
   );
 }

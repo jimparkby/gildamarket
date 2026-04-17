@@ -10,6 +10,7 @@ import Favorites from './pages/Favorites';
 import AddItem from './pages/AddItem';
 import EditItem from './pages/EditItem';
 import Profile from './pages/Profile';
+import ItemPage from './pages/ItemPage';
 
 // ─── Auth Context ────────────────────────────────────────
 export const AuthContext = createContext(null);
@@ -129,6 +130,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/item/:id" element={<ItemPage />} />
           <Route path="/add" element={<AddItem />} />
           <Route path="/edit/:id" element={<EditItem />} />
           <Route path="/profile" element={<Profile />} />

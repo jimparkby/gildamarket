@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   getShop, updateProfile,
   uploadAvatar, uploadBackground,
@@ -9,8 +9,6 @@ import {
 import { useAuth, useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
-import ItemDetail from '../../components/ItemDetail';
-import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import SideMenu from '../../components/SideMenu';
 import FollowersModal from '../../components/FollowersModal';
 import './Profile.css';
@@ -23,7 +21,6 @@ export default function Profile() {
   const { user: authUser } = useAuth();
   const { language } = useSettings();
   const navigate = useNavigate();
-  const location = useLocation();
  
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,7 +30,6 @@ export default function Profile() {
   const [nameDraft, setNameDraft] = useState('');
   const [editingAbout, setEditingAbout] = useState(false);
   const [aboutDraft, setAboutDraft] = useState('');
-  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
   const [lbUploading, setLbUploading] = useState(false);
   const [lbModalOpen, setLbModalOpen] = useState(false);
@@ -154,7 +150,6 @@ export default function Profile() {
       items: (prev.items || []).filter(i => i.id !== itemId),
       archivedItems: (prev.archivedItems || []).filter(i => i.id !== itemId),
     }));
-    setSelected(null);
   }, []);
  
   const handleMarkSold = useCallback(async (itemId) => {
@@ -376,7 +371,7 @@ export default function Profile() {
             <div className="profile__items-grid">
               {visibleItems.map(item => (
                 <div key={item.id} className="profile__item-wrap">
-                  <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
+                  <ItemCard item={item} onClick={item => navigate(`/item/${item.id}`, { state: { item } })} onLikeChange={() => {}} />
                   {isOwner && (
                     <div className="profile__item-actions">
                       <button onClick={() => navigate(`/edit/${item.id}`)} className="profile__item-edit">
@@ -458,7 +453,7 @@ export default function Profile() {
           <div className="profile__items-grid">
             {archivedItems.map(item => (
               <div key={item.id} className="profile__item-wrap">
-                <ItemCard item={item} onClick={setSelected} onLikeChange={() => {}} />
+                <ItemCard item={item} onClick={item => navigate(`/item/${item.id}`, { state: { item } })} onLikeChange={() => {}} />
                 {isOwner && (
                   <div className="profile__item-actions">
                     <button onClick={() => navigate(`/edit/${item.id}`)} className="profile__item-edit">
@@ -537,14 +532,6 @@ export default function Profile() {
             </div>
           </div>
         </div>
-      )}
- 
-      {selected && (
-        <ItemDetail
-          item={selected}
-          onClose={() => setSelected(null)}
-          onLikeChange={() => {}}
-        />
       )}
  
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />

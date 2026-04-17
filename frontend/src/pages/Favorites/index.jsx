@@ -1,22 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getFavorites, toggleShopLike } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ShopCard from '../../components/ShopCard';
-import ItemDetail from '../../components/ItemDetail';
-import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import './Favorites.css';
 
 export default function Favorites() {
   const { language } = useSettings();
-  const location = useLocation();
-  const [tab, setTab] = useState('shops'); // shops | items
+  const navigate = useNavigate();
+  const [tab, setTab] = useState('shops');
   const [items, setItems] = useState([]);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
 
   useEffect(() => {
     setLoading(true);
@@ -31,8 +28,7 @@ export default function Favorites() {
 
   const handleItemLikeChange = useCallback((itemId, liked) => {
     if (!liked) setItems(prev => prev.filter(i => i.id !== itemId));
-    if (selected?.id === itemId) setSelected(null);
-  }, [selected?.id]);
+  }, []);
 
   const handleShopLikeChange = useCallback((shopId, liked) => {
     if (!liked) setShops(prev => prev.filter(s => s.id !== shopId));
@@ -40,25 +36,20 @@ export default function Favorites() {
 
   return (
     <main className="page favorites">
-      {/* Tabs */}
       <div className="favorites__tabs">
         <button
           className={`favorites__tab${tab === 'shops' ? ' active' : ''}`}
           onClick={() => setTab('shops')}
         >
           {t(language, 'shops')}
-          {shops.length > 0 && (
-            <span className="favorites__count">{shops.length}</span>
-          )}
+          {shops.length > 0 && <span className="favorites__count">{shops.length}</span>}
         </button>
         <button
           className={`favorites__tab${tab === 'items' ? ' active' : ''}`}
           onClick={() => setTab('items')}
         >
           {t(language, 'items')}
-          {items.length > 0 && (
-            <span className="favorites__count">{items.length}</span>
-          )}
+          {items.length > 0 && <span className="favorites__count">{items.length}</span>}
         </button>
       </div>
 
@@ -79,7 +70,7 @@ export default function Favorites() {
                 key={item.id}
                 item={item}
                 onLikeChange={handleItemLikeChange}
-                onClick={setSelected}
+                onClick={item => navigate(`/item/${item.id}`, { state: { item } })}
               />
             ))}
           </div>
@@ -96,22 +87,10 @@ export default function Favorites() {
         ) : (
           <div className="favorites__shops">
             {shops.map(shop => (
-              <ShopCard
-                key={shop.id}
-                shop={shop}
-                onLikeChange={handleShopLikeChange}
-              />
+              <ShopCard key={shop.id} shop={shop} onLikeChange={handleShopLikeChange} />
             ))}
           </div>
         )
-      )}
-
-      {selected && (
-        <ItemDetail
-          item={selected}
-          onClose={() => setSelected(null)}
-          onLikeChange={handleItemLikeChange}
-        />
       )}
     </main>
   );
