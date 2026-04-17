@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useSettings } from '../../App';
+import { useSettings, BackButtonContext } from '../../App';
 import './Header.css';
 
 const tg = window?.Telegram?.WebApp;
@@ -9,6 +9,7 @@ export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { language } = useSettings();
+  const backOverrideRef = useContext(BackButtonContext);
 
   const isHome = location.pathname === '/';
 
@@ -20,13 +21,19 @@ export default function Header() {
       tg.BackButton.hide();
     } else {
       tg.BackButton.show();
-      const handler = () => navigate(-1);
+      const handler = () => {
+        if (backOverrideRef?.current) {
+          backOverrideRef.current();
+        } else {
+          navigate(-1);
+        }
+      };
       tg.BackButton.onClick(handler);
       return () => {
         tg.BackButton.offClick(handler);
       };
     }
-  }, [isHome, location.pathname, navigate]);
+  }, [isHome, location.pathname, navigate]); // backOverrideRef is a stable ref — no need in deps
 
   // ── Заголовок страницы ───────────────────────────────────────────────────────
   const PAGE_TITLES = {

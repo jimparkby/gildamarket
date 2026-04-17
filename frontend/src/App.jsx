@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useTelegram } from './hooks/useTelegram';
 import { authTelegram } from './api/client';
@@ -19,6 +19,10 @@ export const useAuth = () => useContext(AuthContext);
 export const SettingsContext = createContext(null);
 export const useSettings = () => useContext(SettingsContext);
 
+// ─── BackButton Context ──────────────────────────────────
+// Ref to a custom back handler; null = use default navigate(-1)
+export const BackButtonContext = createContext(null);
+
 // Fixed to Russian and RUB only
 const CURRENCIES = ['RUB'];
 const LANGUAGES = [
@@ -31,6 +35,7 @@ export default function App() {
 
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const backOverrideRef = useRef(null);
 
   // Settings - Fixed to RUB and Russian
   const [currency, setCurrency] = useState('RUB');
@@ -116,6 +121,7 @@ export default function App() {
   }
 
   return (
+    <BackButtonContext.Provider value={backOverrideRef}>
     <AuthContext.Provider value={{ user, setUser }}>
       <SettingsContext.Provider value={{ currency, setCurrency: persistCurrency, language, setLanguage: persistLanguage, theme, setTheme: persistTheme, CURRENCIES, LANGUAGES }}>
         <Header />
@@ -132,5 +138,6 @@ export default function App() {
         <BottomNav />
       </SettingsContext.Provider>
     </AuthContext.Provider>
+    </BackButtonContext.Provider>
   );
 }

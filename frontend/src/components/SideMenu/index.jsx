@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useSettings } from '../../App';
+import React, { useState, useCallback, useContext, useEffect } from 'react';
+import { useSettings, BackButtonContext } from '../../App';
 import { t } from '../../translations';
 import './SideMenu.css';
 
@@ -107,10 +107,10 @@ const PAGES_CONTENT = {
 
 export default function SideMenu({ open, onClose }) {
   const { language, theme, setTheme } = useSettings();
+  const backOverrideRef = useContext(BackButtonContext);
 
   const [activePage, setActivePage] = useState(null);
 
-  // Sync drafts when menu opens
   const handleOpen = useCallback((key) => setActivePage(key), []);
   const handleBack = useCallback(() => setActivePage(null), []);
 
@@ -118,6 +118,17 @@ export default function SideMenu({ open, onClose }) {
     setActivePage(null);
     onClose();
   }, [onClose]);
+
+  // ── Переопределяем TG BackButton пока меню открыто ──────────────────────────
+  useEffect(() => {
+    if (!backOverrideRef) return;
+    if (!open) {
+      backOverrideRef.current = null;
+      return;
+    }
+    backOverrideRef.current = activePage ? handleBack : handleClose;
+    return () => { backOverrideRef.current = null; };
+  }, [open, activePage, handleBack, handleClose, backOverrideRef]);
 
   const toggleTheme = useCallback(() => {
     setTheme(theme === 'light' ? 'dark' : 'light');

@@ -1,9 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createItem } from '../../api/client';
 import { useTelegram } from '../../hooks/useTelegram';
 import { compressImages } from '../../utils/imageCompression';
 import api from '../../api/client';
+import { BackButtonContext } from '../../App';
 import './AddItem.css';
  
 const CATEGORIES = [
@@ -41,6 +42,7 @@ export default function AddItem() {
   const navigate = useNavigate();
   const { haptic } = useTelegram();
   const fileRef = useRef();
+  const backOverrideRef = useContext(BackButtonContext);
  
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
@@ -103,6 +105,17 @@ export default function AddItem() {
       setStep(s => Math.max(s - 1, 1));
     }
   }, [hasDraft, step]);
+
+  // ── Переопределяем TG BackButton для навигации по шагам ─────────────────────
+  useEffect(() => {
+    if (!backOverrideRef) return;
+    if (step > 1) {
+      backOverrideRef.current = back;
+    } else {
+      backOverrideRef.current = null;
+    }
+    return () => { backOverrideRef.current = null; };
+  }, [step, back, backOverrideRef]);
  
   const getSizes = () => {
     if (SHOE_SIZE.includes(form.category)) return SHOE_SIZES;
