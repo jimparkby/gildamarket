@@ -5,6 +5,7 @@ import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ShopCard from '../../components/ShopCard';
 import ItemDetail from '../../components/ItemDetail';
+import { useItemDetailRestore } from '../../hooks/useItemDetailRestore';
 import './Favorites.css';
 
 export default function Favorites() {
@@ -14,6 +15,7 @@ export default function Favorites() {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  useItemDetailRestore(setSelected);
 
   useEffect(() => {
     setLoading(true);

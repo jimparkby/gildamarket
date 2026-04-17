@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toggleItemLike } from '../../api/client';
 import { useSettings, BackButtonContext } from '../../App';
 import { useTelegram } from '../../hooks/useTelegram';
+import { RESTORE_KEY } from '../../hooks/useItemDetailRestore';
 import './ItemDetail.css';
 
 export default function ItemDetail({ item, onClose, onLikeChange }) {
@@ -91,9 +92,11 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   }, [item?.id, haptic, onLikeChange]);
 
   const openShop = useCallback(() => {
+    // Сохраняем товар чтобы восстановить модалку при возврате назад
+    sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ item, fromPath: location.pathname }));
     onClose();
     navigate(`/shop/${item.seller?.id}`);
-  }, [item?.seller?.id, navigate, onClose]);
+  }, [item, location.pathname, navigate, onClose]);
 
   const openTgChat = useCallback(() => {
     if (!item?.seller?.telegramUsername) return;

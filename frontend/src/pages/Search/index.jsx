@@ -5,6 +5,7 @@ import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
+import { useItemDetailRestore } from '../../hooks/useItemDetailRestore';
 import './Search.css';
 
 const CATEGORIES = [
@@ -23,6 +24,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState(null);
+  useItemDetailRestore(setSelected);
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
