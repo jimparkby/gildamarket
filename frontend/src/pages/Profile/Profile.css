@@ -448,6 +448,7 @@
 }
 .profile__item-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 8px;
 }
@@ -468,6 +469,9 @@
   color: var(--black);
 }
 .profile__item-edit:active { background: var(--gray-100); }
+.profile__item-sold {
+  flex: 1 1 100%;
+}
 .profile__item-del {
   border-color: #6b2020;
   color: #e05252;
