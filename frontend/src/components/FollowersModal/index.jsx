@@ -1,22 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFollowers, getFollowing } from '../../api/client';
+import { BackButtonContext } from '../../App';
 import './FollowersModal.css';
 
 export default function FollowersModal({ shopId, mode, onClose }) {
   // mode: 'followers' | 'following'
   const navigate = useNavigate();
+  const backOverrideRef = useContext(BackButtonContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const tg = window?.Telegram?.WebApp;
-    if (tg?.BackButton) {
-      tg.BackButton.show();
-      tg.BackButton.onClick(onClose);
-      return () => tg.BackButton.offClick(onClose);
+    // FollowersModal открывается только на /profile (не главная) —
+    // Header уже показал кнопку и читает backOverrideRef
+    if (backOverrideRef) {
+      backOverrideRef.current = onClose;
+      return () => { backOverrideRef.current = null; };
     }
-  }, [onClose]);
+  }, [onClose, backOverrideRef]);
 
   useEffect(() => {
     setLoading(true);

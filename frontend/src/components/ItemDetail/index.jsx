@@ -1,41 +1,47 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useRef, useEffect, useContext } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toggleItemLike } from '../../api/client';
-import { useSettings } from '../../App';
+import { useSettings, BackButtonContext } from '../../App';
 import { useTelegram } from '../../hooks/useTelegram';
 import './ItemDetail.css';
 
 export default function ItemDetail({ item, onClose, onLikeChange }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currency } = useSettings();
   const { haptic } = useTelegram();
+  const backOverrideRef = useContext(BackButtonContext);
   const [activeImg, setActiveImg] = useState(0);
   const [isLiked, setIsLiked] = useState(item?.isLiked ?? false);
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
   const imgWrapRef = useRef(null);
 
+  const isHome = location.pathname === '/';
+
   // Управление Telegram BackButton при открытии модалки
   useEffect(() => {
     const tg = window?.Telegram?.WebApp;
     if (!tg?.BackButton) return;
 
-    // Показываем BackButton
     tg.BackButton.show();
 
-    // При нажатии - закрываем модалку
-    const handleBack = () => {
-      onClose();
-    };
-
-    tg.BackButton.onClick(handleBack);
-
-    return () => {
-      tg.BackButton.offClick(handleBack);
-      // Скрываем BackButton при закрытии модалки
-      tg.BackButton.hide();
-    };
-  }, [onClose]);
+    if (isHome) {
+      // На главной Header не регистрирует обработчик — ставим напрямую
+      tg.BackButton.onClick(onClose);
+      return () => {
+        tg.BackButton.offClick(onClose);
+        tg.BackButton.hide();
+      };
+    } else {
+      // На других страницах Header уже показал кнопку и читает backOverrideRef
+      if (backOverrideRef) backOverrideRef.current = onClose;
+      return () => {
+        if (backOverrideRef) backOverrideRef.current = null;
+        // Не скрываем — Header отвечает за отображение на не-главных страницах
+      };
+    }
+  }, [onClose, backOverrideRef, isHome]);
 
   // Блокируем вертикальный свайп Telegram (закрытие приложения) пока открыта деталь
   useEffect(() => {
