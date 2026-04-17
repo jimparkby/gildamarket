@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getItems, searchUsers } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
+import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import './Search.css';
 
 const CATEGORIES = [
@@ -14,6 +15,7 @@ const CATEGORIES = [
 export default function Search() {
   const { language } = useSettings();
   const navigate = useNavigate();
+  const location = useLocation();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState('items'); // items | shops
   const [selectedCat, setSelectedCat] = useState('');
@@ -22,7 +24,7 @@ export default function Search() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 

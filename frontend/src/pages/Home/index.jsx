@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getItems } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
+import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import './Home.css';
 
 const INITIAL = 20;
@@ -11,11 +13,12 @@ const VIEW_MORE = 100;
 
 export default function Home() {
   const { language } = useSettings();
+  const location = useLocation();
   const [items, setItems] = useState([]);
   const [visible, setVisible] = useState(INITIAL);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +44,7 @@ export default function Home() {
     }
   }, []);
 
-  if (loading) return (
+  if (loading && !selected) return (
     <main className="page home"><div className="spinner" /></main>
   );
 

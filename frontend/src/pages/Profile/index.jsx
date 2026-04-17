@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   getShop, updateProfile,
   uploadAvatar, uploadBackground,
@@ -10,6 +10,7 @@ import { useAuth, useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
+import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import SideMenu from '../../components/SideMenu';
 import FollowersModal from '../../components/FollowersModal';
 import './Profile.css';
@@ -22,6 +23,7 @@ export default function Profile() {
   const { user: authUser } = useAuth();
   const { language } = useSettings();
   const navigate = useNavigate();
+  const location = useLocation();
  
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function Profile() {
   const [nameDraft, setNameDraft] = useState('');
   const [editingAbout, setEditingAbout] = useState(false);
   const [aboutDraft, setAboutDraft] = useState('');
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
   const [lbUploading, setLbUploading] = useState(false);
   const [lbModalOpen, setLbModalOpen] = useState(false);

@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getFavorites, toggleShopLike } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ShopCard from '../../components/ShopCard';
 import ItemDetail from '../../components/ItemDetail';
+import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import './Favorites.css';
 
 export default function Favorites() {
   const { language } = useSettings();
+  const location = useLocation();
   const [tab, setTab] = useState('shops'); // shops | items
   const [items, setItems] = useState([]);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(() => getRestoredItem(location.pathname));
 
   useEffect(() => {
     setLoading(true);
