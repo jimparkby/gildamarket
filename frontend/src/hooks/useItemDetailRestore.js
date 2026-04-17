@@ -1,22 +1,17 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-
 export const RESTORE_KEY = 'gilda_restore_item';
 
-export function useItemDetailRestore(setSelected) {
-  const location = useLocation();
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem(RESTORE_KEY);
-    if (!stored) return;
-    try {
-      const { item, fromPath } = JSON.parse(stored);
-      if (fromPath === location.pathname) {
-        sessionStorage.removeItem(RESTORE_KEY);
-        setSelected(item);
-      }
-    } catch {
+// Синхронно читает sessionStorage при инициализации useState — модалка открывается сразу, без мигания
+export function getRestoredItem() {
+  const stored = sessionStorage.getItem(RESTORE_KEY);
+  if (!stored) return null;
+  try {
+    const { item, fromPath } = JSON.parse(stored);
+    if (fromPath === window.location.pathname) {
       sessionStorage.removeItem(RESTORE_KEY);
+      return item;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  } catch {
+    sessionStorage.removeItem(RESTORE_KEY);
+  }
+  return null;
 }
