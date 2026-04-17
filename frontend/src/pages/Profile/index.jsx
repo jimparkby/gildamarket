@@ -7,7 +7,6 @@ import {
   toggleShopLike, deleteItem, markItemSold,
 } from '../../api/client';
 import { useAuth, useSettings } from '../../App';
-import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
@@ -32,7 +31,7 @@ export default function Profile() {
   const [nameDraft, setNameDraft] = useState('');
   const [editingAbout, setEditingAbout] = useState(false);
   const [aboutDraft, setAboutDraft] = useState('');
-  const [selected, setSelected] = useState(getRestoredItem);
+  const [selected, setSelected] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [lbUploading, setLbUploading] = useState(false);
   const [lbModalOpen, setLbModalOpen] = useState(false);

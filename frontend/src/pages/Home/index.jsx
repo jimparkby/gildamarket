@@ -4,7 +4,6 @@ import { useSettings } from '../../App';
 import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import ItemDetail from '../../components/ItemDetail';
-import { getRestoredItem } from '../../hooks/useItemDetailRestore';
 import './Home.css';
 
 const INITIAL = 20;
@@ -16,7 +15,7 @@ export default function Home() {
   const [visible, setVisible] = useState(INITIAL);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
-  const [selected, setSelected] = useState(getRestoredItem);
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
