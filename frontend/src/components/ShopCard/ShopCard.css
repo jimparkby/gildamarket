@@ -1,5 +1,6 @@
 .shop-card {
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
   transition: border-color var(--transition);
@@ -95,6 +96,7 @@
   font-size: 12px;
   font-weight: 500;
   border: 1px solid var(--black);
+  border-radius: var(--radius-pill);
   background: var(--black);
   color: var(--white);
   transition: all var(--transition);
@@ -109,6 +111,7 @@
   width: 34px;
   height: 34px;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;

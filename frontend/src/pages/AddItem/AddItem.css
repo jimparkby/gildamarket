@@ -87,6 +87,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  border-radius: var(--radius-lg);
   transition: opacity 200ms;
 }
 .wizard__next:disabled { opacity: 0.3; }
@@ -114,6 +115,7 @@
   padding: 12px 16px;
   background: #fff3f3;
   border: 1px solid #f4b0b0;
+  border-radius: var(--radius-md);
   font-size: 13px;
   color: #c53030;
   margin-top: 16px;
@@ -134,6 +136,7 @@
   gap: 0;
   padding: 28px 12px;
   border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
   background: var(--white);
   cursor: pointer;
   transition: all 200ms ease;
@@ -175,6 +178,7 @@
   justify-content: center;
   aspect-ratio: 1;
   border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
   background: var(--white);
   cursor: pointer;
   padding: 8px 4px;
@@ -355,6 +359,7 @@
 .currency-btn {
   padding: 8px 16px;
   border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 500;
   color: var(--gray-700);
@@ -366,6 +371,7 @@
 .form-textarea {
   width: 100%;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
   padding: 14px;
   font-size: 14px;
   color: var(--black);
@@ -519,6 +525,7 @@
 .subcat-chip {
   padding: 8px 16px;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-pill);
   font-size: 13px;
   color: var(--gray-700);
   background: transparent;

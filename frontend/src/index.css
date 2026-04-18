@@ -19,6 +19,10 @@
   --header-h: 52px;
   --nav-h: 60px;
   --radius: 0px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 20px;
   --transition: 180ms ease;
 
   /* Set by useTelegram hook – height of Telegram's own top bar in fullscreen */

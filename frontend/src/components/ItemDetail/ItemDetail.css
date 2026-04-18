@@ -196,6 +196,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-pill);
   padding: 4px 10px;
   color: var(--gray-700);
 }
@@ -292,6 +293,7 @@
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.05em;
+  border-radius: var(--radius-lg);
   transition: all var(--transition);
 }
 

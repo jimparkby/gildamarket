@@ -201,6 +201,7 @@
   flex: 1;
   padding: 9px 14px;
   border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-md);
   color: var(--black);
   font-size: 12px;
   font-weight: 600;
@@ -243,6 +244,7 @@
 .profile__about-input {
   width: 100%;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
   padding: 10px 12px;
   font-size: 13px;
   color: var(--black);
@@ -262,12 +264,14 @@
   font-size: 12px;
   color: var(--gray-500);
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
 }
 .profile__about-save {
   padding: 7px 18px;
   font-size: 12px;
   background: var(--black);
   color: var(--white);
+  border-radius: var(--radius-md);
 }
 
 /* ── Section label ── */
@@ -305,6 +309,7 @@
   font-weight: 500;
   letter-spacing: 0.04em;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-pill);
   color: var(--gray-500);
   white-space: nowrap;
   transition: all var(--transition);
@@ -335,6 +340,7 @@
   color: var(--gray-500);
   padding: 5px 12px;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
   letter-spacing: 0.04em;
   transition: all var(--transition);
 }
@@ -461,6 +467,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
   color: var(--gray-500);
   transition: all var(--transition);
 }
@@ -599,6 +606,7 @@
   padding: 14px;
   margin-top: 12px;
   border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.06em;
