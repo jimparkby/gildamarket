@@ -59,6 +59,20 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   // Синхронизируем ref с состоянием для использования в замыканиях
   useEffect(() => { activeImgRef.current = activeImg; }, [activeImg]);
 
+  // Подгоняем высоту обёртки под текущее фото (убирает серые полоски)
+  const syncWrapHeight = useCallback((imgIndex) => {
+    const el = imgWrapRef.current;
+    if (!el) return;
+    const imgs = el.querySelectorAll('img');
+    const img = imgs[imgIndex];
+    if (!img || !img.naturalWidth) return;
+    const w = el.offsetWidth;
+    const h = Math.min(w * img.naturalHeight / img.naturalWidth, window.innerHeight * 0.8);
+    el.style.height = `${Math.round(h)}px`;
+  }, []);
+
+  useEffect(() => { syncWrapHeight(activeImg); }, [activeImg, syncWrapHeight]);
+
   // Snap трека при смене activeImg (клик по точке или инициализация)
   useEffect(() => {
     if (!trackRef.current) return;
@@ -188,6 +202,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
                       src={src}
                       alt={item.title}
                       draggable={false}
+                      onLoad={() => { if (i === activeImgRef.current) syncWrapHeight(i); }}
                     />
                   </div>
                 ))}
