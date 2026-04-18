@@ -241,6 +241,14 @@
   min-height: 20px;
   cursor: pointer;
 }
+.profile__about-link {
+  color: #3b82f6;
+  text-decoration: none;
+  word-break: break-all;
+}
+.profile__about-link:active {
+  opacity: 0.7;
+}
 .profile__about-input {
   width: 100%;
   border: 1px solid var(--gray-200);

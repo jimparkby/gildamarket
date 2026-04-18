@@ -12,6 +12,29 @@ import ItemCard from '../../components/ItemCard';
 import SideMenu from '../../components/SideMenu';
 import FollowersModal from '../../components/FollowersModal';
 import './Profile.css';
+
+function renderTextWithLinks(text) {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) => {
+    if (urlRegex.test(part)) {
+      urlRegex.lastIndex = 0;
+      const href = part.startsWith('http') ? part : `https://${part}`;
+      return (
+        <a
+          key={i}
+          href={href}
+          onClick={e => { e.stopPropagation(); window.Telegram?.WebApp?.openLink(href); e.preventDefault(); }}
+          className="profile__about-link"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
  
 const CATEGORIES = ['Обувь','Верхняя одежда','Футболки','Средний слой','Штаны/Джинсы/Юбки','Сумки','Аксессуары','Прочее'];
 const ITEMS_PER_PAGE = 20;
@@ -325,7 +348,7 @@ export default function Profile() {
             </div>
           ) : (
             <p className="profile__about-text" onClick={() => isOwner && setEditingAbout(true)}>
-              {shop.about || (isOwner ? t(language, 'addBio') : '')}
+              {shop.about ? renderTextWithLinks(shop.about) : (isOwner ? t(language, 'addBio') : '')}
             </p>
           )}
         </div>
