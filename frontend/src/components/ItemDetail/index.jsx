@@ -15,7 +15,13 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const [isLiked, setIsLiked] = useState(item?.isLiked ?? false);
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
+  const touchStartTime = useRef(null);
   const imgWrapRef = useRef(null);
+  const trackRef = useRef(null);
+  const activeImgRef = useRef(0);
+  const imagesLenRef = useRef(0);
+  const skipNextSnapRef = useRef(false);
+  const mountedRef = useRef(false);
 
   const isHome = location.pathname === '/';
 
@@ -50,15 +56,45 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     return () => tg?.enableVerticalSwipes?.();
   }, []);
 
-  // Non-passive touchmove — блокирует перехват свайпа Telegram при горизонтальном жесте
+  // Синхронизируем ref с состоянием для использования в замыканиях
+  useEffect(() => { activeImgRef.current = activeImg; }, [activeImg]);
+
+  // Snap трека при смене activeImg (клик по точке или инициализация)
+  useEffect(() => {
+    if (!trackRef.current) return;
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      trackRef.current.style.transition = 'none';
+      trackRef.current.style.transform = 'translateX(0%)';
+      return;
+    }
+    if (skipNextSnapRef.current) {
+      skipNextSnapRef.current = false;
+      return;
+    }
+    trackRef.current.style.transition = 'transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    trackRef.current.style.transform = `translateX(${-activeImg * 100}%)`;
+  }, [activeImg]);
+
+  // Non-passive touchmove — блокирует перехват Telegram и даёт live drag
   useEffect(() => {
     const el = imgWrapRef.current;
     if (!el) return;
     const onMove = (e) => {
       if (touchStartX.current === null) return;
-      const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+      const dx = e.touches[0].clientX - touchStartX.current;
       const dy = Math.abs(e.touches[0].clientY - (touchStartY.current ?? 0));
-      if (dx > dy && dx > 5) e.preventDefault();
+      if (Math.abs(dx) > dy && Math.abs(dx) > 5) {
+        e.preventDefault();
+        if (!trackRef.current || imagesLenRef.current <= 1) return;
+        const cur = activeImgRef.current;
+        const total = imagesLenRef.current;
+        // Резиновый эффект на краях
+        const atEdge = (cur === 0 && dx > 0) || (cur === total - 1 && dx < 0);
+        const offset = atEdge ? dx * 0.25 : dx;
+        trackRef.current.style.transition = 'none';
+        trackRef.current.style.transform = `translateX(calc(${-cur * 100}% + ${offset}px))`;
+      }
     };
     el.addEventListener('touchmove', onMove, { passive: false });
     return () => el.removeEventListener('touchmove', onMove);
@@ -67,19 +103,43 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const handleTouchStart = useCallback((e) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
   }, []);
 
   const handleTouchEnd = useCallback((e) => {
     if (touchStartX.current === null) return;
     const diff = touchStartX.current - e.changedTouches[0].clientX;
-    const total = item?.images?.length ?? 0;
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) setActiveImg(prev => Math.min(prev + 1, total - 1));
-      else setActiveImg(prev => Math.max(prev - 1, 0));
+    const dt = Math.max(1, Date.now() - (touchStartTime.current ?? Date.now()));
+    const velocity = Math.abs(diff) / dt; // px/ms
+    const containerWidth = imgWrapRef.current?.offsetWidth ?? 300;
+    const total = imagesLenRef.current;
+
+    const isFastFlick = velocity > 0.4;                    // ~400px/s — быстрый бросок
+    const isPastThreshold = Math.abs(diff) > containerWidth * 0.3; // 30% ширины экрана
+
+    let newIndex = activeImgRef.current;
+    if (isFastFlick || isPastThreshold) {
+      if (diff > 0) newIndex = Math.min(newIndex + 1, total - 1);
+      else newIndex = Math.max(newIndex - 1, 0);
     }
+
+    // Чем быстрее бросок — тем короче анимация (как в Instagram)
+    const snapMs = isFastFlick
+      ? Math.max(150, Math.round(220 - velocity * 80))
+      : 280;
+
+    if (trackRef.current) {
+      trackRef.current.style.transition = `transform ${snapMs}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+      trackRef.current.style.transform = `translateX(${-newIndex * 100}%)`;
+    }
+
+    skipNextSnapRef.current = true;
+    activeImgRef.current = newIndex;
+    setActiveImg(newIndex);
     touchStartX.current = null;
     touchStartY.current = null;
-  }, [item?.images?.length]);
+    touchStartTime.current = null;
+  }, []);
 
   const handleLike = useCallback(async () => {
     haptic('light');
@@ -104,6 +164,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   if (!item) return null;
 
   const images = item.images || [];
+  imagesLenRef.current = images.length;
 
   return (
     <div className="item-detail-overlay" onClick={onClose}>
@@ -113,32 +174,37 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
         <div className="item-detail__hero">
 
           {images.length > 0 ? (
-            <>
-              <div
-                ref={imgWrapRef}
-                className="item-detail__main-img-wrap"
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-              >
-                <img
-                  className="item-detail__main-img"
-                  src={images[activeImg]}
-                  alt={item.title}
-                />
-                {item.isSold && <div className="item-detail__sold">SOLD</div>}
-                {images.length > 1 && (
-                  <div className="item-detail__dots">
-                    {images.map((_, i) => (
-                      <button
-                        key={i}
-                        className={`item-detail__dot${activeImg === i ? ' active' : ''}`}
-                        onClick={() => setActiveImg(i)}
-                      />
-                    ))}
+            <div
+              ref={imgWrapRef}
+              className="item-detail__main-img-wrap"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div ref={trackRef} className="item-detail__img-track">
+                {images.map((src, i) => (
+                  <div key={i} className="item-detail__img-slide">
+                    <img
+                      className="item-detail__main-img"
+                      src={src}
+                      alt={item.title}
+                      draggable={false}
+                    />
                   </div>
-                )}
+                ))}
               </div>
-            </>
+              {item.isSold && <div className="item-detail__sold">SOLD</div>}
+              {images.length > 1 && (
+                <div className="item-detail__dots">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      className={`item-detail__dot${activeImg === i ? ' active' : ''}`}
+                      onClick={() => setActiveImg(i)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             /* Нет фото — показываем пустой блок чтобы кнопки были видны */
             <div className="item-detail__no-img" />

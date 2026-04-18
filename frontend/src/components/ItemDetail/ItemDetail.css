@@ -82,12 +82,25 @@
   max-height: 80vh;
 }
 
+.item-detail__img-track {
+  display: flex;
+  will-change: transform;
+}
+
+.item-detail__img-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+}
+
 .item-detail__main-img {
   width: 100%;
   height: auto;
   max-height: 80vh;
   object-fit: contain;
   display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .item-detail__sold {
