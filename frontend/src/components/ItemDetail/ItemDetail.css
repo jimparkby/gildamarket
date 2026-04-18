@@ -78,6 +78,7 @@
 .item-detail__main-img-wrap {
   position: relative;
   overflow: hidden;
+  clip-path: inset(0);   /* клипит даже composited-слои (will-change: transform) */
   background: var(--gray-100);
   max-height: 80vh;
 }
@@ -88,8 +89,7 @@
 }
 
 .item-detail__img-slide {
-  min-width: 100%;
-  flex-shrink: 0;
+  flex: 0 0 100%;   /* явно фиксирует ширину слайда = 100% обёртки, не сжимается */
 }
 
 .item-detail__main-img {
