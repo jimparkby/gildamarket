@@ -242,8 +242,9 @@
   cursor: pointer;
 }
 .profile__about-link {
-  color: #3b82f6;
-  text-decoration: none;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   word-break: break-all;
 }
 .profile__about-link:active {
