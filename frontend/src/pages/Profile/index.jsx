@@ -15,7 +15,7 @@ import './Profile.css';
 
 function renderTextWithLinks(text) {
   if (!text) return null;
-  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|(?:t\.me|vk\.com|instagram\.com|tiktok\.com)\/[^\s]+)/g;
   const parts = text.split(urlRegex);
   return parts.map((part, i) => {
     if (urlRegex.test(part)) {
