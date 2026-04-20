@@ -33,6 +33,18 @@
   color: var(--gray-300);
 }
 
+.item-card__new-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--black);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+}
+
 .item-card__sold-badge {
   position: absolute;
   top: 10px;

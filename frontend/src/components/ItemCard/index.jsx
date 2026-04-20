@@ -2,10 +2,18 @@ import React from 'react';
 import { useSettings } from '../../App';
 import './ItemCard.css';
 
+const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
+function isNew(createdAt) {
+  if (!createdAt) return false;
+  return Date.now() - new Date(createdAt).getTime() < TWO_DAYS_MS;
+}
+
 export default function ItemCard({ item, onClick }) {
   const { currency } = useSettings();
 
   const image = item.images?.[0];
+  const showNew = !item.isSold && isNew(item.createdAt);
 
   return (
     <article className="item-card" onClick={() => onClick?.(item)}>
@@ -22,6 +30,7 @@ export default function ItemCard({ item, onClick }) {
           </div>
         )}
 
+        {showNew && <div className="item-card__new-badge">NEW</div>}
         {item.isSold && <div className="item-card__sold-badge">SOLD</div>}
       </div>
 
