@@ -12,7 +12,6 @@ try {
 const { PrismaClient } = require('@prisma/client');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const resolveUrl = require('../utils/resolveUrl');
-const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
@@ -61,16 +60,6 @@ function esc(text) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-}
-
-// ── Парсинг цены из текста ────────────────────────────────────────────────────
-function parsePrice(text) {
-  if (!text) return '';
-  const match = text.match(/(\d[\d\s]*\d|\d+)\s*(?:р(?:уб)?\.?|₽|rub)/i);
-  if (match) return match[1].replace(/\s/g, '');
-  const nums = text.match(/\b(\d{3,6})\b/g);
-  if (nums) return nums[0];
-  return '';
 }
 
 // ── S3 ────────────────────────────────────────────────────────────────────────
@@ -150,43 +139,6 @@ async function fetchPhotoBuffer(imageValue) {
   }
 
   return null;
-}
-
-// ── Скачать фото из Telegram ──────────────────────────────────────────────────
-async function downloadTelegramPhoto(botInstance, botToken, fileId) {
-  try {
-    const fileInfo = await botInstance.getFile(fileId);
-    const fileUrl  = `https://api.telegram.org/file/bot${botToken}/${fileInfo.file_path}`;
-
-    // Скачиваем в буфер (с таймаутом 15 сек)
-    const buffer = await new Promise((resolve, reject) => {
-      const chunks = [];
-      const req = https.get(fileUrl, (res) => {
-        res.on('data', chunk => chunks.push(chunk));
-        res.on('end', () => resolve(Buffer.concat(chunks)));
-        res.on('error', reject);
-      });
-      req.setTimeout(15000, () => { req.destroy(new Error('Download timeout')); });
-      req.on('error', reject);
-    });
-
-    const fileName = `draft_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-
-    if (useS3()) {
-      // Загружаем в S3 — работает на любом инстансе
-      return await uploadBufferToS3(buffer, fileName);
-    } else {
-      // Локальный fallback (dev-окружение)
-      const uploadDir = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-      const filePath = path.join(uploadDir, fileName);
-      await fs.promises.writeFile(filePath, buffer);
-      return `/uploads/${fileName}`;
-    }
-  } catch (err) {
-    console.error('[Bot] Ошибка скачивания фото:', err.message);
-    return null;
-  }
 }
 
 // ── Caption и клавиатура для admin-сообщений ─────────────────────────────────
@@ -360,79 +312,6 @@ function registerHandlers(botInstance, token) {
       });
     } catch (err) {
       console.error('[Bot] /start sendMessage error:', err.message);
-    }
-  });
-
-  // Пересланные сообщения → черновик
-  botInstance.on('message', async (msg) => {
-    if (msg.text && msg.text.startsWith('/')) return;
-    if (msg.chat.type !== 'private') return;
-    if (!msg.forward_date) return;
-
-    const telegramUserId = String(msg.from.id);
-    const chatId = msg.chat.id;
-
-    try {
-      const user = await prisma.user.findUnique({ where: { telegramUserId } });
-      if (!user) {
-        await botInstance.sendMessage(chatId,
-          '❌ Вы не зарегистрированы в Gilda Market. Откройте приложение сначала.',
-          {
-            reply_markup: {
-              inline_keyboard: [[
-                { text: '🛍 Открыть Gilda Market', web_app: { url: process.env.MINI_APP_URL } },
-              ]],
-            },
-          }
-        );
-        return;
-      }
-
-      const photos = [];
-      if (msg.photo && msg.photo.length > 0) {
-        const bestPhoto = msg.photo[msg.photo.length - 1];
-        const photoPath = await downloadTelegramPhoto(botInstance, token, bestPhoto.file_id);
-        if (photoPath) photos.push(photoPath);
-      }
-
-      const text = msg.caption || msg.text || '';
-      const price = parsePrice(text);
-
-      await prisma.itemDraft.deleteMany({ where: { userId: user.id } });
-      await prisma.itemDraft.create({
-        data: {
-          userId:      user.id,
-          title:       '',
-          description: text.trim(),
-          price:       price,
-          images:      photos,
-        },
-      });
-
-      // Черновик создан — отправляем подтверждение.
-      // Оборачиваем отдельно: если Telegram недоступен, черновик всё равно сохранён.
-      const appUrl = process.env.MINI_APP_URL || 'https://jimparkby-gildamarket-cfc1.twc1.net';
-      try {
-        await botInstance.sendMessage(chatId,
-          `✅ <b>Пост получен!</b>\n\n` +
-          `${photos.length > 0 ? `📸 Фото: ${photos.length} шт.\n` : '📸 Фото не найдено — добавите вручную\n'}` +
-          `💰 Цена: ${price ? price + ' RUB' : 'не найдена — укажите вручную'}\n\n` +
-          `Откройте приложение чтобы проверить и опубликовать товар:`,
-          {
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [[
-                { text: '📦 Создать товар', web_app: { url: `${appUrl}/add` } },
-              ]],
-            },
-          }
-        );
-      } catch (sendErr) {
-        console.warn('[Bot] Черновик создан, но отправить подтверждение не удалось:', sendErr.message);
-      }
-    } catch (err) {
-      console.error('[Bot] Ошибка обработки пересланного сообщения:', err);
-      try { await botInstance.sendMessage(chatId, '❌ Произошла ошибка. Попробуйте ещё раз.'); } catch (_) {}
     }
   });
 

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { createItem } from '../../api/client';
 import { useTelegram } from '../../hooks/useTelegram';
 import { compressImages } from '../../utils/imageCompression';
-import api from '../../api/client';
 import { BackButtonContext } from '../../App';
 import './AddItem.css';
  
@@ -46,7 +45,6 @@ export default function AddItem() {
  
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
-  const [draftPhotos, setDraftPhotos] = useState([]); // URL фото из черновика
   const [form, setForm] = useState({
     title: '', brand: '', category: '', subcategory: '', size: '',
     price: '', currency: 'RUB', description: '',
@@ -55,37 +53,6 @@ export default function AddItem() {
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [draftLoading, setDraftLoading] = useState(true);
-  const [hasDraft, setHasDraft] = useState(false);
- 
-  // ── Проверяем черновик при открытии ─────────────────────────────────────────
-  useEffect(() => {
-    async function checkDraft() {
-      try {
-        const res = await api.get('/items/draft');
-        const draft = res.data.draft;
-        if (draft) {
-          setHasDraft(true);
-          setAgreed(true);
-          setForm(prev => ({
-            ...prev,
-            description: draft.description || '',
-            price: draft.price || '',
-          }));
-          if (draft.images && draft.images.length > 0) {
-            setDraftPhotos(draft.images);
-          }
-          // Сразу переходим на шаг деталей
-          setStep(4);
-        }
-      } catch (err) {
-        // Нет черновика — обычный флоу
-      } finally {
-        setDraftLoading(false);
-      }
-    }
-    checkDraft();
-  }, []);
  
   const setField = useCallback((field, val) => {
     setForm(prev => {
@@ -97,14 +64,8 @@ export default function AddItem() {
   const next = useCallback(() => { haptic('light'); setStep(s => Math.min(s + 1, TOTAL_STEPS)); }, [haptic]);
   const back = useCallback(() => {
     setError('');
-    if (hasDraft && step === 4) {
-      // Если пришли из черновика — назад идём на шаг 1
-      setHasDraft(false);
-      setStep(1);
-    } else {
-      setStep(s => Math.max(s - 1, 1));
-    }
-  }, [hasDraft, step]);
+    setStep(s => Math.max(s - 1, 1));
+  }, []);
 
   // ── Переопределяем TG BackButton для навигации по шагам ─────────────────────
   useEffect(() => {
@@ -144,12 +105,7 @@ export default function AddItem() {
     });
   }, []);
  
-  const removeDraftPhoto = useCallback((idx) => {
-    setDraftPhotos(prev => prev.filter((_, i) => i !== idx));
-  }, []);
- 
   const handleSubmit = useCallback(async () => {
-    if (hasDraft && !form.category) return setError('Выберите категорию');
     if (!form.title.trim()) return setError('Введите название вещи');
     if (!form.price || isNaN(parseFloat(form.price))) return setError('Введите корректную цену');
  
@@ -160,19 +116,8 @@ export default function AddItem() {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
  
-      // Добавляем новые фото файлами
       photos.forEach(p => fd.append('images', p.file));
- 
-      // Добавляем фото из черновика как URL
-      if (draftPhotos.length > 0) {
-        fd.append('draftImages', JSON.stringify(draftPhotos));
-      }
- 
       await createItem(fd);
- 
-      // Всегда удаляем черновик после публикации
-      await api.delete('/items/draft').catch(() => {});
- 
       haptic('medium');
       navigate('/profile');
     } catch (err) {
@@ -190,7 +135,7 @@ export default function AddItem() {
     } finally {
       setSubmitting(false);
     }
-  }, [form, photos, draftPhotos, hasDraft, haptic, navigate]);
+  }, [form, photos, haptic, navigate]);
  
   const StepBar = () => (
     <div className="wizard__steps">
@@ -199,16 +144,6 @@ export default function AddItem() {
       ))}
     </div>
   );
- 
-  if (draftLoading) {
-    return (
-      <main className="page wizard">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          <div className="spinner" />
-        </div>
-      </main>
-    );
-  }
  
   // ── Step 1: Category ─────────────────────────────────────────────────────────
   if (step === 1) return (
@@ -331,36 +266,6 @@ export default function AddItem() {
       </div>
       <div className="wizard__scroll wizard__scroll--form">
  
-        {/* Фото из черновика */}
-        {draftPhotos.length > 0 && (
-          <div className="form-field">
-            <label className="form-label">Фото из поста</label>
-            <div className="photos-grid">
-              {draftPhotos.map((url, i) => (
-                <div key={i} className="photo-thumb">
-                  <img src={url} alt="" />
-                  <button className="photo-thumb__del" onClick={() => removeDraftPhoto(i)}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
-                  {i === 0 && <span className="photo-thumb__cover">Обложка</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
- 
-        {hasDraft && (
-          <div className="form-field">
-            <label className="form-label">Категория *</label>
-            <select className="form-input" value={form.category} onChange={e => setField('category', e.target.value)}>
-              <option value="">Выберите категорию</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.value}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
         <div className="form-field">
           <label className="form-label">Название *</label>
           <input className="form-input" placeholder="Например: Винтажные джинсы Levi's 501" value={form.title} onChange={e => setField('title', e.target.value)} />
