@@ -1,7 +1,5 @@
 /**
- * Gilda Market — Telegram Bot(s)
- * Поддерживает BOT_TOKEN и BOT_TOKEN_2 — оба работают идентично.
- * Только первый бот (BOT_TOKEN) отправляет уведомления в admin-чат.
+ * Gilda Market — Telegram Bot
  */
 
 let TelegramBot;
@@ -562,46 +560,43 @@ function startBot() {
     return;
   }
 
-  const tokens = [process.env.BOT_TOKEN, process.env.BOT_TOKEN_2].filter(Boolean);
-  if (tokens.length === 0) {
-    console.warn('[Bot] BOT_TOKEN не задан — боты не запущены');
+  const token = process.env.BOT_TOKEN;
+  if (!token) {
+    console.warn('[Bot] BOT_TOKEN не задан — бот не запущен');
     return;
   }
 
-  tokens.forEach(function(token, index) {
-    function launch() {
-      // Сначала удаляем webhook чтобы polling работал корректно
-      const tmp = new TelegramBot(token, { polling: false });
-      tmp.deleteWebHook().catch(() => {}).finally(() => {
-        const botInstance = new TelegramBot(token, {
-          polling: {
-            interval:   300,
-            autoStart:  true,
-            params:     { timeout: 10 },
-          },
-        });
-
-        registerHandlers(botInstance, token);
-        if (index === 0) primaryBot = botInstance;
-        console.log(`[Bot ${index + 1}] Запущен (polling), токен: ${token.substring(0, 10)}...`);
-
-        botInstance.on('polling_error', function(err) {
-          if (err.code === 'ETELEGRAM' && err.message && err.message.includes('409')) {
-            console.log(`[Bot:${token.substring(0, 10)}] 409 Conflict — другой инстанс уже поллит, ждём 15 сек`);
-            botInstance.stopPolling().then(function() {
-              setTimeout(function() {
-                botInstance.startPolling();
-                console.log(`[Bot:${token.substring(0, 10)}] Polling перезапущен`);
-              }, 15000);
-            });
-          } else {
-            console.error(`[Bot:${token.substring(0, 10)}] Polling error:`, err.message);
-          }
-        });
+  function launch() {
+    const tmp = new TelegramBot(token, { polling: false });
+    tmp.deleteWebHook().catch(() => {}).finally(() => {
+      const botInstance = new TelegramBot(token, {
+        polling: {
+          interval:  300,
+          autoStart: true,
+          params:    { timeout: 10 },
+        },
       });
-    }
-    launch();
-  });
+
+      registerHandlers(botInstance, token);
+      primaryBot = botInstance;
+      console.log(`[Bot] Запущен (polling), токен: ${token.substring(0, 10)}...`);
+
+      botInstance.on('polling_error', function(err) {
+        if (err.code === 'ETELEGRAM' && err.message && err.message.includes('409')) {
+          console.log(`[Bot] 409 Conflict — другой инстанс уже поллит, ждём 15 сек`);
+          botInstance.stopPolling().then(function() {
+            setTimeout(function() {
+              botInstance.startPolling();
+              console.log('[Bot] Polling перезапущен');
+            }, 15000);
+          });
+        } else {
+          console.error('[Bot] Polling error:', err.message);
+        }
+      });
+    });
+  }
+  launch();
 }
 
 // ── Заглушка для совместимости с index.js (router не нужен при polling) ───────

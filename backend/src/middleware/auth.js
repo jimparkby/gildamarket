@@ -1,46 +1,38 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
  
-/**
- * Validate Telegram Web App initData using HMAC-SHA256
- * Supports multiple bots via BOT_TOKEN and BOT_TOKEN_2
- */
 function validateTelegramInitData(initData) {
-  const tokens = [process.env.BOT_TOKEN, process.env.BOT_TOKEN_2].filter(Boolean);
-  if (tokens.length === 0) throw new Error('BOT_TOKEN not set');
- 
+  const botToken = process.env.BOT_TOKEN;
+  if (!botToken) throw new Error('BOT_TOKEN not set');
+
   const urlParams = new URLSearchParams(initData);
   const hash = urlParams.get('hash');
   if (!hash) return null;
- 
+
   urlParams.delete('hash');
   const dataCheckString = Array.from(urlParams.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
- 
-  for (const botToken of tokens) {
-    const secretKey = crypto
-      .createHmac('sha256', 'WebAppData')
-      .update(botToken)
-      .digest();
-    const computedHash = crypto
-      .createHmac('sha256', secretKey)
-      .update(dataCheckString)
-      .digest('hex');
- 
-    if (computedHash === hash) {
-      const userStr = urlParams.get('user');
-      if (!userStr) return null;
-      try {
-        return JSON.parse(userStr);
-      } catch {
-        return null;
-      }
-    }
+
+  const secretKey = crypto
+    .createHmac('sha256', 'WebAppData')
+    .update(botToken)
+    .digest();
+  const computedHash = crypto
+    .createHmac('sha256', secretKey)
+    .update(dataCheckString)
+    .digest('hex');
+
+  if (computedHash !== hash) return null;
+
+  const userStr = urlParams.get('user');
+  if (!userStr) return null;
+  try {
+    return JSON.parse(userStr);
+  } catch {
+    return null;
   }
- 
-  return null;
 }
  
 /**

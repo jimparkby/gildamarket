@@ -54,7 +54,7 @@ TimeWeb → App Platform → Создать → Node.js
 
 ```
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DB_NAME
-BOT_TOKEN=8203663822:AAFv-9EuARezWfp0ZFjWGk9IxX4iRZ521PU
+BOT_TOKEN=8563872990:AAG8XpJ73M5G5zIV_ettaIiYpNIbWGMZnPA
 JWT_SECRET=придумай_длинную_случайную_строку_минимум_32_символа
 NODE_ENV=production
 PORT=3000
