@@ -29,6 +29,7 @@ function serializeItem(i, seller = null) {
     isSold: i.isSold, status: i.status,
     category: i.category, subcategory: i.subcategory || null,
     size: i.size || null, description: i.description || null,
+    createdAt: i.createdAt,
     seller,
   };
 }
