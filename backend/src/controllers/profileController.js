@@ -86,7 +86,7 @@ async function getShop(req, res, next) {
             select: {
               id: true, title: true, brand: true, category: true, subcategory: true,
               size: true, price: true, currency: true, description: true,
-              images: true, isSold: true, status: true,
+              images: true, isSold: true, status: true, createdAt: true,
             },
           },
           lookBoards: { orderBy: { createdAt: 'desc' } },
