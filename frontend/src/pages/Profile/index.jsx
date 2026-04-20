@@ -394,7 +394,7 @@ export default function Profile() {
             <div className="profile__items-grid">
               {visibleItems.map(item => (
                 <div key={item.id} className="profile__item-wrap">
-                  <ItemCard item={item} onClick={item => navigate(`/item/${item.id}`, { state: { item } })} onLikeChange={() => {}} />
+                  <ItemCard item={item} onClick={item => navigate(`/item/${item.id}`, { state: { item } })} onLikeChange={() => {}} showNewBadge />
                   {isOwner && (
                     <div className="profile__item-actions">
                       <button onClick={() => navigate(`/edit/${item.id}`)} className="profile__item-edit">

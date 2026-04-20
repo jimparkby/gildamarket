@@ -9,11 +9,11 @@ function isNew(createdAt) {
   return Date.now() - new Date(createdAt).getTime() < TWO_DAYS_MS;
 }
 
-export default function ItemCard({ item, onClick }) {
+export default function ItemCard({ item, onClick, showNewBadge = false }) {
   const { currency } = useSettings();
 
   const image = item.images?.[0];
-  const showNew = !item.isSold && isNew(item.createdAt);
+  const showNew = showNewBadge && !item.isSold && isNew(item.createdAt);
 
   return (
     <article className="item-card" onClick={() => onClick?.(item)}>
