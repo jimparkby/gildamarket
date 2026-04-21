@@ -188,6 +188,8 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
     <div className="item-detail-overlay" onClick={onClose}>
       <div className="item-detail" onClick={e => e.stopPropagation()}>
 
+        <div className="item-detail__scroll">
+
         {/* Фото — занимает верхнюю часть */}
         <div className="item-detail__hero">
 
@@ -288,7 +290,9 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
           )}
         </div>
 
-        {/* Actions */}
+        </div>{/* /item-detail__scroll */}
+
+        {/* Actions — sticky bottom */}
         <div className="item-detail__actions">
           <button className="item-detail__btn-secondary" onClick={openShop}>
             Перейти в магазин
