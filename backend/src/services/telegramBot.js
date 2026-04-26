@@ -762,7 +762,18 @@ function registerHandlers(botInstance, token) {
     if (!userId) return;
 
     const state = userStates.get(userId);
-    if (!state || state.step !== 'waiting_for_forward') return;
+    const inForwardState = state?.step === 'waiting_for_forward';
+
+    // Пересланное сообщение — определяем по Telegram-метаданным
+    const isForwarded = !!(
+      msg.forward_from ||
+      msg.forward_from_chat ||
+      msg.forward_sender_name ||
+      msg.forward_date
+    );
+
+    // Обрабатываем если: пользователь нажал "Через пересланный пост" ИЛИ сообщение пересланное
+    if (!inForwardState && !isForwarded) return;
 
     // Media group (альбом фото)
     if (msg.media_group_id) {
@@ -774,7 +785,7 @@ function registerHandlers(botInstance, token) {
     const text = msg.text || msg.caption || '';
     const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
 
-    if (state.timer) clearTimeout(state.timer);
+    if (state?.timer) clearTimeout(state.timer);
     userStates.delete(userId);
 
     await processForwardedPost(botInstance, msg.chat.id, msg.from, text, photos);
