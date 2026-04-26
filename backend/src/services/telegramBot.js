@@ -12,15 +12,21 @@ try {
 const { PrismaClient } = require('@prisma/client');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const resolveUrl = require('../utils/resolveUrl');
+const { parseItemFromText } = require('./itemParser');
 const fs = require('fs');
 const path = require('path');
 
 const prisma = new PrismaClient();
 
-// Первый бот — используется для admin-уведомлений
 let primaryBot = null;
 
 const reviewCaptions = new Map();
+
+// ── Состояния пользователей для диалога добавления товара ─────────────────────
+const userStates = new Map();   // telegramId → { step, chatId, timer }
+const mediaGroups = new Map();  // media_group_id → { chatId, from, text, photos[], timer }
+const rateLimiter = new Map();  // telegramId → { count, date }
+const MAX_ITEMS_PER_DAY = 10;
 
 function msgKey(chatId, messageId) {
   return `${chatId}:${messageId}`;
@@ -88,12 +94,10 @@ async function uploadBufferToS3(buffer, fileName) {
     ContentType: 'image/jpeg',
     ACL:         'public-read',
   }));
-  // Публичный URL
   const endpoint = process.env.S3_ENDPOINT.replace(/\/$/, '');
   return `${endpoint}/${process.env.S3_BUCKET}/${key}`;
 }
 
-// ── Скачать файл из S3 в буфер ───────────────────────────────────────────────
 async function downloadFromS3(s3Url) {
   try {
     const endpoint = (process.env.S3_ENDPOINT || '').replace(/\/$/, '');
@@ -121,17 +125,14 @@ async function downloadFromS3(s3Url) {
   }
 }
 
-// Получить буфер для любого фото товара (S3 URL или локальный файл)
 async function fetchPhotoBuffer(imageValue) {
   const raw = resolveUrl(imageValue);
   if (!raw) return null;
 
-  // S3 URL — скачиваем через SDK (не через HTTP-ссылку, которую Telegram не всегда открывает)
   if (raw.startsWith('http') && useS3()) {
     return await downloadFromS3(raw);
   }
 
-  // Локальный файл
   const fileName = path.basename(raw);
   const filePath = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads', fileName);
   if (fs.existsSync(filePath)) {
@@ -162,7 +163,7 @@ function buildItemCaption(item) {
   ];
   if (item.brand)       lines.push(`👑 Бренд: ${esc(item.brand)}`);
   if (item.size)        lines.push(`📏 Размер: ${esc(item.size)}`);
-  lines.push(`⭐ Состояние: ${condition}`);
+  if (item.condition)   lines.push(`⭐ Состояние: ${condition}`);
   if (item.description) lines.push(``, `📝 <i>${esc(item.description)}</i>`);
   lines.push(``, `🛍 Продавец: ${sellerHandle} (${esc(sellerName)})`);
 
@@ -226,7 +227,6 @@ const BAN_NOTIFICATION =
   `Твой аккаунт был заблокирован за нарушение правил площадки.\n\n` +
   `Если считаешь, что произошла ошибка — свяжись с поддержкой.`;
 
-// Используем primaryBot для уведомлений пользователям (reply on item decline/ban)
 async function notifyUser(telegramUserId, text, parseMode) {
   if (!primaryBot) return;
   try {
@@ -256,7 +256,262 @@ async function editAdminMessage(botInstance, chatId, messageId, hasPhoto, text, 
   }
 }
 
-// ── Регистрация хендлеров — общие для обоих ботов ────────────────────────────
+// ── Helpers для добавления товаров ────────────────────────────────────────────
+
+function checkRateLimit(telegramId) {
+  const today = new Date().toISOString().split('T')[0];
+  const key = String(telegramId);
+  const entry = rateLimiter.get(key);
+  if (!entry || entry.date !== today) {
+    rateLimiter.set(key, { count: 1, date: today });
+    return true;
+  }
+  if (entry.count >= MAX_ITEMS_PER_DAY) return false;
+  entry.count++;
+  return true;
+}
+
+async function getUserOrCreate(from) {
+  return prisma.user.upsert({
+    where: { telegramUserId: String(from.id) },
+    update: {},
+    create: {
+      telegramUserId: String(from.id),
+      firstName: from.first_name || null,
+      lastName: from.last_name || null,
+      telegramUsername: from.username || null,
+    },
+  });
+}
+
+async function downloadTelegramPhoto(botInstance, fileId) {
+  try {
+    const fileLink = await botInstance.getFileLink(fileId);
+    const res = await fetch(fileLink);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const buf = await res.arrayBuffer();
+    return Buffer.from(buf);
+  } catch (err) {
+    console.warn('[Bot] downloadTelegramPhoto error:', err.message);
+    return null;
+  }
+}
+
+async function sendAddItemMenu(botInstance, chatId) {
+  const appUrl = process.env.MINI_APP_URL || '';
+  await botInstance.sendMessage(
+    chatId,
+    'Как хочешь добавить товар?',
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📤 Через пересланный пост', callback_data: 'add_forward' }],
+          [{ text: '📝 Добавить вручную', web_app: { url: appUrl } }],
+          [{ text: '📦 Мои объявления', web_app: { url: appUrl } }],
+        ],
+      },
+    }
+  );
+}
+
+async function processForwardedPost(botInstance, chatId, from, text, photoFileIds) {
+  const telegramId = String(from.id);
+
+  // Проверка бана
+  const banned = await prisma.bannedTelegramUser.findUnique({ where: { telegramUserId: telegramId } });
+  if (banned) {
+    await botInstance.sendMessage(chatId, '⛔ Ваш аккаунт заблокирован.');
+    return;
+  }
+
+  // Лимит публикаций
+  if (!checkRateLimit(telegramId)) {
+    await botInstance.sendMessage(chatId, `❌ Превышен дневной лимит публикаций (${MAX_ITEMS_PER_DAY} товаров в день).`);
+    return;
+  }
+
+  // Сообщение-заглушка "Обработка..."
+  let statusMsg;
+  try {
+    statusMsg = await botInstance.sendMessage(chatId, '⏳ Обработка...');
+  } catch (err) {
+    console.error('[Bot] processForwardedPost: не удалось отправить статус:', err.message);
+    return;
+  }
+
+  const editStatus = (txt, extra) =>
+    botInstance.editMessageText(txt, {
+      chat_id: chatId,
+      message_id: statusMsg.message_id,
+      parse_mode: 'HTML',
+      ...(extra || {}),
+    }).catch(() => {});
+
+  try {
+    // Парсинг текста
+    const parsed = await parseItemFromText(text || '');
+
+    if (parsed.isSold) {
+      await editStatus('⚠️ Товар уже продан или в резерве — пропускаем.');
+      return;
+    }
+
+    if (!parsed.title) {
+      await editStatus(
+        '❓ Не удалось определить название товара.\n\n' +
+        'Попробуйте добавить вручную через приложение.',
+        {
+          reply_markup: {
+            inline_keyboard: [[
+              { text: '📝 Добавить вручную', web_app: { url: process.env.MINI_APP_URL || '' } },
+            ]],
+          },
+        }
+      );
+      return;
+    }
+
+    // Поиск или создание пользователя
+    const user = await getUserOrCreate(from);
+
+    // Проверка дубликата
+    const existing = await prisma.item.findFirst({
+      where: {
+        title: { equals: parsed.title, mode: 'insensitive' },
+        sellerId: user.id,
+        isSold: false,
+        status: { not: 'rejected' },
+      },
+    });
+
+    if (existing) {
+      await editStatus(
+        `ℹ️ Похожий товар уже есть в каталоге:\n\n<b>${esc(existing.title)}</b>\n\nЕсли хочешь обновить объявление — открой его через «Мои объявления».`,
+        {
+          reply_markup: {
+            inline_keyboard: [[
+              { text: '📦 Мои объявления', web_app: { url: process.env.MINI_APP_URL || '' } },
+            ]],
+          },
+        }
+      );
+      return;
+    }
+
+    // Скачивание и загрузка фото
+    const imageUrls = [];
+    for (const fileId of photoFileIds.slice(0, 10)) {
+      const buffer = await downloadTelegramPhoto(botInstance, fileId);
+      if (!buffer) continue;
+
+      const fileName = `tg-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+      try {
+        if (useS3()) {
+          const url = await uploadBufferToS3(buffer, fileName);
+          imageUrls.push(url);
+        } else {
+          const uploadsDir = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
+          if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+          imageUrls.push(fileName);
+        }
+      } catch (err) {
+        console.warn('[Bot] Ошибка загрузки фото:', err.message);
+      }
+    }
+
+    // Создание товара
+    const item = await prisma.item.create({
+      data: {
+        title:       parsed.title,
+        brand:       parsed.brand || null,
+        category:    parsed.category || 'other',
+        size:        parsed.size || null,
+        price:       parsed.price || 0,
+        currency:    'RUB',
+        description: parsed.description || null,
+        images:      imageUrls,
+        sellerId:    user.id,
+      },
+      include: { seller: true },
+    });
+
+    // Уведомление администратора (fire-and-forget)
+    notifyAdminAboutNewItem(item.id).catch(err =>
+      console.error('[Bot] notifyAdminAboutNewItem error:', err)
+    );
+
+    // Результат
+    const priceStr = parsed.price
+      ? `${parseFloat(item.price).toLocaleString('ru-RU')} ₽`
+      : '—';
+    const needsNote = parsed.needsClarification
+      ? `\n\n⚠️ <b>Уточните цену</b> — откройте объявление в приложении.`
+      : '';
+
+    const resultText = [
+      `✅ <b>Загрузка завершена</b>`,
+      ``,
+      `Добавлено: 1`,
+      parsed.needsClarification ? `Нужно уточнить: 1` : `Нужно уточнить: 0`,
+      `Пропущено: 0`,
+      ``,
+      `<b>Добавлено:</b>`,
+      `• ${esc(item.title)} — ${priceStr}`,
+      needsNote,
+    ].join('\n');
+
+    const appUrl = process.env.MINI_APP_URL || '';
+    await editStatus(resultText, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📦 Мои объявления', web_app: { url: appUrl } }],
+          [{ text: '➕ Добавить ещё', callback_data: 'add_forward' }],
+        ],
+      },
+    });
+
+  } catch (err) {
+    console.error('[Bot] processForwardedPost error:', err);
+    await editStatus('❌ Произошла ошибка при обработке. Попробуйте ещё раз.');
+  }
+}
+
+// Обработчик одного сообщения из media group
+function handleMediaGroupMessage(botInstance, msg) {
+  const groupId = msg.media_group_id;
+  const userId = String(msg.from?.id);
+
+  if (!mediaGroups.has(groupId)) {
+    mediaGroups.set(groupId, {
+      chatId: msg.chat.id,
+      from: msg.from,
+      text: msg.caption || '',
+      photos: [],
+      timer: null,
+      userId,
+    });
+  }
+
+  const group = mediaGroups.get(groupId);
+  if (msg.caption && !group.text) group.text = msg.caption;
+  if (msg.photo) {
+    group.photos.push(msg.photo[msg.photo.length - 1].file_id);
+  }
+
+  if (group.timer) clearTimeout(group.timer);
+  group.timer = setTimeout(async () => {
+    mediaGroups.delete(groupId);
+
+    const state = userStates.get(userId);
+    if (state?.timer) clearTimeout(state.timer);
+    userStates.delete(userId);
+
+    await processForwardedPost(botInstance, group.chatId, group.from, group.text, group.photos);
+  }, 1500);
+}
+
+// ── Регистрация хендлеров ─────────────────────────────────────────────────────
 function registerHandlers(botInstance, token) {
   // /approve_all — только из admin-чата
   botInstance.onText(/\/approve_all/, async (msg) => {
@@ -287,6 +542,19 @@ function registerHandlers(botInstance, token) {
     }
   });
 
+  // /cancel — отмена текущего действия
+  botInstance.onText(/\/cancel/, async (msg) => {
+    const userId = String(msg.from?.id);
+    const state = userStates.get(userId);
+    if (state?.timer) clearTimeout(state.timer);
+    userStates.delete(userId);
+    try {
+      await botInstance.sendMessage(msg.chat.id, 'Отменено ✖️');
+    } catch (err) {
+      console.error('[Bot] /cancel sendMessage error:', err.message);
+    }
+  });
+
   // /start
   botInstance.onText(/\/start/, async (msg) => {
     console.log('[Bot] /start от', msg.from.id);
@@ -305,9 +573,10 @@ function registerHandlers(botInstance, token) {
       await botInstance.sendMessage(chatId, text, {
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: [[
-            { text: '🛍 Открыть Gilda Market', web_app: { url: appUrl } },
-          ]],
+          inline_keyboard: [
+            [{ text: '🛍 Открыть Gilda Market', web_app: { url: appUrl } }],
+            [{ text: '➕ Добавить товар', callback_data: 'add_menu' }],
+          ],
         },
       });
     } catch (err) {
@@ -315,7 +584,7 @@ function registerHandlers(botInstance, token) {
     }
   });
 
-  // callback_query — кнопки admin-ревью
+  // callback_query — кнопки admin-ревью и добавления товаров
   botInstance.on('callback_query', async (query) => {
     const data = query.data || '';
     const msg  = query.message;
@@ -325,6 +594,38 @@ function registerHandlers(botInstance, token) {
     const messageId = msg.message_id;
     const hasPhoto  = !!(msg.photo && msg.photo.length);
     const key       = msgKey(chatId, messageId);
+
+    // ── Меню добавления товара ─────────────────────────────────────────────────
+
+    if (data === 'add_menu') {
+      await botInstance.answerCallbackQuery(query.id);
+      await sendAddItemMenu(botInstance, chatId);
+      return;
+    }
+
+    if (data === 'add_forward') {
+      const userId = String(query.from.id);
+      const existing = userStates.get(userId);
+      if (existing?.timer) clearTimeout(existing.timer);
+
+      const timer = setTimeout(() => userStates.delete(userId), 5 * 60 * 1000);
+      userStates.set(userId, { step: 'waiting_for_forward', chatId, timer });
+
+      await botInstance.answerCallbackQuery(query.id);
+      try {
+        await botInstance.sendMessage(
+          chatId,
+          '📤 Перешлите пост с товаром или отправьте фото с описанием.\n\n' +
+          'Можно прислать несколько фото сразу (альбом).\n\n' +
+          'Чтобы отменить — /cancel'
+        );
+      } catch (err) {
+        console.error('[Bot] add_forward sendMessage error:', err.message);
+      }
+      return;
+    }
+
+    // ── Admin-ревью ────────────────────────────────────────────────────────────
 
     if (data.startsWith('ia:')) {
       const itemId = parseInt(data.slice(3));
@@ -426,6 +727,36 @@ function registerHandlers(botInstance, token) {
     }
   });
 
+  // ── Обработка входящих сообщений пользователей ────────────────────────────
+  botInstance.on('message', async (msg) => {
+    // Пропускаем admin-чат
+    if (String(msg.chat.id) === String(process.env.ADMIN_REVIEW_CHAT_ID)) return;
+    // Пропускаем команды (обрабатываются через onText)
+    if (msg.text && msg.text.startsWith('/')) return;
+    // Пропускаем групповые и канальные сообщения
+    if (msg.chat.type !== 'private') return;
+
+    const userId = String(msg.from?.id);
+    if (!userId) return;
+
+    const state = userStates.get(userId);
+    if (!state || state.step !== 'waiting_for_forward') return;
+
+    // Media group (альбом фото)
+    if (msg.media_group_id) {
+      handleMediaGroupMessage(botInstance, msg);
+      return;
+    }
+
+    // Одиночное сообщение (фото или текст)
+    const text = msg.text || msg.caption || '';
+    const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
+
+    if (state.timer) clearTimeout(state.timer);
+    userStates.delete(userId);
+
+    await processForwardedPost(botInstance, msg.chat.id, msg.from, text, photos);
+  });
 }
 
 process.on('unhandledRejection', function(reason) {
@@ -508,14 +839,12 @@ async function notifyAdminAboutNewItem(itemId) {
   const caption  = buildItemCaption(item);
   const keyboard = buildKeyboard(item.id, item.sellerId, 0);
 
-  // Retry: до 3 попыток с паузой 10 сек (на случай если бот в момент публикации перезапускался)
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       let message = null;
       const firstImage = item.images && item.images[0];
 
       if (firstImage) {
-        // Скачиваем фото в буфер и отправляем напрямую — Telegram не тянет URL сам
         const photoBuffer = await fetchPhotoBuffer(firstImage);
         if (photoBuffer) {
           try {
@@ -541,7 +870,7 @@ async function notifyAdminAboutNewItem(itemId) {
         reviewCaptions.set(msgKey(message.chat.id, message.message_id), caption);
         console.log(`[Bot] Admin уведомление отправлено (попытка ${attempt})`);
       }
-      return; // успех — выходим из цикла
+      return;
 
     } catch (err) {
       console.error(`[Bot] Попытка ${attempt}/3 не удалась:`, err.message);
