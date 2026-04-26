@@ -68,6 +68,28 @@ function esc(text) {
     .replace(/>/g, '&gt;');
 }
 
+// ── Proxy agent для обхода блокировок Telegram ───────────────────────────────
+function createProxyAgent() {
+  const proxyUrl = process.env.TELEGRAM_PROXY_URL;
+  if (!proxyUrl) return null;
+  try {
+    if (/^socks/i.test(proxyUrl)) {
+      const { SocksProxyAgent } = require('socks-proxy-agent');
+      return new SocksProxyAgent(proxyUrl);
+    }
+    const { HttpsProxyAgent } = require('https-proxy-agent');
+    return new HttpsProxyAgent(proxyUrl);
+  } catch (err) {
+    console.warn('[Bot] Прокси-агент не создан (установите пакет):', err.message);
+    return null;
+  }
+}
+
+function botOptions(extra = {}) {
+  const agent = createProxyAgent();
+  return agent ? { ...extra, request: { agent } } : extra;
+}
+
 // ── S3 ────────────────────────────────────────────────────────────────────────
 function useS3() {
   return process.env.S3_ENDPOINT &&
@@ -777,15 +799,15 @@ function startBot() {
   }
 
   function launch() {
-    const tmp = new TelegramBot(token, { polling: false });
+    const tmp = new TelegramBot(token, botOptions({ polling: false }));
     tmp.deleteWebHook().catch(() => {}).finally(() => {
-      const botInstance = new TelegramBot(token, {
+      const botInstance = new TelegramBot(token, botOptions({
         polling: {
           interval:  300,
           autoStart: true,
           params:    { timeout: 10 },
         },
-      });
+      }));
 
       registerHandlers(botInstance, token);
       primaryBot = botInstance;
@@ -836,7 +858,8 @@ async function notifyAdminAboutNewItem(itemId) {
   }
   if (!item) return;
 
-  const caption  = buildItemCaption(item);
+  const fullCaption = buildItemCaption(item);
+  const caption = fullCaption.length > 1024 ? fullCaption.slice(0, 1021) + '…' : fullCaption;
   const keyboard = buildKeyboard(item.id, item.sellerId, 0);
 
   for (let attempt = 1; attempt <= 3; attempt++) {
