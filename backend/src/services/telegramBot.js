@@ -329,7 +329,7 @@ async function sendAddItemMenu(botInstance, chatId) {
         inline_keyboard: [
           [{ text: '📤 Через пересланный пост', callback_data: 'add_forward' }],
           [{ text: '📝 Добавить вручную', web_app: { url: appUrl } }],
-          [{ text: '📦 Мои объявления', web_app: { url: appUrl } }],
+          [{ text: '📦 Мои объявления', web_app: { url: `${appUrl}?page=profile` } }],
         ],
       },
     }
@@ -412,7 +412,7 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
         {
           reply_markup: {
             inline_keyboard: [[
-              { text: '📦 Мои объявления', web_app: { url: process.env.MINI_APP_URL || '' } },
+              { text: '📦 Мои объявления', web_app: { url: `${process.env.MINI_APP_URL || ''}?page=profile` } },
             ]],
           },
         }
@@ -487,7 +487,7 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
     await editStatus(resultText, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '📦 Мои объявления', web_app: { url: appUrl } }],
+          [{ text: '📦 Мои объявления', web_app: { url: `${appUrl}?page=profile` } }],
           [{ text: '➕ Добавить ещё', callback_data: 'add_forward' }],
         ],
       },

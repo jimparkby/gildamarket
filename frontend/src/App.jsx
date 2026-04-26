@@ -110,6 +110,12 @@ export default function App() {
     const urlShop = new URLSearchParams(window.location.search).get('shop');
     if (urlShop) {
       navigate(`/shop/${urlShop}`, { replace: true });
+      return;
+    }
+    // 3. ?page=profile — открыть профиль напрямую (из кнопки бота)
+    const urlPage = new URLSearchParams(window.location.search).get('page');
+    if (urlPage === 'profile') {
+      navigate('/profile', { replace: true });
     }
   }, [authLoading]); // eslint-disable-line
 
