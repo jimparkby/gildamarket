@@ -307,16 +307,19 @@ async function getUserOrCreate(from) {
 }
 
 async function downloadTelegramPhoto(botInstance, fileId) {
-  try {
-    const fileLink = await botInstance.getFileLink(fileId);
-    const res = await fetch(fileLink);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const buf = await res.arrayBuffer();
-    return Buffer.from(buf);
-  } catch (err) {
-    console.warn('[Bot] downloadTelegramPhoto error:', err.message);
-    return null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const fileLink = await botInstance.getFileLink(fileId);
+      const res = await fetch(fileLink);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = await res.arrayBuffer();
+      return Buffer.from(buf);
+    } catch (err) {
+      console.warn(`[Bot] downloadTelegramPhoto попытка ${attempt}/3:`, err.message);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
+    }
   }
+  return null;
 }
 
 async function sendAddItemMenu(botInstance, chatId) {
@@ -530,7 +533,7 @@ function handleMediaGroupMessage(botInstance, msg) {
     userStates.delete(userId);
 
     await processForwardedPost(botInstance, group.chatId, group.from, group.text, group.photos);
-  }, 1500);
+  }, 3000);
 }
 
 // ── Регистрация хендлеров ─────────────────────────────────────────────────────
