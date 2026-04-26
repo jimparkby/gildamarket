@@ -822,6 +822,8 @@ function startBot() {
               console.log('[Bot] Polling перезапущен');
             }, 15000);
           });
+        } else if (err.message && err.message.includes('ETIMEDOUT')) {
+          // Временный обрыв соединения — бот сам переподключится, не засоряем логи
         } else {
           console.error('[Bot] Polling error:', err.message);
         }
