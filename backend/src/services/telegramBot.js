@@ -309,7 +309,8 @@ async function getUserOrCreate(from) {
 async function downloadTelegramPhoto(botInstance, fileId) {
   const agent = createProxyAgent();
   const https = require('https');
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const fileLink = await botInstance.getFileLink(fileId);
       const buffer = await new Promise((resolve, reject) => {
@@ -330,13 +331,14 @@ async function downloadTelegramPhoto(botInstance, fileId) {
           });
           res.on('error', reject);
         });
+        req.setTimeout(30000, () => req.destroy(new Error('Download timeout')));
         req.on('error', reject);
         req.end();
       });
       return buffer;
     } catch (err) {
-      console.warn(`[Bot] downloadTelegramPhoto попытка ${attempt}/3:`, err.message);
-      if (attempt < 3) await new Promise(r => setTimeout(r, 1000));
+      console.warn(`[Bot] downloadTelegramPhoto попытка ${attempt}/${MAX_ATTEMPTS}:`, err.message);
+      if (attempt < MAX_ATTEMPTS) await new Promise(r => setTimeout(r, 2000 * attempt));
     }
   }
   return null;
@@ -464,6 +466,7 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
     const validBuffers = downloadResults
       .filter(r => r.status === 'fulfilled' && r.value)
       .map(r => r.value);
+    console.log(`[Bot] Фото: получено ${photoFileIds.length}, скачано ${validBuffers.length}`);
 
     // Загружаем все фото в хранилище параллельно
     const uploadResults = await Promise.allSettled(
