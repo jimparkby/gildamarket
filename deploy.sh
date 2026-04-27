@@ -17,5 +17,15 @@ cd ../frontend && npm install
 echo "▶ Building frontend..."
 npm run build
 
-echo "✅ Build complete. Frontend dist: frontend/dist/"
-echo "   Start backend with: cd backend && npm start"
+echo "▶ Restarting backend via PM2..."
+cd ..
+if pm2 id gilda > /dev/null 2>&1; then
+  pm2 reload ecosystem.config.js --update-env
+else
+  pm2 start ecosystem.config.js
+  pm2 save
+fi
+
+echo "✅ Deploy complete."
+echo "   Logs: pm2 logs gilda"
+echo "   Status: pm2 status"
