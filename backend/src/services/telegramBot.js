@@ -23,9 +23,9 @@ let primaryBot = null;
 const reviewCaptions = new Map();
 
 // ── Состояния пользователей для диалога добавления товара ─────────────────────
-const userStates = new Map();   // telegramId → { step, chatId, timer }
-const mediaGroups = new Map();  // media_group_id → { chatId, from, text, photos[], timer }
-const rateLimiter = new Map();  // telegramId → { count, date }
+const userStates = new Map();       // telegramId → { step, chatId, timer }
+const userPhotoBuffers = new Map(); // telegramId → { chatId, from, text, photos[], timer }
+const rateLimiter = new Map();      // telegramId → { count, date }
 const MAX_ITEMS_PER_DAY = 10;
 
 function msgKey(chatId, messageId) {
@@ -467,31 +467,28 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
     );
 
     // Результат
-    const priceStr = parsed.price
-      ? `${parseFloat(item.price).toLocaleString('ru-RU')} ₽`
-      : '—';
     const needsNote = parsed.needsClarification
       ? `\n\n⚠️ <b>Уточните цену</b> — откройте объявление в приложении.`
       : '';
 
     const resultText = [
-      `✅ <b>Загрузка завершена</b>`,
+      `Загрузка завершена`,
       ``,
       `Добавлено: 1`,
+      `Обновлено: 0`,
       parsed.needsClarification ? `Нужно уточнить: 1` : `Нужно уточнить: 0`,
+      `SOLD найдено: 0`,
       `Пропущено: 0`,
       ``,
-      `<b>Добавлено:</b>`,
-      `• ${esc(item.title)} — ${priceStr}`,
+      `Добавлено:`,
+      `+ ${esc(item.title)}`,
       needsNote,
     ].join('\n');
 
-    const appUrl = process.env.MINI_APP_URL || '';
     await editStatus(resultText, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '📦 Мои объявления', web_app: { url: `${appUrl}?page=profile` } }],
-          [{ text: '➕ Добавить ещё', callback_data: 'add_forward' }],
+          [{ text: '← Назад', callback_data: 'add_menu' }],
         ],
       },
     });
@@ -502,37 +499,37 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
   }
 }
 
-// Обработчик одного сообщения из media group
-function handleMediaGroupMessage(botInstance, msg) {
-  const groupId = msg.media_group_id;
+// Единый буфер фото на пользователя — накапливает все фото в течение 3 секунд,
+// работает для медиагрупп, альбомов и последовательно пересланных фото
+function bufferUserPhoto(botInstance, msg) {
   const userId = String(msg.from?.id);
 
-  if (!mediaGroups.has(groupId)) {
-    mediaGroups.set(groupId, {
+  if (!userPhotoBuffers.has(userId)) {
+    userPhotoBuffers.set(userId, {
       chatId: msg.chat.id,
       from: msg.from,
-      text: msg.caption || '',
+      text: '',
       photos: [],
       timer: null,
-      userId,
     });
   }
 
-  const group = mediaGroups.get(groupId);
-  if (msg.caption && !group.text) group.text = msg.caption;
+  const buf = userPhotoBuffers.get(userId);
+  if (msg.caption && !buf.text) buf.text = msg.caption;
+  if (msg.text && !buf.text) buf.text = msg.text;
   if (msg.photo) {
-    group.photos.push(msg.photo[msg.photo.length - 1].file_id);
+    buf.photos.push(msg.photo[msg.photo.length - 1].file_id);
   }
 
-  if (group.timer) clearTimeout(group.timer);
-  group.timer = setTimeout(async () => {
-    mediaGroups.delete(groupId);
+  if (buf.timer) clearTimeout(buf.timer);
+  buf.timer = setTimeout(async () => {
+    userPhotoBuffers.delete(userId);
 
     const state = userStates.get(userId);
     if (state?.timer) clearTimeout(state.timer);
     userStates.delete(userId);
 
-    await processForwardedPost(botInstance, group.chatId, group.from, group.text, group.photos);
+    await processForwardedPost(botInstance, buf.chatId, buf.from, buf.text, buf.photos);
   }, 3000);
 }
 
@@ -573,6 +570,9 @@ function registerHandlers(botInstance, token) {
     const state = userStates.get(userId);
     if (state?.timer) clearTimeout(state.timer);
     userStates.delete(userId);
+    const buf = userPhotoBuffers.get(userId);
+    if (buf?.timer) clearTimeout(buf.timer);
+    userPhotoBuffers.delete(userId);
     try {
       await botInstance.sendMessage(msg.chat.id, 'Отменено ✖️');
     } catch (err) {
@@ -778,20 +778,8 @@ function registerHandlers(botInstance, token) {
     // Обрабатываем если: пользователь нажал "Через пересланный пост" ИЛИ сообщение пересланное
     if (!inForwardState && !isForwarded) return;
 
-    // Media group (альбом фото)
-    if (msg.media_group_id) {
-      handleMediaGroupMessage(botInstance, msg);
-      return;
-    }
-
-    // Одиночное сообщение (фото или текст)
-    const text = msg.text || msg.caption || '';
-    const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
-
-    if (state?.timer) clearTimeout(state.timer);
-    userStates.delete(userId);
-
-    await processForwardedPost(botInstance, msg.chat.id, msg.from, text, photos);
+    // Все фото (медиагруппа, одиночное, последовательные) попадают в единый буфер
+    bufferUserPhoto(botInstance, msg);
   });
 }
 
