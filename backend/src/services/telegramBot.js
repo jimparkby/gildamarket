@@ -307,13 +307,33 @@ async function getUserOrCreate(from) {
 }
 
 async function downloadTelegramPhoto(botInstance, fileId) {
+  const agent = createProxyAgent();
+  const https = require('https');
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const fileLink = await botInstance.getFileLink(fileId);
-      const res = await fetch(fileLink);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buf = await res.arrayBuffer();
-      return Buffer.from(buf);
+      const buffer = await new Promise((resolve, reject) => {
+        const url = new URL(fileLink);
+        const options = {
+          hostname: url.hostname,
+          port: 443,
+          path: url.pathname + url.search,
+          method: 'GET',
+          ...(agent ? { agent } : {}),
+        };
+        const req = https.request(options, (res) => {
+          const chunks = [];
+          res.on('data', chunk => chunks.push(Buffer.from(chunk)));
+          res.on('end', () => {
+            if (res.statusCode !== 200) reject(new Error(`HTTP ${res.statusCode}`));
+            else resolve(Buffer.concat(chunks));
+          });
+          res.on('error', reject);
+        });
+        req.on('error', reject);
+        req.end();
+      });
+      return buffer;
     } catch (err) {
       console.warn(`[Bot] downloadTelegramPhoto попытка ${attempt}/3:`, err.message);
       if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
@@ -355,22 +375,31 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
     return;
   }
 
-  // Сообщение-заглушка "Обработка..."
-  let statusMsg;
-  try {
-    statusMsg = await botInstance.sendMessage(chatId, '⏳ Обработка...');
-  } catch (err) {
-    console.error('[Bot] processForwardedPost: не удалось отправить статус:', err.message);
-    return;
+  // Сообщение-заглушка "Обработка..." — с ретраями, не останавливаем обработку при неудаче
+  let statusMsg = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      statusMsg = await botInstance.sendMessage(chatId, '⏳ Обработка...');
+      break;
+    } catch (err) {
+      console.warn(`[Bot] sendStatus попытка ${attempt}/3:`, err.message);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 5000));
+    }
   }
 
-  const editStatus = (txt, extra) =>
-    botInstance.editMessageText(txt, {
-      chat_id: chatId,
-      message_id: statusMsg.message_id,
-      parse_mode: 'HTML',
-      ...(extra || {}),
-    }).catch(() => {});
+  const editStatus = async (txt, extra) => {
+    const opts = { parse_mode: 'HTML', ...(extra || {}) };
+    if (statusMsg) {
+      botInstance.editMessageText(txt, {
+        chat_id: chatId,
+        message_id: statusMsg.message_id,
+        ...opts,
+      }).catch(() => {});
+    } else {
+      // статус-сообщение не удалось отправить — шлём новым сообщением
+      botInstance.sendMessage(chatId, txt, opts).catch(() => {});
+    }
+  };
 
   try {
     // Парсинг текста
