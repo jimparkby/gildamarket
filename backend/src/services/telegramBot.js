@@ -336,7 +336,7 @@ async function downloadTelegramPhoto(botInstance, fileId) {
       return buffer;
     } catch (err) {
       console.warn(`[Bot] downloadTelegramPhoto попытка ${attempt}/3:`, err.message);
-      if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
+      if (attempt < 3) await new Promise(r => setTimeout(r, 1000));
     }
   }
   return null;
@@ -375,19 +375,28 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
     return;
   }
 
-  // Сообщение-заглушка "Обработка..." — с ретраями, не останавливаем обработку при неудаче
-  let statusMsg = null;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      statusMsg = await botInstance.sendMessage(chatId, '⏳ Обработка...');
-      break;
-    } catch (err) {
-      console.warn(`[Bot] sendStatus попытка ${attempt}/3:`, err.message);
-      if (attempt < 3) await new Promise(r => setTimeout(r, 5000));
+  // Запускаем параллельно: статус-сообщение + парсинг текста + скачивание всех фото
+  const statusPromise = (async () => {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        return await botInstance.sendMessage(chatId, '⏳ Обработка...');
+      } catch (err) {
+        console.warn(`[Bot] sendStatus попытка ${attempt}/3:`, err.message);
+        if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
+      }
     }
-  }
+    return null;
+  })();
 
+  const parsedPromise = parseItemFromText(text || '');
+
+  const photoBuffersPromise = Promise.allSettled(
+    photoFileIds.slice(0, 10).map(fileId => downloadTelegramPhoto(botInstance, fileId))
+  );
+
+  // editStatus ждёт statusPromise внутри — не блокирует основной поток
   const editStatus = async (txt, extra) => {
+    const statusMsg = await statusPromise;
     const opts = { parse_mode: 'HTML', ...(extra || {}) };
     if (statusMsg) {
       botInstance.editMessageText(txt, {
@@ -396,14 +405,12 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
         ...opts,
       }).catch(() => {});
     } else {
-      // статус-сообщение не удалось отправить — шлём новым сообщением
       botInstance.sendMessage(chatId, txt, opts).catch(() => {});
     }
   };
 
   try {
-    // Парсинг текста
-    const parsed = await parseItemFromText(text || '');
+    const parsed = await parsedPromise;
 
     if (parsed.isSold) {
       await editStatus('⚠️ Товар уже продан или в резерве — пропускаем.');
@@ -452,27 +459,29 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
       return;
     }
 
-    // Скачивание и загрузка фото
-    const imageUrls = [];
-    for (const fileId of photoFileIds.slice(0, 10)) {
-      const buffer = await downloadTelegramPhoto(botInstance, fileId);
-      if (!buffer) continue;
+    // Ждём скачанные фото (к этому моменту большинство уже готово)
+    const downloadResults = await photoBuffersPromise;
+    const validBuffers = downloadResults
+      .filter(r => r.status === 'fulfilled' && r.value)
+      .map(r => r.value);
 
-      const fileName = `tg-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-      try {
+    // Загружаем все фото в хранилище параллельно
+    const uploadResults = await Promise.allSettled(
+      validBuffers.map((buffer, i) => {
+        const fileName = `tg-${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.jpg`;
         if (useS3()) {
-          const url = await uploadBufferToS3(buffer, fileName);
-          imageUrls.push(url);
-        } else {
-          const uploadsDir = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
-          if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-          fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
-          imageUrls.push(fileName);
+          return uploadBufferToS3(buffer, fileName);
         }
-      } catch (err) {
-        console.warn('[Bot] Ошибка загрузки фото:', err.message);
-      }
-    }
+        const uploadsDir = path.join(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
+        if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+        fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+        return Promise.resolve(fileName);
+      })
+    );
+
+    const imageUrls = uploadResults
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
 
     // Создание товара
     const item = await prisma.item.create({
