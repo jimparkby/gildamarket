@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getItems } from '../../api/client';
 import { useSettings } from '../../App';
@@ -6,12 +6,15 @@ import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import './Home.css';
 
+const SCROLL_KEY = 'home_scroll';
+
 export default function Home() {
   const { language } = useSettings();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
+  const pageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,6 +30,25 @@ export default function Home() {
         if (!cancelled) { setApiError(true); setLoading(false); }
       });
     return () => { cancelled = true; };
+  }, []);
+
+  // Restore scroll after items render
+  useEffect(() => {
+    if (loading || !pageRef.current) return;
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    if (saved) {
+      pageRef.current.scrollTop = parseInt(saved, 10);
+      sessionStorage.removeItem(SCROLL_KEY);
+    }
+  }, [loading]);
+
+  // Save scroll on unmount
+  useEffect(() => {
+    return () => {
+      if (pageRef.current) {
+        sessionStorage.setItem(SCROLL_KEY, pageRef.current.scrollTop);
+      }
+    };
   }, []);
 
   const handleLikeChange = useCallback((itemId, liked) => {
@@ -64,7 +86,7 @@ export default function Home() {
   );
 
   return (
-    <main className="page home">
+    <main ref={pageRef} className="page home">
       <div className="home__grid">
         {items.map(item => (
           <ItemCard
