@@ -42,14 +42,6 @@ export default function Home() {
     }
   }, [loading]);
 
-  // Save scroll on unmount
-  useEffect(() => {
-    return () => {
-      if (pageRef.current) {
-        sessionStorage.setItem(SCROLL_KEY, pageRef.current.scrollTop);
-      }
-    };
-  }, []);
 
   const handleLikeChange = useCallback((itemId, liked) => {
     if (liked) {
@@ -93,7 +85,10 @@ export default function Home() {
             key={item.id}
             item={item}
             onLikeChange={handleLikeChange}
-            onClick={item => navigate(`/item/${item.id}`, { state: { item } })}
+            onClick={item => {
+                sessionStorage.setItem(SCROLL_KEY, pageRef.current?.scrollTop ?? 0);
+                navigate(`/item/${item.id}`, { state: { item } });
+              }}
           />
         ))}
       </div>
