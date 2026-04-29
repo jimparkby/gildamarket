@@ -3,54 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import { getFavorites, toggleShopLike } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
-import { getCache, setCache } from '../../cache';
 import ItemCard from '../../components/ItemCard';
 import ShopCard from '../../components/ShopCard';
 import './Favorites.css';
-
-const FAV_CACHE = 'favorites';
 
 export default function Favorites() {
   const { language } = useSettings();
   const navigate = useNavigate();
   const [tab, setTab] = useState('shops');
-
-  const cached = getCache(FAV_CACHE);
-  const [items, setItems] = useState(cached?.items || []);
-  const [shops, setShops] = useState(cached?.shops || []);
-  const [loading, setLoading] = useState(!cached);
+  const [items, setItems] = useState([]);
+  const [shops, setShops] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     getFavorites()
       .then(data => {
         setItems(data.items || []);
         setShops(data.shops || []);
-        setCache(FAV_CACHE, data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const handleItemLikeChange = useCallback((itemId, liked) => {
-    if (!liked) {
-      setItems(prev => {
-        const next = prev.filter(i => i.id !== itemId);
-        const c = getCache(FAV_CACHE);
-        if (c) setCache(FAV_CACHE, { ...c, items: next });
-        return next;
-      });
-    }
+    if (!liked) setItems(prev => prev.filter(i => i.id !== itemId));
   }, []);
 
   const handleShopLikeChange = useCallback((shopId, liked) => {
-    if (!liked) {
-      setShops(prev => {
-        const next = prev.filter(s => s.id !== shopId);
-        const c = getCache(FAV_CACHE);
-        if (c) setCache(FAV_CACHE, { ...c, shops: next });
-        return next;
-      });
-    }
+    if (!liked) setShops(prev => prev.filter(s => s.id !== shopId));
   }, []);
 
   return (
