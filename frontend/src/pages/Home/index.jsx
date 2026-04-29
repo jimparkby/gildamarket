@@ -6,14 +6,10 @@ import { t } from '../../translations';
 import ItemCard from '../../components/ItemCard';
 import './Home.css';
 
-const INITIAL = 20;
-const VIEW_MORE = 100;
-
 export default function Home() {
   const { language } = useSettings();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [visible, setVisible] = useState(INITIAL);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
 
@@ -67,12 +63,10 @@ export default function Home() {
     </main>
   );
 
-  const shown = items.slice(0, visible);
-
   return (
     <main className="page home">
       <div className="home__grid">
-        {shown.map(item => (
+        {items.map(item => (
           <ItemCard
             key={item.id}
             item={item}
@@ -81,17 +75,6 @@ export default function Home() {
           />
         ))}
       </div>
-
-      {visible < items.length && (
-        <div className="home__more">
-          <button
-            className="home__more-btn"
-            onClick={() => setVisible(v => v + VIEW_MORE)}
-          >
-            {t(language, 'viewMore')}
-          </button>
-        </div>
-      )}
     </main>
   );
 }
