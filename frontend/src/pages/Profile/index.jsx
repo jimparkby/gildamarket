@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getCache, setCache } from '../../cache';
 import {
   getShop, updateProfile,
   uploadAvatar, uploadBackground,
@@ -44,9 +45,13 @@ export default function Profile() {
   const { user: authUser } = useAuth();
   const { language } = useSettings();
   const navigate = useNavigate();
- 
-  const [shop, setShop] = useState(null);
-  const [loading, setLoading] = useState(true);
+
+  const isOwner = !id || (authUser && String(authUser.id) === id);
+  const shopId = id || (authUser ? String(authUser.id) : null);
+
+  const cachedShop = shopId ? getCache(`profile_${shopId}`) : null;
+  const [shop, setShop] = useState(cachedShop);
+  const [loading, setLoading] = useState(!cachedShop);
   const [activeFilter, setActiveFilter] = useState('all');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [editingName, setEditingName] = useState(false);
@@ -64,17 +69,14 @@ export default function Profile() {
   const bgRef = useRef();
   const lbFileRef = useRef();
  
-  const isOwner = !id || (authUser && String(authUser.id) === id);
-  const shopId = id || (authUser ? String(authUser.id) : null);
- 
   useEffect(() => {
     if (!shopId) return;
-    setLoading(true);
     getShop(shopId)
       .then(data => {
         setShop(data);
         setAboutDraft(data.about || '');
         setNameDraft(`${data.firstName || ''}${data.lastName ? ' ' + data.lastName : ''}`);
+        setCache(`profile_${shopId}`, data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

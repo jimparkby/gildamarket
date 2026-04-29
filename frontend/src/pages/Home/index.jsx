@@ -3,31 +3,39 @@ import { useNavigate } from 'react-router-dom';
 import { getItems } from '../../api/client';
 import { useSettings } from '../../App';
 import { t } from '../../translations';
+import { getCache, setCache } from '../../cache';
 import ItemCard from '../../components/ItemCard';
 import './Home.css';
 
 const SCROLL_KEY = 'home_scroll';
+const FEED_CACHE = 'home_feed';
 
 export default function Home() {
   const { language } = useSettings();
   const navigate = useNavigate();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState(false);
   const pageRef = useRef(null);
+
+  const cached = getCache(FEED_CACHE);
+  const [items, setItems] = useState(cached || []);
+  const [loading, setLoading] = useState(!cached);
+  const [apiError, setApiError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     getItems({ feed: 'true' })
       .then(data => {
         if (cancelled) return;
-        setItems(data.items || []);
+        const fresh = data.items || [];
+        setItems(fresh);
+        setCache(FEED_CACHE, fresh);
         setApiError(false);
         setLoading(false);
       })
       .catch(() => {
-        if (!cancelled) { setApiError(true); setLoading(false); }
+        if (!cancelled) {
+          if (!getCache(FEED_CACHE)) setApiError(true);
+          setLoading(false);
+        }
       });
     return () => { cancelled = true; };
   }, []);
