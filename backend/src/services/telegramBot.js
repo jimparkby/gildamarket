@@ -60,6 +60,25 @@ const CONDITION_LABELS = {
   fair:     '👌 Удовлетворительное',
 };
 
+const BOT_CATEGORIES = [
+  'Обувь', 'Верхняя одежда', 'Футболки', 'Средний слой',
+  'Штаны/Джинсы/Юбки', 'Сумки', 'Аксессуары', 'Прочее',
+];
+
+function buildCategoryKeyboard(itemId, currentCategory) {
+  const rows = [];
+  for (let i = 0; i < BOT_CATEGORIES.length; i += 2) {
+    rows.push(
+      BOT_CATEGORIES.slice(i, i + 2).map(cat => ({
+        text: cat === currentCategory ? `✓ ${cat}` : cat,
+        callback_data: `cat:${itemId}:${cat}`,
+      }))
+    );
+  }
+  rows.push([{ text: '← Назад', callback_data: 'add_menu' }]);
+  return { inline_keyboard: rows };
+}
+
 function esc(text) {
   if (!text) return '—';
   return String(text)
@@ -527,11 +546,7 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
     ].join('\n');
 
     await editStatus(resultText, {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '← Назад', callback_data: 'add_menu' }],
-        ],
-      },
+      reply_markup: buildCategoryKeyboard(item.id, item.category),
     });
 
   } catch (err) {
@@ -689,6 +704,36 @@ function registerHandlers(botInstance, token) {
         console.error('[Bot] add_forward sendMessage error:', err.message);
       }
       return;
+    }
+
+    // ── Выбор категории товара ─────────────────────────────────────────────────
+
+    if (data.startsWith('cat:')) {
+      const parts    = data.split(':');
+      const itemId   = parseInt(parts[1]);
+      const category = parts.slice(2).join(':');
+
+      const item = await prisma.item.findUnique({ where: { id: itemId } });
+      if (!item) {
+        return botInstance.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
+      }
+      if (item.sellerId) {
+        const user = await prisma.user.findUnique({ where: { id: item.sellerId } });
+        if (user && user.telegramUserId !== String(query.from.id)) {
+          return botInstance.answerCallbackQuery(query.id, { text: 'Нет доступа', show_alert: true });
+        }
+      }
+
+      await prisma.item.update({ where: { id: itemId }, data: { category } });
+
+      try {
+        await botInstance.editMessageReplyMarkup(
+          buildCategoryKeyboard(itemId, category),
+          { chat_id: chatId, message_id: messageId }
+        );
+      } catch (_) {}
+
+      return botInstance.answerCallbackQuery(query.id, { text: `Категория: ${category}` });
     }
 
     // ── Admin-ревью ────────────────────────────────────────────────────────────
