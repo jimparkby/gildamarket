@@ -65,6 +65,14 @@ const BOT_CATEGORIES = [
   'Штаны/Джинсы/Юбки', 'Сумки', 'Аксессуары', 'Прочее',
 ];
 
+const BOT_SIZE_MAP = {
+  'Обувь':              { sizes: ['35','36','37','38','39','40','41','42','43','44','45','46'], perRow: 4 },
+  'Штаны/Джинсы/Юбки': { sizes: ['26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44'], perRow: 5 },
+  'Сумки':              { sizes: ['One Size'], perRow: 1 },
+  'Аксессуары':         { sizes: [], perRow: 1 },
+};
+const BOT_CLOTHING_SIZES = { sizes: ['One Size', 'XS', 'S', 'M', 'L', 'XL'], perRow: 3 };
+
 function buildCategoryKeyboard(itemId, currentCategory) {
   const rows = [];
   for (let i = 0; i < BOT_CATEGORIES.length; i += 2) {
@@ -76,6 +84,21 @@ function buildCategoryKeyboard(itemId, currentCategory) {
     );
   }
   rows.push([{ text: '← Назад', callback_data: 'add_menu' }]);
+  return { inline_keyboard: rows };
+}
+
+function buildSizeKeyboard(itemId, category, currentSize) {
+  const { sizes, perRow } = BOT_SIZE_MAP[category] || BOT_CLOTHING_SIZES;
+  const rows = [];
+  for (let i = 0; i < sizes.length; i += perRow) {
+    rows.push(
+      sizes.slice(i, i + perRow).map(s => ({
+        text: s === currentSize ? `✓ ${s}` : s,
+        callback_data: `size:${itemId}:${s}`,
+      }))
+    );
+  }
+  rows.push([{ text: '← Категории', callback_data: `cats:${itemId}` }]);
   return { inline_keyboard: rows };
 }
 
@@ -724,16 +747,65 @@ function registerHandlers(botInstance, token) {
         }
       }
 
-      await prisma.item.update({ where: { id: itemId }, data: { category } });
+      const updated = await prisma.item.update({ where: { id: itemId }, data: { category } });
 
       try {
         await botInstance.editMessageReplyMarkup(
-          buildCategoryKeyboard(itemId, category),
+          buildSizeKeyboard(itemId, category, updated.size),
           { chat_id: chatId, message_id: messageId }
         );
       } catch (_) {}
 
       return botInstance.answerCallbackQuery(query.id, { text: `Категория: ${category}` });
+    }
+
+    // ── Выбор размера товара ───────────────────────────────────────────────────
+
+    if (data.startsWith('size:')) {
+      const parts  = data.split(':');
+      const itemId = parseInt(parts[1]);
+      const size   = parts.slice(2).join(':') || null;
+
+      const item = await prisma.item.findUnique({ where: { id: itemId } });
+      if (!item) {
+        return botInstance.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
+      }
+      if (item.sellerId) {
+        const user = await prisma.user.findUnique({ where: { id: item.sellerId } });
+        if (user && user.telegramUserId !== String(query.from.id)) {
+          return botInstance.answerCallbackQuery(query.id, { text: 'Нет доступа', show_alert: true });
+        }
+      }
+
+      await prisma.item.update({ where: { id: itemId }, data: { size } });
+
+      try {
+        await botInstance.editMessageReplyMarkup(
+          buildSizeKeyboard(itemId, item.category, size),
+          { chat_id: chatId, message_id: messageId }
+        );
+      } catch (_) {}
+
+      return botInstance.answerCallbackQuery(query.id, { text: size ? `Размер: ${size}` : 'Размер убран' });
+    }
+
+    // ── Назад к выбору категории ───────────────────────────────────────────────
+
+    if (data.startsWith('cats:')) {
+      const itemId = parseInt(data.slice(5));
+      const item   = await prisma.item.findUnique({ where: { id: itemId } });
+      if (!item) {
+        return botInstance.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
+      }
+
+      try {
+        await botInstance.editMessageReplyMarkup(
+          buildCategoryKeyboard(itemId, item.category),
+          { chat_id: chatId, message_id: messageId }
+        );
+      } catch (_) {}
+
+      return botInstance.answerCallbackQuery(query.id);
     }
 
     // ── Admin-ревью ────────────────────────────────────────────────────────────
