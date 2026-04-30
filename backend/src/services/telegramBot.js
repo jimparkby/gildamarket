@@ -98,7 +98,10 @@ function buildSizeKeyboard(itemId, category, currentSize) {
       }))
     );
   }
-  rows.push([{ text: '← Категории', callback_data: `cats:${itemId}` }]);
+  rows.push([
+    { text: '← Категории', callback_data: `cats:${itemId}` },
+    { text: currentSize ? '✅ Готово' : 'Пропустить →', callback_data: `done:${itemId}` },
+  ]);
   return { inline_keyboard: rows };
 }
 
@@ -550,23 +553,17 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
     );
 
     // Результат
-    const needsNote = parsed.needsClarification
-      ? `\n\n⚠️ <b>Уточните цену</b> — откройте объявление в приложении.`
+    const priceNote = parsed.needsClarification
+      ? `\n⚠️ <b>Уточните цену</b> — откройте объявление в приложении.`
       : '';
 
     const resultText = [
-      `Загрузка завершена`,
+      `<b>${esc(item.title)}</b>`,
+      item.price ? `${item.price} ₽` : null,
+      priceNote || null,
       ``,
-      `Добавлено: 1`,
-      `Обновлено: 0`,
-      parsed.needsClarification ? `Нужно уточнить: 1` : `Нужно уточнить: 0`,
-      `SOLD найдено: 0`,
-      `Пропущено: 0`,
-      ``,
-      `Добавлено:`,
-      `+ ${esc(item.title)}`,
-      needsNote,
-    ].join('\n');
+      `Выберите категорию:`,
+    ].filter(v => v !== null).join('\n');
 
     await editStatus(resultText, {
       reply_markup: buildCategoryKeyboard(item.id, item.category),
@@ -749,11 +746,18 @@ function registerHandlers(botInstance, token) {
 
       const updated = await prisma.item.update({ where: { id: itemId }, data: { category } });
 
+      const { sizes } = BOT_SIZE_MAP[category] || BOT_CLOTHING_SIZES;
+      const sizePrompt = sizes.length === 0
+        ? `Категория: <b>${category}</b>\n\nДля этой категории размер не нужен — нажмите Готово.`
+        : `Категория: <b>${category}</b>\n\nВыберите размер:`;
+
       try {
-        await botInstance.editMessageReplyMarkup(
-          buildSizeKeyboard(itemId, category, updated.size),
-          { chat_id: chatId, message_id: messageId }
-        );
+        await botInstance.editMessageText(sizePrompt, {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: 'HTML',
+          reply_markup: buildSizeKeyboard(itemId, category, updated.size),
+        });
       } catch (_) {}
 
       return botInstance.answerCallbackQuery(query.id, { text: `Категория: ${category}` });
@@ -799,13 +803,54 @@ function registerHandlers(botInstance, token) {
       }
 
       try {
-        await botInstance.editMessageReplyMarkup(
-          buildCategoryKeyboard(itemId, item.category),
-          { chat_id: chatId, message_id: messageId }
-        );
+        await botInstance.editMessageText('Выберите категорию:', {
+          chat_id: chatId,
+          message_id: messageId,
+          reply_markup: buildCategoryKeyboard(itemId, item.category),
+        });
       } catch (_) {}
 
       return botInstance.answerCallbackQuery(query.id);
+    }
+
+    // ── Завершение заполнения товара ──────────────────────────────────────────
+
+    if (data.startsWith('done:')) {
+      const itemId = parseInt(data.slice(5));
+      const item = await prisma.item.findUnique({ where: { id: itemId } });
+      if (!item) {
+        return botInstance.answerCallbackQuery(query.id, { text: 'Товар не найден', show_alert: true });
+      }
+      if (item.sellerId) {
+        const user = await prisma.user.findUnique({ where: { id: item.sellerId } });
+        if (user && user.telegramUserId !== String(query.from.id)) {
+          return botInstance.answerCallbackQuery(query.id, { text: 'Нет доступа', show_alert: true });
+        }
+      }
+
+      const parts = [
+        `✅ Товар отправлен на проверку!`,
+        ``,
+        `<b>${esc(item.title)}</b>`,
+        item.category ? `Категория: ${item.category}` : null,
+        item.size     ? `Размер: ${item.size}` : null,
+        item.price    ? `Цена: ${item.price} ₽` : null,
+      ].filter(Boolean).join('\n');
+
+      try {
+        await botInstance.editMessageText(parts, {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[
+              { text: '📦 Мои объявления', web_app: { url: `${process.env.MINI_APP_URL || ''}?page=profile` } },
+            ]],
+          },
+        });
+      } catch (_) {}
+
+      return botInstance.answerCallbackQuery(query.id, { text: '✅ Готово!' });
     }
 
     // ── Admin-ревью ────────────────────────────────────────────────────────────
