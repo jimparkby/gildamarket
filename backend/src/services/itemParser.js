@@ -7,7 +7,38 @@ const VALID_CATEGORIES = ['shoes', 'coats', 'tshirts', 'midlayer', 'pants', 'bag
 
 const SOLD_REGEX = /\b(sold|продано|продан|продана|зарезервировано|reserved|резерв|забронировано|снят с продажи|снята с продажи|нет в наличии|не в наличии)\b/i;
 
-async function parseItemFromText(text) {
+const BOT_LINE_PATTERNS = [
+  /^✅\s*Оставлен:/i,
+  /^🗑\s*Удалён/i,
+  /^🚫\s*Забанен:/i,
+  /^Причины:/i,
+  /^🆕\s/,
+  /^📦\s*Категория:/,
+  /^📏\s*Размер:/,
+  /^⭐\s*Состояние:/,
+  /^👑\s*Бренд:/,
+  /^🛍\s*Продавец:/,
+  /^🏷\s/,
+];
+
+function stripBotMetadata(text) {
+  if (!text) return text;
+  return text
+    .split('\n')
+    .map(line => {
+      const t = line.trim();
+      if (BOT_LINE_PATTERNS.some(p => p.test(t))) return null;
+      if (t.startsWith('📝 ')) return t.slice(3).trim();
+      return line;
+    })
+    .filter(line => line !== null)
+    .join('\n')
+    .trim();
+}
+
+async function parseItemFromText(rawText) {
+  const text = stripBotMetadata(rawText);
+
   if (!text || !text.trim()) {
     return { title: null, brand: null, category: 'other', size: null, price: null, description: null, isSold: false, needsClarification: true, reason: 'no_text' };
   }
