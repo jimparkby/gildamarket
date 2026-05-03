@@ -27,6 +27,20 @@ async function parseItemFromText(text) {
   return fallbackParse(text);
 }
 
+function cleanDescription(desc) {
+  if (!desc) return null;
+  const lines = desc.split('\n').filter(line => {
+    const t = line.trim();
+    if (!t) return false;
+    if (/https?:\/\//i.test(t)) return false;
+    if (/t\.me\//i.test(t)) return false;
+    if (/\d[\d\s]*[₽р]|руб|\brub\b/i.test(t)) return false;
+    if (/info\s*:/i.test(t)) return false;
+    return true;
+  });
+  return lines.length ? lines.join('\n') : null;
+}
+
 async function parseWithClaude(text) {
   let Anthropic;
   try {
@@ -71,7 +85,7 @@ description: только характеристики товара (состо�
     category: parsed.category || 'other',
     size: parsed.size || null,
     price: parsed.price ? parseFloat(parsed.price) : null,
-    description: parsed.description || null,
+    description: cleanDescription(parsed.description),
     isSold: !!parsed.isSold,
   };
 
