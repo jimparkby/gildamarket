@@ -10,22 +10,43 @@ const CATEGORIES = [
   'Обувь', 'Верхняя одежда', 'Футболки', 'Средний слой', 'Штаны/Джинсы/Юбки', 'Сумки', 'Аксессуары', 'Прочее',
 ];
 
+const SCROLL_KEY = 'search_state';
+
+function readSaved() {
+  try { return JSON.parse(sessionStorage.getItem(SCROLL_KEY) || 'null'); }
+  catch { return null; }
+}
+
 export default function Search() {
   const { language } = useSettings();
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
-  const [mode, setMode] = useState('items'); // items | shops
-  const [selectedCat, setSelectedCat] = useState('');
-  const [items, setItems] = useState([]);
-  const [shops, setShops] = useState([]);
-  const [total, setTotal] = useState(0);
+  const savedRef = useRef(readSaved());
+  const saved = savedRef.current;
+
+  const [query, setQuery] = useState(saved?.query || '');
+  const [mode, setMode] = useState(saved?.mode || 'items');
+  const [selectedCat, setSelectedCat] = useState(saved?.selectedCat || '');
+  const [items, setItems] = useState(saved?.items || []);
+  const [shops, setShops] = useState(saved?.shops || []);
+  const [total, setTotal] = useState(saved?.total || 0);
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [searched, setSearched] = useState(saved?.searched || false);
+  const pageRef = useRef(null);
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 80);
+    if (!saved) {
+      setTimeout(() => inputRef.current?.focus(), 80);
+      return;
+    }
+    sessionStorage.removeItem(SCROLL_KEY);
+    savedRef.current = null;
+    if (saved.scrollTop && pageRef.current) {
+      requestAnimationFrame(() => {
+        pageRef.current.scrollTop = saved.scrollTop;
+      });
+    }
   }, []);
 
   const doSearch = useCallback(async (q, cat, searchMode) => {
@@ -101,7 +122,7 @@ export default function Search() {
 
   return (
     <>
-      <main className="page search-page">
+      <main ref={pageRef} className="page search-page">
         {/* Sticky-блок: поиск + переключатель + категории */}
         <div className="search-page__controls">
           {/* Строка поиска */}
@@ -220,7 +241,13 @@ export default function Search() {
                   key={item.id}
                   item={item}
                   onLikeChange={handleLikeChange}
-                  onClick={item => navigate(`/item/${item.id}`, { state: { item } })}
+                  onClick={item => {
+                    sessionStorage.setItem(SCROLL_KEY, JSON.stringify({
+                      query, mode, selectedCat, items, shops, total, searched,
+                      scrollTop: pageRef.current?.scrollTop ?? 0,
+                    }));
+                    navigate(`/item/${item.id}`, { state: { item } });
+                  }}
                 />
               ))}
             </div>
