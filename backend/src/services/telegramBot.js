@@ -676,7 +676,6 @@ function registerHandlers(botInstance, token) {
         reply_markup: {
           inline_keyboard: [
             [{ text: '🛍 Открыть Gilda Market', web_app: { url: appUrl } }],
-            [{ text: '➕ Добавить товар', callback_data: 'add_menu' }],
           ],
         },
       });
