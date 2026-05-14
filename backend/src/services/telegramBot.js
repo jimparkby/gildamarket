@@ -20,74 +20,6 @@ const prisma = new PrismaClient();
 
 let primaryBot = null;
 
-// ── Рассылка раз в 4 дня ─────────────────────────────────────────────────────
-const BROADCAST_INTERVAL_MS = 4 * 24 * 60 * 60 * 1000;
-const BROADCAST_FILE = path.join(process.cwd(), 'data', 'last_broadcast.json');
-
-function getLastBroadcastTime() {
-  try {
-    if (fs.existsSync(BROADCAST_FILE)) {
-      const data = JSON.parse(fs.readFileSync(BROADCAST_FILE, 'utf8'));
-      return data.lastAt ? new Date(data.lastAt) : null;
-    }
-  } catch (_) {}
-  return null;
-}
-
-function saveLastBroadcastTime() {
-  const dir = path.dirname(BROADCAST_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(BROADCAST_FILE, JSON.stringify({ lastAt: new Date().toISOString() }));
-}
-
-async function sendBroadcast(botInstance) {
-  const appUrl = process.env.MINI_APP_URL || '';
-  const text = 'Привет! 👋 Мы нашли для тебя уникальные вещи';
-
-  let users;
-  try {
-    users = await prisma.user.findMany({ select: { telegramUserId: true } });
-  } catch (err) {
-    console.error('[Bot] Рассылка: ошибка получения пользователей:', err.message);
-    return;
-  }
-
-  let sent = 0, failed = 0;
-  for (const user of users) {
-    try {
-      await botInstance.sendMessage(user.telegramUserId, text, {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🛍 Открыть Gilda Market', web_app: { url: appUrl } }],
-          ],
-        },
-      });
-      sent++;
-    } catch (_) {
-      failed++;
-    }
-    await new Promise(r => setTimeout(r, 100));
-  }
-
-  console.log(`[Bot] Рассылка завершена: отправлено ${sent}, ошибок ${failed}`);
-  saveLastBroadcastTime();
-}
-
-function scheduleBroadcast(botInstance) {
-  async function check() {
-    const last = getLastBroadcastTime();
-    if (!last || Date.now() - last.getTime() >= BROADCAST_INTERVAL_MS) {
-      console.log('[Bot] Запуск рассылки...');
-      await sendBroadcast(botInstance).catch(err =>
-        console.error('[Bot] Ошибка рассылки:', err.message)
-      );
-    }
-  }
-
-  setTimeout(check, 15000);
-  setInterval(check, 60 * 60 * 1000);
-}
-
 const reviewCaptions = new Map();
 
 // ── Состояния пользователей для диалога добавления товара ─────────────────────
@@ -1082,7 +1014,6 @@ function startBot() {
       }));
 
       registerHandlers(botInstance, token);
-      scheduleBroadcast(botInstance);
       primaryBot = botInstance;
       console.log(`[Bot] Запущен (polling), токен: ${token.substring(0, 10)}...`);
 
