@@ -351,6 +351,16 @@ async function getUserOrCreate(from) {
   });
 }
 
+function isValidImageBuffer(buffer) {
+  if (!buffer || buffer.length < 8) return false;
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return true; // JPEG
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return true; // PNG
+  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) return true; // GIF
+  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+      buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) return true; // WebP
+  return false;
+}
+
 async function downloadTelegramPhoto(botInstance, fileId) {
   const agent = createProxyAgent();
   const https = require('https');
@@ -380,6 +390,10 @@ async function downloadTelegramPhoto(botInstance, fileId) {
         req.on('error', reject);
         req.end();
       });
+      if (!isValidImageBuffer(buffer)) {
+        console.warn(`[Bot] downloadTelegramPhoto попытка ${attempt}: получены не-изображение данные (${buffer.length} bytes), пропускаем`);
+        return null;
+      }
       return buffer;
     } catch (err) {
       console.warn(`[Bot] downloadTelegramPhoto попытка ${attempt}/${MAX_ATTEMPTS}:`, err.message);
@@ -450,9 +464,9 @@ async function processForwardedPost(botInstance, chatId, from, text, photoFileId
         chat_id: chatId,
         message_id: statusMsg.message_id,
         ...opts,
-      }).catch(() => {});
+      }).catch(err => console.warn('[Bot] editMessageText error:', err.message));
     } else {
-      botInstance.sendMessage(chatId, txt, opts).catch(() => {});
+      botInstance.sendMessage(chatId, txt, opts).catch(err => console.warn('[Bot] editStatus sendMessage error:', err.message));
     }
   };
 
@@ -1074,16 +1088,31 @@ async function notifyAdminAboutNewItem(itemId) {
       const firstImage = item.images && item.images[0];
 
       if (firstImage) {
-        const photoBuffer = await fetchPhotoBuffer(firstImage);
-        if (photoBuffer) {
+        const raw = resolveUrl(firstImage);
+        // Если фото хранится как публичный URL (S3) — отправляем напрямую, без скачивания буфера
+        if (raw && raw.startsWith('http')) {
           try {
-            message = await primaryBot.sendPhoto(chatId, photoBuffer, {
+            message = await primaryBot.sendPhoto(chatId, raw, {
               caption:      caption,
               parse_mode:   'HTML',
               reply_markup: keyboard,
             });
           } catch (err) {
-            console.warn(`[Bot] Попытка ${attempt}: ошибка отправки фото:`, err.message);
+            console.warn(`[Bot] Попытка ${attempt}: ошибка отправки фото по URL:`, err.message);
+          }
+        } else {
+          // Локальный файл — читаем буфер
+          const photoBuffer = await fetchPhotoBuffer(firstImage);
+          if (photoBuffer) {
+            try {
+              message = await primaryBot.sendPhoto(chatId, photoBuffer, {
+                caption:      caption,
+                parse_mode:   'HTML',
+                reply_markup: keyboard,
+              });
+            } catch (err) {
+              console.warn(`[Bot] Попытка ${attempt}: ошибка отправки фото:`, err.message);
+            }
           }
         }
       }

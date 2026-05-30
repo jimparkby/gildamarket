@@ -49,7 +49,10 @@ async function parseWithClaude(text) {
     throw new Error('@anthropic-ai/sdk не установлен');
   }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: 8000, // 8 секунд — если api.anthropic.com недоступен, падаем в fallback
+  });
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
