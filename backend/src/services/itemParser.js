@@ -27,6 +27,16 @@ async function parseItemFromText(text) {
   return fallbackParse(text);
 }
 
+function cleanTitle(title) {
+  if (!title) return null;
+  const cleaned = title
+    .replace(/\s*\(https?:\/\/[^\s)]+\)/g, '')
+    .replace(/\s*\[https?:\/\/[^\s\]]+\]/g, '')
+    .replace(/https?:\/\/\S+/g, '')
+    .trim();
+  return cleaned || null;
+}
+
 function cleanDescription(desc) {
   if (!desc) return null;
   const lines = desc.split('\n').filter(line => {
@@ -68,6 +78,7 @@ JSON:
 {"title":"название товара","brand":"бренд или null","category":"одна из категорий","size":"размер или null","price":число_или_null,"description":"описание или null","isSold":false}
 
 Категории: shoes=обувь, coats=верхняя одежда/куртки/пальто/шубы, tshirts=футболки/рубашки/блузы/топы, midlayer=свитера/джемперы/кардиганы/худи, pants=брюки/джинсы/шорты/юбки, bags=сумки/рюкзаки/клатчи, accessories=аксессуары/украшения/ремни/шарфы/шапки, other=всё остальное
+title: только название товара без ссылок и URL
 price: только число в рублях, без символов, null если не указана
 isSold: true если в тексте есть sold/продано/reserved/резерв/снято
 description: только характеристики товара (состояние, материал, особенности), сохраняй переносы строк через \\n, НЕ включай цену, ссылки, контакты продавца`,
@@ -83,7 +94,7 @@ description: только характеристики товара (состо�
   if (!VALID_CATEGORIES.includes(parsed.category)) parsed.category = 'other';
 
   const result = {
-    title: parsed.title || null,
+    title: cleanTitle(parsed.title),
     brand: parsed.brand || null,
     category: parsed.category || 'other',
     size: parsed.size || null,
@@ -103,7 +114,7 @@ function fallbackParse(text) {
   const price = priceMatch ? parseInt(priceMatch[1].replace(/\s+/g, '')) : null;
 
   const lines = text.trim().split('\n').filter(l => l.trim());
-  const title = lines[0]?.replace(/[*_~`#]/g, '').trim().slice(0, 120) || null;
+  const title = cleanTitle(lines[0]?.replace(/[*_~`#]/g, '').trim().slice(0, 120)) || null;
 
   return {
     title,
