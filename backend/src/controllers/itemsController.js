@@ -83,9 +83,9 @@ async function getItems(req, res, next) {
     let skip = 0;
     let take = INITIAL_PAGE_SIZE;
 
-    // feed=true — возвращаем все товары без пагинации (для группировки по категориям)
+    // feed=true — возвращаем все товары без пагинации
     if (feed === 'true') {
-      take = 200;
+      take = undefined;
     } else if (mode === 'more') {
       skip = INITIAL_PAGE_SIZE;
       take = VIEW_MORE_SIZE;

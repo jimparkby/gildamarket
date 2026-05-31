@@ -170,11 +170,14 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
 
   const openTgChat = useCallback(() => {
     if (!item?.seller?.telegramUsername) return;
-    const text = `Привет! Хочу купить ${item.title}`;
+    const firstImage = item.images?.[0] ?? '';
+    const text = firstImage
+      ? `Привет! Хочу купить ${item.title} (${firstImage})`
+      : `Привет! Хочу купить ${item.title}`;
     window.Telegram?.WebApp?.openTelegramLink(
       `https://t.me/${item.seller.telegramUsername}?text=${encodeURIComponent(text)}`
     );
-  }, [item?.seller?.telegramUsername, item?.title]);
+  }, [item?.seller?.telegramUsername, item?.title, item?.images]);
 
   if (!item) return null;
 
