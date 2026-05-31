@@ -26,6 +26,10 @@ function validateTelegramInitData(initData) {
 
   if (computedHash !== hash) return null;
 
+  const authDate = parseInt(urlParams.get('auth_date'), 10);
+  const now = Math.floor(Date.now() / 1000);
+  if (!authDate || now - authDate > 86400) return null; // старше 24 часов
+
   const userStr = urlParams.get('user');
   if (!userStr) return null;
   try {

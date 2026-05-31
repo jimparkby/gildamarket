@@ -35,7 +35,7 @@ app.use('/api/lookboard', require('./routes/lookboard'));
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
-app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
