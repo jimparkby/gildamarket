@@ -1089,31 +1089,16 @@ async function notifyAdminAboutNewItem(itemId) {
       const firstImage = item.images && item.images[0];
 
       if (firstImage) {
-        const raw = resolveUrl(firstImage);
-        // Если фото хранится как публичный URL (S3) — отправляем напрямую, без скачивания буфера
-        if (raw && raw.startsWith('http')) {
+        const photoBuffer = await fetchPhotoBuffer(firstImage);
+        if (photoBuffer) {
           try {
-            message = await primaryBot.sendPhoto(chatId, raw, {
+            message = await primaryBot.sendPhoto(chatId, photoBuffer, {
               caption:      caption,
               parse_mode:   'HTML',
               reply_markup: keyboard,
             });
           } catch (err) {
-            console.warn(`[Bot] Попытка ${attempt}: ошибка отправки фото по URL:`, err.message);
-          }
-        } else {
-          // Локальный файл — читаем буфер
-          const photoBuffer = await fetchPhotoBuffer(firstImage);
-          if (photoBuffer) {
-            try {
-              message = await primaryBot.sendPhoto(chatId, photoBuffer, {
-                caption:      caption,
-                parse_mode:   'HTML',
-                reply_markup: keyboard,
-              });
-            } catch (err) {
-              console.warn(`[Bot] Попытка ${attempt}: ошибка отправки фото:`, err.message);
-            }
+            console.warn(`[Bot] Попытка ${attempt}: ошибка отправки фото:`, err.message);
           }
         }
       }
