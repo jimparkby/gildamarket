@@ -72,6 +72,15 @@ export function useTelegram() {
     tg?.HapticFeedback?.impactOccurred(type);
   }, []);
 
+  const openChat = useCallback((username, itemTitle) => {
+    if (!username) return;
+    const text = itemTitle ? `Привет! Хочу купить ${itemTitle}` : '';
+    const url = text
+      ? `https://t.me/${username}?text=${encodeURIComponent(text)}`
+      : `https://t.me/${username}`;
+    tg?.openLink(url, { try_instant_view: false });
+  }, []);
+
   return {
     tg,
     ready,
@@ -79,6 +88,7 @@ export function useTelegram() {
     initData:    tg?.initData ?? '',
     close,
     haptic,
+    openChat,
     colorScheme: tg?.colorScheme ?? 'light',
   };
 }

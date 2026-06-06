@@ -9,7 +9,7 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { currency } = useSettings();
-  const { haptic } = useTelegram();
+  const { haptic, openChat } = useTelegram();
   const backOverrideRef = useContext(BackButtonContext);
   const [activeImg, setActiveImg] = useState(0);
   const [isLiked, setIsLiked] = useState(item?.isLiked ?? false);
@@ -169,13 +169,8 @@ export default function ItemDetail({ item, onClose, onLikeChange }) {
   }, [item?.seller?.id, navigate]);
 
   const openTgChat = useCallback(() => {
-    if (!item?.seller?.telegramUsername) return;
-    const text = `Привет! Хочу купить ${item.title}`;
-    window.Telegram?.WebApp?.openLink(
-      `https://t.me/${item.seller.telegramUsername}?text=${encodeURIComponent(text)}`,
-      { try_instant_view: false }
-    );
-  }, [item?.seller?.telegramUsername, item?.title]);
+    openChat(item?.seller?.telegramUsername, item?.title);
+  }, [openChat, item?.seller?.telegramUsername, item?.title]);
 
   if (!item) return null;
 
