@@ -1030,7 +1030,7 @@ function startBot() {
 
       registerHandlers(botInstance, token);
       primaryBot = botInstance;
-      console.log(`[Bot] Запущен (polling), токен: ${token.substring(0, 10)}...`);
+      console.log('[Bot] Запущен (polling)');
 
       botInstance.on('polling_error', function(err) {
         if (err.code === 'ETELEGRAM' && err.message && err.message.includes('409')) {
